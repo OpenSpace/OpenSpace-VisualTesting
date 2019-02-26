@@ -1,0 +1,23 @@
+--TestingDefaultEarth.asset
+local sceneHelper = asset.require('util/scene_helper')
+
+local TestKeybindings = {
+    {
+        Key = "F8",
+        Name = "Prepare Earth Screenshot",
+        Command = "openspace.setPropertyValueSingle('RenderEngine.TakeScreenshot', nil)",
+        Documentation = "Saves the contents of the screen to a file in the working directory.",
+        Local = true
+    }
+}
+
+asset.onInitialize(function()
+    Keys = sceneHelper.bindKeys(TestKeybindings)
+	openspace.time.setTime("2019-01-01T00:00:00.00")
+end)
+
+asset.onDeinitialize(function ()
+    sceneHelper.unbindKeys(TestKeybindings)
+end)
+
+asset.export("TestingKeybindings", TestKeybindings)
