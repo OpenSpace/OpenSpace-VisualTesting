@@ -4,33 +4,29 @@ using System.Threading;
 using System;
 using System.IO;
 
-namespace OpenSpaceVisualTesting
+namespace OpenSpaceVisualTesting.Default
 {
     [TestClass]
     public class ScenarioDefaultSolarSystem : OpenSpaceSession
     {
-        private const string ScenarioName = @"DefaultSolarSystem";
+        private const string ScenarioGroup = @"Default";
+        private const string ScenarioName = @"SolarSystem";
 
         [TestMethod]
         public void TakeSolarSystemScreenShot()
         {
-            const string FilePath = "../../OpenSpaceVisualTesting/OpenSpaceVisualTesting/Default/TestingAsset" + ScenarioName;
-
+            //load asset file
+            OpenSpaceSession.addAssetFile(ScenarioGroup, ScenarioName);
+            //play recording file
+            DesktopSession.Keyboard.SendKeys(Keys.F8);
             Thread.Sleep(TimeSpan.FromSeconds(2));
-            session.Keyboard.SendKeys(Keys.Space + "`openspace.asset.add('" + FilePath + "');" + Keys.Enter + "`");
-            Thread.Sleep(TimeSpan.FromSeconds(5));
-            session.Keyboard.SendKeys(Keys.F8);
+            //take screenshot
+            DesktopSession.Keyboard.SendKeys(Keys.F7);
             Thread.Sleep(TimeSpan.FromSeconds(2));
-            session.Keyboard.SendKeys(Keys.F9);
-            Thread.Sleep(TimeSpan.FromSeconds(2));
-
-            string solutionDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
-            string tmpPath = OpenSpaceSession.basePath + "\\screenshots\\OpenSpace_000000.png";
-            string moveToPath = solutionDir + "\\Default\\ResultDefaultSolarSystem.png";
-            Console.WriteLine("Move " + tmpPath + " to " + moveToPath);
-            File.Move(tmpPath, moveToPath);
-
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            //move sceenshot to result
+            OpenSpaceSession.moveScreenShot(ScenarioGroup, ScenarioName);
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+            //exit for next test
             TearDown();
         }
 
@@ -43,10 +39,7 @@ namespace OpenSpaceVisualTesting
         [ClassCleanup]
         public static void ClassCleanup()
         {
-            session.Keyboard.SendKeys(Keys.Space + "`openspace.asset.remove('${BASE}/OpenSpaceVisualTesting/TestingAssetDeafaultSolarSystem');" + Keys.Enter + "`");
-            Thread.Sleep(TimeSpan.FromSeconds(2));
-            TearDown();
+            //nothing since we already teeardown after test
         }
-
     }
 }

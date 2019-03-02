@@ -1,11 +1,11 @@
---TestingDefaultEarth.asset
+--TestingAssetNewHorizionsModel.asset
 local sceneHelper = asset.require('util/scene_helper')
 
 local TestKeybindings = {
     {
         Key = "F8",
         Name = "play test recording",
-        Command = "openspace.sessionRecording.startPlayback('${BASE}/OpenSpaceVisualTesting/OpenSpaceVisualTesting/Default/RecordingDefaultSolarSystem.osrecording')",
+        Command = "openspace.sessionRecording.startPlayback('${BASE}/OpenSpaceVisualTesting/OpenSpaceVisualTesting/NewHorizions/RecordingNewHorizionsModel.osrecording')",
         Documentation = " ",
         Local = true
     },
@@ -13,7 +13,6 @@ local TestKeybindings = {
 
 asset.onInitialize(function()
     Keys = sceneHelper.bindKeys(TestKeybindings)
-	openspace.time.setTime("2019-01-01T00:00:00.00")
 end)
 
 asset.onDeinitialize(function ()

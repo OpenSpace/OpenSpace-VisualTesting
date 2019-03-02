@@ -67,12 +67,15 @@
   <ItemGroup>
     <Compile Include="Default\ScenarioDefaultSolarSystem.cs" />
     <None Include="Default\TestingAssetDefaultEarth.asset" />
+    <Compile Include="NewHorizions\ScenarioNewHorizionsModel.cs" />
     <Compile Include="OpenSpaceSession.cs" />
     <Compile Include="Default\ScenarioDefaultEarth.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Default\TestingAssetDefaultSolarSystem.asset" />
+    <None Include="NewHorizions\TestingAssetNewHorizionsModel.asset" />
+    <None Include="NewHorizions\TestingAssetNewHorizionsProjection.asset" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

@@ -1,24 +1,24 @@
+using System;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenQA.Selenium;
-using System.Threading;
-using System;
 
-
-namespace OpenSpaceVisualTesting.Default
+namespace OpenSpaceVisualTesting.NewHorizions
 {
     [TestClass]
-    public class ScenarioDefaultEarth : OpenSpaceSession
+    public class ScenarioNewHorizionsModel : OpenSpaceSession
     {
-        private const string ScenarioGroup = @"Default";
-        private const string ScenarioName = @"Earth";
+        private const string ScenarioGroup = @"NewHorizions";
+        private const string ScenarioName = @"Model";
 
         [TestMethod]
-        public void TakeEarthScreenShot()
+        public void ScreenshotModel()
         {
-            //set to target data
-            OpenSpaceSession.setTime("2019-01-01T00:00:00.00");
-            //wait for tiles to load
-            Thread.Sleep(TimeSpan.FromSeconds(20));
+            //load asset file
+            OpenSpaceSession.addAssetFile(ScenarioGroup, ScenarioName);
+            //play recording file
+            DesktopSession.Keyboard.SendKeys(Keys.F8);
+            Thread.Sleep(TimeSpan.FromSeconds(2));
             //take screenshot
             DesktopSession.Keyboard.SendKeys(Keys.F7);
             Thread.Sleep(TimeSpan.FromSeconds(2));
@@ -27,18 +27,19 @@ namespace OpenSpaceVisualTesting.Default
             Thread.Sleep(TimeSpan.FromSeconds(1));
             //exit for next test
             TearDown();
+
         }
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
         {
-            Setup(context);
+            Setup(context, "newhorizons");
         }
 
         [ClassCleanup]
         public static void ClassCleanup()
         {
-            TearDown();
+            //nothing since we already teeardown after test
         }
 
     }
