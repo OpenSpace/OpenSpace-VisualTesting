@@ -39,7 +39,7 @@ namespace OpenSpaceVisualTesting
                 }
                 catch (Exception Ex)
                 {
-
+                    Console.WriteLine(Ex.ToString());
                     Thread.Sleep(TimeSpan.FromSeconds(3));
                     DesiredCapabilities desktopappCapabilities = new DesiredCapabilities();
                     desktopappCapabilities.SetCapability("app", "Root");
