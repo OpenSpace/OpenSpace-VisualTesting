@@ -36,18 +36,15 @@ namespace OpenSpaceVisualTesting
                     appCapabilities.SetCapability("appArguments", args);
                     LaunchSession = new WindowsDriver<WindowsElement>(new Uri(WindowsApplicationDriverUrl), appCapabilities, TimeSpan.FromMinutes(2));
                     Assert.IsNotNull(LaunchSession);
-
                 }
                 catch (Exception Ex)
                 {
 
                     Thread.Sleep(TimeSpan.FromSeconds(3));
-
                     DesiredCapabilities desktopappCapabilities = new DesiredCapabilities();
                     desktopappCapabilities.SetCapability("app", "Root");
                     DesktopSession = new WindowsDriver<WindowsElement>(new Uri("http://127.0.0.1:4723"), desktopappCapabilities);
-
-
+                    
                     // Create session by attaching to os top level window
                     DesiredCapabilities appCapabilities = new DesiredCapabilities();
                     var OpenSpaceWindow = DesktopSession.FindElementByName("OpenSpace");
