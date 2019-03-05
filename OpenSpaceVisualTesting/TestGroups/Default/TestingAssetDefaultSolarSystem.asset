@@ -5,7 +5,7 @@ local TestKeybindings = {
     {
         Key = "F8",
         Name = "play test recording",
-        Command = "openspace.sessionRecording.startPlayback('${BASE}/OpenSpaceVisualTesting/OpenSpaceVisualTesting/Default/RecordingDefaultSolarSystem.osrecording')",
+        Command = "openspace.sessionRecording.startPlayback('${BASE}/OpenSpaceVisualTesting/OpenSpaceVisualTesting/TestGroups/Default/RecordingDefaultSolarSystem.osrecording')",
         Documentation = " ",
         Local = true
     },

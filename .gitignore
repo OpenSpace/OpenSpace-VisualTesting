@@ -1,3 +1,5 @@
 .vs*
 packages/
 OpenSpaceVisualTesting/obj/*
+**/Result*.png
+**/Difference*.png

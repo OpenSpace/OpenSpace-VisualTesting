@@ -27,6 +27,9 @@ namespace OpenSpaceVisualTesting.Default
             Thread.Sleep(TimeSpan.FromSeconds(1));
             //exit for next test
             TearDown();
+
+
+
         }
 
         [ClassInitialize]

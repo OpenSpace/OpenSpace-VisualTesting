@@ -54,29 +54,17 @@ namespace OpenSpaceVisualTesting
                     LaunchSession = new WindowsDriver<WindowsElement>(new Uri(WindowsApplicationDriverUrl), appCapabilities);
                 }
                 Thread.Sleep(TimeSpan.FromSeconds(30));
-
-
-                //wait for startup
-
-
-
-                //var allWindowHandles = session.WindowHandles;
-                //session.SwitchTo().Window(allWindowHandles[0]);
-
-                //session.LaunchApp();
-                //ensure successful startup
-                //Assert.IsNotNull(session.SessionId);
-                //load keys and set initial setup for all tests
+                //pause and load keys and set initial setup for all tests
                 DesktopSession.Keyboard.SendKeys(Keys.Space + "`openspace.asset.add('util/testing_keybindings');" + Keys.Enter + "`");
+                //hide ui for screenshots
                 DesktopSession.Keyboard.SendKeys(Keys.F6);
-                DesktopSession.Keyboard.SendKeys(Keys.Space);
             }
         }
 
         public static void addAssetFile(string scenarioGroup, string scenarioName)
         {
             Thread.Sleep(TimeSpan.FromSeconds(1));
-            string FilePath = "../../OpenSpaceVisualTesting/OpenSpaceVisualTesting/" + scenarioGroup + "/TestingAsset" + scenarioGroup + scenarioName;
+            string FilePath = "../../OpenSpaceVisualTesting/OpenSpaceVisualTesting/TestGroups/" + scenarioGroup + "/TestingAsset" + scenarioGroup + scenarioName;
             DesktopSession.Keyboard.SendKeys("`openspace.asset.add('" + FilePath + "');" + Keys.Enter + "`");
             Thread.Sleep(TimeSpan.FromSeconds(2));
         }
@@ -91,7 +79,7 @@ namespace OpenSpaceVisualTesting
         {
             string solutionDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
             string tmpPath = OpenSpaceSession.basePath + "\\screenshots\\OpenSpace_000000.png";
-            string moveToPath = solutionDir + "\\" + scenarioGroup + "\\Result" + scenarioGroup + scenarioName + ".png";
+            string moveToPath = solutionDir + "\\TestGroups\\" + scenarioGroup + "\\Result" + scenarioGroup + scenarioName + ".png";
 
             if (File.Exists(moveToPath))
             {
