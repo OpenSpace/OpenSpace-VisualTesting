@@ -17,10 +17,10 @@ namespace OpenSpaceVisualTesting.NewHorizions
             //load asset file
             OpenSpaceSession.addAssetFile(ScenarioGroup, ScenarioName);
             //play recording file
-            DesktopSession.Keyboard.SendKeys(Keys.F8);
+            currentSession.Keyboard.SendKeys(Keys.F8);
             Thread.Sleep(TimeSpan.FromSeconds(2));
             //take screenshot
-            DesktopSession.Keyboard.SendKeys(Keys.F7);
+            currentSession.Keyboard.SendKeys(Keys.F7);
             Thread.Sleep(TimeSpan.FromSeconds(2));
             //move sceenshot to result
             OpenSpaceSession.moveScreenShot(ScenarioGroup, ScenarioName);

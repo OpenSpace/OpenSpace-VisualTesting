@@ -3,3 +3,4 @@ packages/
 OpenSpaceVisualTesting/obj/*
 **/Result*.png
 **/Difference*.png
+**/Difference*.png2

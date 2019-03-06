@@ -20,7 +20,7 @@ namespace OpenSpaceVisualTesting.Default
             //wait for tiles to load
             Thread.Sleep(TimeSpan.FromSeconds(20));
             //take screenshot
-            DesktopSession.Keyboard.SendKeys(Keys.F7);
+            currentSession.Keyboard.SendKeys(Keys.F7);
             Thread.Sleep(TimeSpan.FromSeconds(2));
             //move sceenshot to result
             OpenSpaceSession.moveScreenShot(ScenarioGroup, ScenarioName);
