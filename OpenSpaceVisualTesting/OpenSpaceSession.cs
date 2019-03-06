@@ -23,6 +23,7 @@ namespace OpenSpaceVisualTesting
         {
 
             string solutionDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
+            Console.WriteLine(solutionDir);
             OpenSpaceSession.basePath = solutionDir.Substring(0, solutionDir.LastIndexOf("OpenSpaceVisualTesting\\OpenSpaceVisualTesting"));
 
             // Launch a new instance of OpenSpace
