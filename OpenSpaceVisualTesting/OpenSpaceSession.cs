@@ -11,7 +11,7 @@ namespace OpenSpaceVisualTesting
     public class OpenSpaceSession
     {
         protected const string WindowsApplicationDriverUrl = "http://127.0.0.1:4723";
-        private const string OpenSpaceAppId = @"C:\os\OpenSpace\bin\RelWithDebInfo\OpenSpace.exe";
+        private static string OpenSpaceAppId = @"C:\os\OpenSpace\bin\RelWithDebInfo\OpenSpace.exe";
 
         public static string basePath = "";
 
@@ -23,9 +23,8 @@ namespace OpenSpaceVisualTesting
         {
 
             string solutionDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
-            Console.WriteLine(solutionDir);
             OpenSpaceSession.basePath = solutionDir.Substring(0, solutionDir.LastIndexOf("OpenSpaceVisualTesting\\OpenSpaceVisualTesting"));
-
+            OpenSpaceAppId = basePath + "bin\\RelWithDebInfo\\OpenSpace.exe";
             // Launch a new instance of OpenSpace
             if (LaunchSession == null)
             {

@@ -18,7 +18,7 @@ namespace OpenSpaceVisualTesting.NewHorizions
             OpenSpaceSession.addAssetFile(ScenarioGroup, ScenarioName);
             //play recording file
             currentSession.Keyboard.SendKeys(Keys.F8);
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            Thread.Sleep(TimeSpan.FromSeconds(5));
             //take screenshot
             currentSession.Keyboard.SendKeys(Keys.F7);
             Thread.Sleep(TimeSpan.FromSeconds(2));
