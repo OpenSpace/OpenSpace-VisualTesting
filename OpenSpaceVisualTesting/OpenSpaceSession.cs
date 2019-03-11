@@ -26,10 +26,8 @@ namespace OpenSpaceVisualTesting
             OpenSpaceSession.basePath = solutionDir.Substring(0, solutionDir.LastIndexOf("OpenSpaceVisualTesting\\OpenSpaceVisualTesting"));
             OpenSpaceAppId = basePath + "bin\\RelWithDebInfo\\OpenSpace.exe";
             // Launch a new instance of OpenSpace
-            if (LaunchSession == null)
-            {
-                try
-                {
+             try
+             {
                     // Create a new session to launch OpenSpace
                     DesiredCapabilities appCapabilities = new DesiredCapabilities();
                     appCapabilities.SetCapability("app", OpenSpaceAppId);
@@ -39,44 +37,43 @@ namespace OpenSpaceVisualTesting
                     LaunchSession = new WindowsDriver<WindowsElement>(new Uri(WindowsApplicationDriverUrl), appCapabilities, TimeSpan.FromMinutes(2));
                     Assert.IsNotNull(LaunchSession);
                     currentSession = LaunchSession;
-                }
-                catch (Exception Ex)
-                {
-                    Console.WriteLine(Ex.ToString());
-                    Thread.Sleep(TimeSpan.FromSeconds(3));
-                    DesiredCapabilities desktopappCapabilities = new DesiredCapabilities();
-                    desktopappCapabilities.SetCapability("app", "Root");
-                    DesktopSession = new WindowsDriver<WindowsElement>(new Uri("http://127.0.0.1:4723"), desktopappCapabilities);
+             }
+             catch (Exception Ex)
+             {
+                Console.WriteLine(Ex.ToString());
+                Thread.Sleep(TimeSpan.FromSeconds(3));
+                DesiredCapabilities desktopappCapabilities = new DesiredCapabilities();
+                desktopappCapabilities.SetCapability("app", "Root");
+                DesktopSession = new WindowsDriver<WindowsElement>(new Uri("http://127.0.0.1:4723"), desktopappCapabilities);
                     
                     // Create session by attaching to os top level window
-                    DesiredCapabilities appCapabilities = new DesiredCapabilities();
-                    var OpenSpaceWindow = DesktopSession.FindElementByName("OpenSpace");
-                    var OpenSpaceTopLevelWindowHandle = OpenSpaceWindow.GetAttribute("NativeWindowHandle");
-                    OpenSpaceTopLevelWindowHandle = (int.Parse(OpenSpaceTopLevelWindowHandle)).ToString("x"); // Convert to Hex
-                    appCapabilities.SetCapability("appTopLevelWindow", OpenSpaceTopLevelWindowHandle);
-                    LaunchSession = new WindowsDriver<WindowsElement>(new Uri(WindowsApplicationDriverUrl), appCapabilities);
+                    //DesiredCapabilities appCapabilities = new DesiredCapabilities();
+                    //var OpenSpaceWindow = DesktopSession.FindElementByName("OpenSpace");
+                    //var OpenSpaceTopLevelWindowHandle = OpenSpaceWindow.GetAttribute("NativeWindowHandle");
+                    //OpenSpaceTopLevelWindowHandle = (int.Parse(OpenSpaceTopLevelWindowHandle)).ToString("x"); // Convert to Hex
+                    //appCapabilities.SetCapability("appTopLevelWindow", OpenSpaceTopLevelWindowHandle);
+                    //LaunchSession = new WindowsDriver<WindowsElement>(new Uri(WindowsApplicationDriverUrl), appCapabilities);
 
-                    currentSession = DesktopSession;
-                }
-                Thread.Sleep(TimeSpan.FromSeconds(30));
-                //pause and load keys and set initial setup for all tests
-                currentSession.Keyboard.SendKeys(Keys.Space + "`openspace.asset.add('util/testing_keybindings');" + Keys.Enter + "`");
-                //hide ui for screenshots
-                currentSession.Keyboard.SendKeys(Keys.F6);
+                currentSession = DesktopSession;
             }
+            Thread.Sleep(TimeSpan.FromSeconds(30));
+            //pause and load keys and set initial setup for all tests
+            currentSession.Keyboard.SendKeys(Keys.Space + "`openspace.asset.add('util/testing_keybindings');" + Keys.Enter + "`");
+            //hide ui for screenshots
+            currentSession.Keyboard.SendKeys(Keys.F6);
         }
 
         public static void addAssetFile(string scenarioGroup, string scenarioName)
         {
             Thread.Sleep(TimeSpan.FromSeconds(1));
             string FilePath = "../../OpenSpaceVisualTesting/OpenSpaceVisualTesting/TestGroups/" + scenarioGroup + "/TestingAsset" + scenarioGroup + scenarioName;
-            LaunchSession.Keyboard.SendKeys("`openspace.asset.add('" + FilePath + "');" + Keys.Enter + "`");
+            currentSession.Keyboard.SendKeys("`openspace.asset.add('" + FilePath + "');" + Keys.Enter + "`");
             Thread.Sleep(TimeSpan.FromSeconds(2));
         }
 
         public static void setTime(string time)
         {
-            LaunchSession.Keyboard.SendKeys("`openspace.time.setTime('" + time + "');" + Keys.Enter + "`");
+            currentSession.Keyboard.SendKeys("`openspace.time.setTime('" + time + "');" + Keys.Enter + "`");
             Thread.Sleep(TimeSpan.FromSeconds(1));
         }
 
@@ -96,6 +93,9 @@ namespace OpenSpaceVisualTesting
 
         public static void TearDown()
         {
+            currentSession.Keyboard.SendKeys(Keys.Escape);
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+
             // Close the application and delete the session
             if (DesktopSession != null)
             {
