@@ -60,7 +60,10 @@ namespace OpenSpaceVisualTesting
             //pause and load keys and set initial setup for all tests
             currentSession.Keyboard.SendKeys(Keys.Space + "`openspace.asset.add('util/testing_keybindings');" + Keys.Enter + "`");
             //hide ui for screenshots
-            currentSession.Keyboard.SendKeys(Keys.F6);
+//            currentSession.Keyboard.SendKeys(Keys.F6);
+            currentSession.Keyboard.PressKey(Keys.Shift);
+            currentSession.Keyboard.SendKeys(Keys.Tab);
+            currentSession.Keyboard.ReleaseKey(Keys.Shift);
         }
 
         public static void addAssetFile(string scenarioGroup, string scenarioName)
@@ -99,14 +102,12 @@ namespace OpenSpaceVisualTesting
             // Close the application and delete the session
             if (DesktopSession != null)
             {
-                DesktopSession.Close();
                 DesktopSession.Quit();
                 DesktopSession = null;
             }
 
             if (LaunchSession != null)
             {
-                LaunchSession.Close();
                 LaunchSession.Quit();
                 LaunchSession = null;
             }

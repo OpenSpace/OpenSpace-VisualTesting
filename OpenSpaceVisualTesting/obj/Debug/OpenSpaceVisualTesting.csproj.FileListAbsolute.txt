@@ -41,7 +41,6 @@ C:\os\OpenSpace\OpenSpaceVisualTesting\OpenSpaceVisualTesting\bin\Debug\Microsof
 C:\os\OpenSpace\OpenSpaceVisualTesting\OpenSpaceVisualTesting\bin\Debug\Newtonsoft.Json.xml
 C:\os\OpenSpace\OpenSpaceVisualTesting\OpenSpaceVisualTesting\bin\Debug\WebDriver.xml
 C:\os\OpenSpace\OpenSpaceVisualTesting\OpenSpaceVisualTesting\bin\Debug\WebDriver.Support.xml
-C:\os\OpenSpace\OpenSpaceVisualTesting\OpenSpaceVisualTesting\obj\Debug\OpenSpaceVisualTesting.csprojAssemblyReference.cache
 C:\os\OpenSpace\OpenSpaceVisualTesting\OpenSpaceVisualTesting\obj\Debug\OpenSpaceVisualTesting.csproj.CoreCompileInputs.cache
 C:\os\OpenSpace\OpenSpaceVisualTesting\OpenSpaceVisualTesting\obj\Debug\OpenSpaceVisualTesting.csproj.CopyComplete
 C:\os\OpenSpace\OpenSpaceVisualTesting\OpenSpaceVisualTesting\obj\Debug\OpenSpaceVisualTesting.dll
