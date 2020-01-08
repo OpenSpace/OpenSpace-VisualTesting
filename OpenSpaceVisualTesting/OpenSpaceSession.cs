@@ -11,7 +11,7 @@ namespace OpenSpaceVisualTesting
     public class OpenSpaceSession
     {
         protected const string WindowsApplicationDriverUrl = "http://127.0.0.1:4723";
-        private static string OpenSpaceAppId = @"C:\os\OpenSpace\bin\RelWithDebInfo\OpenSpace.exe";
+        private static string OpenSpaceAppId = @"";
 
         public static string basePath = "";
 
@@ -19,11 +19,10 @@ namespace OpenSpaceVisualTesting
         protected static WindowsDriver<WindowsElement> DesktopSession;
         protected static WindowsDriver<WindowsElement> currentSession;
 
-        public static void Setup(TestContext context, string asset = "default")
+        public static void Setup(string asset = "default")
         {
-
             string solutionDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
-            OpenSpaceSession.basePath = solutionDir.Substring(0, solutionDir.LastIndexOf("OpenSpaceVisualTesting\\OpenSpaceVisualTesting"));
+            OpenSpaceSession.basePath = solutionDir.Substring(0, solutionDir.LastIndexOf("OpenSpaceVisualTesting\\OpenSpaceVisualTesting")) + "OpenSpace\\";
             OpenSpaceAppId = basePath + "bin\\RelWithDebInfo\\OpenSpace.exe";
             // Launch a new instance of OpenSpace
              try
@@ -31,8 +30,9 @@ namespace OpenSpaceVisualTesting
                     // Create a new session to launch OpenSpace
                     DesiredCapabilities appCapabilities = new DesiredCapabilities();
                     appCapabilities.SetCapability("app", OpenSpaceAppId);
-                    string configValues = "ScreenshotUseDate=false;ModuleConfigurations.Server={};ModuleConfigurations.WebBrowser.Enabled=false;";
-                    string args = "/c --config \"" + configValues + "Asset='" + asset + "'\"";
+                    appCapabilities.SetCapability("appWorkingDir", OpenSpaceSession.basePath + "bin\\RelWithDebInfo");
+                    string configValues = "ScreenshotUseDate=false;ModuleConfigurations.Server={};ModuleConfigurations.WebBrowser.Enabled=false;ModuleConfigurations.WebGui={};";
+                    string args = "--config \"" + configValues + "Asset='" + asset + "'\"";
                     appCapabilities.SetCapability("appArguments", args);
                     LaunchSession = new WindowsDriver<WindowsElement>(new Uri(WindowsApplicationDriverUrl), appCapabilities, TimeSpan.FromMinutes(2));
                     Assert.IsNotNull(LaunchSession);
@@ -41,29 +41,36 @@ namespace OpenSpaceVisualTesting
              catch (Exception Ex)
              {
                 Console.WriteLine(Ex.ToString());
-                Thread.Sleep(TimeSpan.FromSeconds(3));
-                DesiredCapabilities desktopappCapabilities = new DesiredCapabilities();
-                desktopappCapabilities.SetCapability("app", "Root");
-                DesktopSession = new WindowsDriver<WindowsElement>(new Uri("http://127.0.0.1:4723"), desktopappCapabilities);
-                    
-                    // Create session by attaching to os top level window
-                    //DesiredCapabilities appCapabilities = new DesiredCapabilities();
-                    //var OpenSpaceWindow = DesktopSession.FindElementByName("OpenSpace");
-                    //var OpenSpaceTopLevelWindowHandle = OpenSpaceWindow.GetAttribute("NativeWindowHandle");
-                    //OpenSpaceTopLevelWindowHandle = (int.Parse(OpenSpaceTopLevelWindowHandle)).ToString("x"); // Convert to Hex
-                    //appCapabilities.SetCapability("appTopLevelWindow", OpenSpaceTopLevelWindowHandle);
-                    //LaunchSession = new WindowsDriver<WindowsElement>(new Uri(WindowsApplicationDriverUrl), appCapabilities);
-
                 currentSession = DesktopSession;
             }
             Thread.Sleep(TimeSpan.FromSeconds(30));
-            //pause and load keys and set initial setup for all tests
-            currentSession.Keyboard.SendKeys(Keys.Space + "`openspace.asset.add('util/testing_keybindings');" + Keys.Enter + "`");
-            //hide ui for screenshots
-//            currentSession.Keyboard.SendKeys(Keys.F6);
+
             currentSession.Keyboard.PressKey(Keys.Shift);
             currentSession.Keyboard.SendKeys(Keys.Tab);
             currentSession.Keyboard.ReleaseKey(Keys.Shift);
+        }
+
+        public static void sendScript(string script)
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+            currentSession.Keyboard.SendKeys("`" + script + Keys.Enter + "`");
+        }
+
+        public static void sendKeys(string keys)
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+            switch (keys)
+            {
+                case "F7":
+                    currentSession.Keyboard.SendKeys(Keys.F7);
+                    break;
+                case "F11":
+                    currentSession.Keyboard.SendKeys(Keys.F11);
+                    break;
+                default:
+                    currentSession.Keyboard.SendKeys(keys);
+                    break;
+            }
         }
 
         public static void addAssetFile(string scenarioGroup, string scenarioName)
@@ -82,9 +89,12 @@ namespace OpenSpaceVisualTesting
 
         public static void moveScreenShot(string scenarioGroup, string scenarioName)
         {
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+            currentSession.Keyboard.SendKeys(Keys.F12);
+            Thread.Sleep(TimeSpan.FromSeconds(1));
             string solutionDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
             string tmpPath = OpenSpaceSession.basePath + "\\screenshots\\OpenSpace_000000.png";
-            string moveToPath = solutionDir + "\\TestGroups\\" + scenarioGroup + "\\Result" + scenarioGroup + scenarioName + ".png";
+            string moveToPath = solutionDir + "\\TargetImages\\win64\\Result" + scenarioGroup + scenarioName + ".png";
 
             if (File.Exists(moveToPath))
             {
@@ -97,7 +107,7 @@ namespace OpenSpaceVisualTesting
         public static void TearDown()
         {
             currentSession.Keyboard.SendKeys(Keys.Escape);
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            Thread.Sleep(TimeSpan.FromSeconds(10));
 
             // Close the application and delete the session
             if (DesktopSession != null)

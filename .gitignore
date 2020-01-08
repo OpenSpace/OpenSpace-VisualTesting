@@ -1,6 +1,6 @@
 .vs*
 packages/
 OpenSpaceVisualTesting/obj/*
+OpenSpaceVisualTesting/bin/*
 **/Result*.png
 **/Difference*.png
-**/Difference*.png2
