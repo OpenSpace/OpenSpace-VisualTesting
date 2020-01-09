@@ -66,7 +66,7 @@ namespace OpenSpaceVisualTesting
             string scenarioName = testName.Substring(0, testName.LastIndexOf(".ostest"));
 
             Console.WriteLine("testName '{0}.{1}'.", testGroup, scenarioName);
-            if (testGroup != "voyager")
+            if (scenarioName != "MarsHiRISE")
             {
                 return;
             }

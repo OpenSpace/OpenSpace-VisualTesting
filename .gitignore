@@ -4,3 +4,5 @@ OpenSpaceVisualTesting/obj/*
 OpenSpaceVisualTesting/bin/*
 **/Result*.png
 **/Difference*.png
+*.report
+**/result.txt

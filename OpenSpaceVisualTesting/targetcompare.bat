@@ -20,7 +20,7 @@ set _scoreTail=^</div^>
 set _newTestRow=' /^>^</div^>^<div class='row-cell name-cell'^>NEW^</div^>
 set _rowEnd=^</div^>^</li^>
 
-for /R %%F in (TargetImages\Result*.png) do (
+for /R .\TargetImages %%F in (Result*.png) do (
 	set _fullPath=%%F
 	set _fullPath=!_fullPath!
 	set _fileName=%%~nF
