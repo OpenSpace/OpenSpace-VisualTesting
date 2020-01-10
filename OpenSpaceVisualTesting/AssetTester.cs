@@ -66,10 +66,10 @@ namespace OpenSpaceVisualTesting
             string scenarioName = testName.Substring(0, testName.LastIndexOf(".ostest"));
 
             Console.WriteLine("testName '{0}.{1}'.", testGroup, scenarioName);
-            if (scenarioName != "MarsHiRISE")
-            {
-                return;
-            }
+            //if (scenarioName != "MarsHiRISE")
+            //{
+            //    return;
+            //}
             Console.WriteLine("Starting asset '{0}'.", testGroup);
 
             OpenSpaceSession.Setup(testGroup.ToLower());

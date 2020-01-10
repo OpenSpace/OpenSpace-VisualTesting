@@ -6,3 +6,4 @@ OpenSpaceVisualTesting/bin/*
 **/Difference*.png
 *.report
 **/result.txt
+**/*.json.tmp

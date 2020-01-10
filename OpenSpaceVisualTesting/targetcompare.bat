@@ -4,60 +4,55 @@ setlocal enableDelayedExpansion
 echo.>comparison.report
 echo.>newtests.report
 
-set _html=^<html^>
-echo !_html!>visualtests.html
-for /F "delims=" %%a in (visualtests_header.html) do (
-  set line=%%a
-  echo !line!>>visualtests.html
-)
+echo {"items":[>visualtests_results.json.tmp
 
-set _rowStart=^<li^>^<div^>^<div class='row-cell name-cell'^>
-set _nameTail=^</div^>^<div class='row-cell image-cell'^>^<img src='
-set _targetTail=' /^>^</div^>^<div class='row-cell image-cell'^>^<img src='
-set _resultTail=' /^>^</div^>^<div class='row-cell image-cell'^>^<img src='
-set _differenceTail=' /^>^</div^>^<div class='row-cell score-cell'^>
-set _scoreTail=^</div^>
-set _newTestRow=' /^>^</div^>^<div class='row-cell name-cell'^>NEW^</div^>
-set _rowEnd=^</div^>^</li^>
+set /a _count=0
+set _nameString={"name":"
+set _newString=","new":"
+set _scoreString=","score":"
+set _endString="}
 
 for /R .\TargetImages %%F in (Result*.png) do (
+	if !_count! == 0 (
+		set /a _count+=1		
+	) else (
+		echo ,>>visualtests_results.json.tmp		
+	)
 	set _fullPath=%%F
 	set _fullPath=!_fullPath!
 	set _fileName=%%~nF
 	set _fileName=!_fileName!
 	call set _testName=%%_fileName:Result=%%
 
-	echo !_rowStart!>>visualtests.html
-	echo !_testName!>>visualtests.html
-	echo !_nameTail!>>visualtests.html
+	echo !_nameString!>>visualtests_results.json.tmp
+	echo !_testName!>>visualtests_results.json.tmp
+	echo !_newString!>>visualtests_results.json.tmp
 
 
 	call set _targetPath=%%_fullPath:Result=Target%%
 	call set _differencePath=%%_fullPath:Result=Difference%%
 	if EXIST !_targetPath! (
 		echo !_fileName!>>comparison.report
-		echo !_targetPath!>>visualtests.html
-		echo !_targetTail!>>visualtests.html
-		echo !_fullPath!>>visualtests.html
-		echo !_resultTail!>>visualtests.html
-		echo !_differencePath!>>visualtests.html
 		set "_targetFile=%%F"
 		compare.exe -fuzz 4%% -metric rmse "!_targetPath!" "!_fullPath!" "!_differencePath!" 2>result.txt
 		set /p _compareValue=<result.txt
-		echo !_differenceTail!>>visualtests.html
 		echo !_compareValue!>>comparison.report
-		echo !_compareValue!>>visualtests.html
-		echo !_scoreTail!>>visualtests.html
+		echo false>>visualtests_results.json.tmp
+		echo !_scoreString!>>visualtests_results.json.tmp
+		echo !_compareValue!>>visualtests_results.json.tmp
 		echo;>>comparison.report
 	) else (
 		copy /y !_fullPath! !_targetPath!
-		echo !_targetPath!>>visualtests.html
-		echo !_newTestRow!>>visualtests.html
+		echo true>>visualtests_results.json.tmp
+		echo !_scoreString!>>visualtests_results.json.tmp
 		echo !_targetPath!>>newtests.report
 	)
 
-	echo !_rowEnd!>>visualtests.html
+	echo !_endString!>>visualtests_results.json.tmp
 )
 
-set /p _htmlFooter=<visualtests_footer.html
-echo !_htmlFooter!>>visualtests.html
+echo ]}>>visualtests_results.json.tmp
+
+set row=
+for /f %%x in (visualtests_results.json.tmp) do set "row=!row!%%x"
+>visualtests_results.json echo %row%
