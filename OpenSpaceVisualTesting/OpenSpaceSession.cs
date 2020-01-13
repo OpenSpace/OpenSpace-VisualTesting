@@ -27,16 +27,20 @@ namespace OpenSpaceVisualTesting
             // Launch a new instance of OpenSpace
              try
              {
-                    // Create a new session to launch OpenSpace
-                    DesiredCapabilities appCapabilities = new DesiredCapabilities();
-                    appCapabilities.SetCapability("app", OpenSpaceAppId);
-                    appCapabilities.SetCapability("appWorkingDir", OpenSpaceSession.basePath + "bin\\RelWithDebInfo");
-                    string configValues = "ScreenshotUseDate=false;ModuleConfigurations.Server={};ModuleConfigurations.WebBrowser.Enabled=false;ModuleConfigurations.WebGui={};";
-                    string args = "--config \"" + configValues + "Asset='" + asset + "'\"";
-                    appCapabilities.SetCapability("appArguments", args);
-                    LaunchSession = new WindowsDriver<WindowsElement>(new Uri(WindowsApplicationDriverUrl), appCapabilities, TimeSpan.FromMinutes(2));
-                    Assert.IsNotNull(LaunchSession);
-                    currentSession = LaunchSession;
+                // Create a new session to launch OpenSpace
+                DesiredCapabilities appCapabilities = new DesiredCapabilities();
+                appCapabilities.SetCapability("app", OpenSpaceAppId);
+                appCapabilities.SetCapability("appWorkingDir", OpenSpaceSession.basePath + "bin\\RelWithDebInfo");
+                string configValues = "ScreenshotUseDate=false;ModuleConfigurations.Server={};";
+                configValues += "ModuleConfigurations.WebBrowser.Enabled=false;";
+                configValues += "ModuleConfigurations.WebGui={};";
+                configValues += "ModuleConfigurations.GlobeBrowsing.WMSCacheEnabled=true;";
+
+                string args = "--config \"" + configValues + "Asset='" + asset + "'\"";
+                appCapabilities.SetCapability("appArguments", args);
+                LaunchSession = new WindowsDriver<WindowsElement>(new Uri(WindowsApplicationDriverUrl), appCapabilities, TimeSpan.FromMinutes(2));
+                Assert.IsNotNull(LaunchSession);
+                currentSession = LaunchSession;
              }
              catch (Exception Ex)
              {
