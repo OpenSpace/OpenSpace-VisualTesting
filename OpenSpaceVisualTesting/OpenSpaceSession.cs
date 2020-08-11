@@ -36,7 +36,7 @@ namespace OpenSpaceVisualTesting
                 configValues += "ModuleConfigurations.WebGui={};";
                 configValues += "ModuleConfigurations.GlobeBrowsing.WMSCacheEnabled=true;";
 
-                string args = "--config \"" + configValues + "Asset='" + asset + "'\"";
+                string args = "--config \"" + configValues + "Profile='" + asset + "'\"";
                 appCapabilities.SetCapability("appArguments", args);
                 LaunchSession = new WindowsDriver<WindowsElement>(new Uri(WindowsApplicationDriverUrl), appCapabilities, TimeSpan.FromMinutes(2));
                 Assert.IsNotNull(LaunchSession);
