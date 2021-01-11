@@ -7,3 +7,4 @@ OpenSpaceVisualTesting/bin/*
 *.report
 **/result.txt
 **/*.json.tmp
+**/visualtests_results.json

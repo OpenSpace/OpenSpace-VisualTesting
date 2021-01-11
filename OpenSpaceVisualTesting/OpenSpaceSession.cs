@@ -35,6 +35,7 @@ namespace OpenSpaceVisualTesting
                 configValues += "ModuleConfigurations.WebBrowser.Enabled=false;";
                 configValues += "ModuleConfigurations.WebGui={};";
                 configValues += "ModuleConfigurations.GlobeBrowsing.WMSCacheEnabled=true;";
+                configValues += "BypassLauncher=true;";
 
                 string args = "--config \"" + configValues + "Profile='" + asset + "'\"";
                 appCapabilities.SetCapability("appArguments", args);
