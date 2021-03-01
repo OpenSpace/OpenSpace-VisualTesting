@@ -149,12 +149,7 @@ class OSSession:
             os.remove(moveToPath)
         os.rename(tmpPath, moveToPath)
 
-def initialization():
-    print("Run OpenSpaceSession")
-
 if __name__ == "__main__":
-    print("called __main__")
-    initialization()
     ospace = OSSession("default", "~/Desktop/OpenSpace")
     ospace.startOpenSpace()
     time.sleep(30)
