@@ -54,14 +54,14 @@ def runAssetTests():
     for dir in dirs:
         print("Test case " + str(testCaseNum) + "/" + str(numTestCases) + ":")
         processTestDirectory(baseTestDir + "/" + dir, testDirName, baseOsDir)
-        testCaseNum = += 1
+        testCaseNum += 1
 
 def figureOutDirs(testDirName, baseDirVis, baseDirOs):
     solutionDir = os.getcwd()
     sDirIdx = solutionDir.rfind(baseDirVis)
     commonBaseDir = solutionDir[0:sDirIdx]
     openspaceDir = commonBaseDir + "/" + baseDirOs
-    fullOsPathTesting = commonBaseDir + "/" + baseDirVis + "/" + testDirName
+    fullOsPathTesting = commonBaseDir + "/" + baseDirOs + "/" + testDirName
     return fullOsPathTesting, openspaceDir
 
 #Process all files in the directory passed in, recurse on any directories 
@@ -78,7 +78,7 @@ def processTestDirectory(targetDirectory, testDirName, baseOsDir):
     for fe in fileListing:
         print("File entry " + str(feNum) + "/" + str(numFileEntries) + ":")
         processTestFile(targetDirectory, fe, testGroup, baseOsDir)
-        feNum = += 1
+        feNum += 1
 
 #Insert logic for processing foundTestCases files here
 def processTestFile(targetDirectory, path, testGroup, baseOsDir):
