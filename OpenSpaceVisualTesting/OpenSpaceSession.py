@@ -89,7 +89,7 @@ class OSSession:
         self.keyboardKeystroke("quoteleft")
         self.keyboardType(script)
         #Adjust delay according to length of string to type
-        time.sleep(len(script) / 50 + 0.25)
+        time.sleep(len(script) / 10 + 0.25)
         self.keyboardKeystroke("Return")
         time.sleep(0.25)
         self.keyboardKeystroke("quoteleft")

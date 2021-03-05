@@ -42,7 +42,7 @@ def checkForInstalledComponents():
         print("Error: xdotool does not appear to be installed (apt install xdotool)")
         quit(-1)
 
-def runAssetTests():
+def runAssetTests(soloRunOpt):
     baseDirOpenSpace = "OpenSpace"
     baseDirOpenSpaceVisualTesting = "OpenSpaceVisualTesting/OpenSpaceVisualTesting"
     testDirName = "tests/visual"
@@ -52,8 +52,8 @@ def runAssetTests():
     numTestCases = len(dirs)
     testCaseNum = 1
     for dir in dirs:
-        print("Test case " + str(testCaseNum) + "/" + str(numTestCases) + ":")
-        processTestDirectory(baseTestDir + "/" + dir, testDirName, baseOsDir)
+        print("Test case " + str(testCaseNum) + "/" + str(numTestCases) + ": ", end="")
+        processTestDirectory(baseTestDir + "/" + dir, testDirName, baseOsDir, soloRunOpt)
         testCaseNum += 1
 
 def figureOutDirs(testDirName, baseDirVis, baseDirOs):
@@ -66,18 +66,19 @@ def figureOutDirs(testDirName, baseDirVis, baseDirOs):
 
 #Process all files in the directory passed in, recurse on any directories 
 #that are found, and process the files they contain.
-def processTestDirectory(targetDirectory, testDirName, baseOsDir):
+def processTestDirectory(targetDirectory, testDirName, baseOsDir, soloRunOpt):
     idx = targetDirectory.rfind(testDirName) + len(testDirName) + 1
     testGroup = targetDirectory[idx:999]
-    print("In processTestDirectory: ", end="")
+    print("processTestDirectory: ", end="")
     print(targetDirectory)
     fileEntries = pathlib.Path(targetDirectory).glob("*.ostest")
     fileListing = list(fileEntries)
     numFileEntries = len(fileListing)
     feNum = 1
     for fe in fileListing:
-        print("File entry " + str(feNum) + "/" + str(numFileEntries) + ":")
-        processTestFile(targetDirectory, fe, testGroup, baseOsDir)
+        #print("File entry " + str(feNum) + "/" + str(numFileEntries) + ":")
+        if soloRunOpt == "" or fe.name[0:len(soloRunOpt)] == soloRunOpt:
+            processTestFile(targetDirectory, fe, testGroup, baseOsDir)
         feNum += 1
 
 #Insert logic for processing foundTestCases files here
@@ -125,8 +126,12 @@ def processTestFile(targetDirectory, path, testGroup, baseOsDir):
                 navScript = "openspace.navigation.setNavigationState(" + d["value"] + ");"
                 ospace.sendScript(navScript)
             elif d["type"] == "recording":
-                recordingScript = "openspace.sessionRecording.startPlayback('" + GetTestDir()
-                recordingScript += "/" + testGroup + "/" + d["value"] + ".osrecording')"
+                #Create a temporary link to the recording in ${RECORDINGS} dir
+                recordingFilename = d["value"] + ".osrecording"
+                os.symlink(targetDirectory + "/" + recordingFilename, \
+                    baseOsDir + "/recordings/" + recordingFilename)
+                recordingScript = "openspace.sessionRecording.startPlayback('"
+                recordingScript += recordingFilename + "')"
                 ospace.sendScript(recordingScript)
     #ospace.killOpenSpace()
     ospace.quitOpenSpace()
@@ -135,4 +140,8 @@ def processTestFile(targetDirectory, path, testGroup, baseOsDir):
 
 if __name__ == "__main__":
     checkForInstalledComponents()
-    runAssetTests()
+    if len(sys.argv) > 1:
+        runAssetTests(sys.argv[1])
+    else:
+        runAssetTests()
+    quit(0)
