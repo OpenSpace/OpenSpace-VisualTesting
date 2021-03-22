@@ -10,11 +10,19 @@ from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 import subprocess
 import OpenSpaceSession as OSS
 
+#Standalone script usage:
+#  $1 - the name of the OpenSpace install directory to use to run OpenSpace. This is
+#       expected to be further down in the same file path as this dir (see comments below)
+#  [$2] - (optional) is a name prefix used to restrict the testing to a subset of
+#         test files. Any tests in any directory that start with the provided string
+#         will run. To restrict to one test file only, the exact filename would need
+#         to be provided.
+#
 #This script expects to run within the OpenSpaceVisualTesting repo cloned directory
 # structure, and also expects that this repo exists in the same directory as the
 # OpenSpace application repo cloned directory. Example:
 #
-# OpenSpace/
+# ["OpenSpace" | optional custom OS directory name provided]/
 #   apps/
 #   bin/
 #     RelWithDebInfo/ | Release/ | Debug/ (only in Windows?)
@@ -42,8 +50,7 @@ def checkForInstalledComponents():
         print("Error: xdotool does not appear to be installed (apt install xdotool)")
         quit(-1)
 
-def runAssetTests(soloRunOpt):
-    baseDirOpenSpace = "OpenSpace"
+def runAssetTests(baseDirOpenSpace, testSubsetString):
     baseDirOpenSpaceVisualTesting = "OpenSpaceVisualTesting/OpenSpaceVisualTesting"
     testDirName = "tests/visual"
     baseTestDir, baseOsDir = figureOutDirs(testDirName, baseDirOpenSpaceVisualTesting, \
@@ -53,20 +60,23 @@ def runAssetTests(soloRunOpt):
     testCaseNum = 1
     for dir in dirs:
         print("Test case " + str(testCaseNum) + "/" + str(numTestCases) + ": ", end="")
-        processTestDirectory(baseTestDir + "/" + dir, testDirName, baseOsDir, soloRunOpt)
+        whereIsTest = baseTestDir + "/" + dir
+        processTestDirectory(whereIsTest, testDirName, baseOsDir, testSubsetString)
         testCaseNum += 1
 
 def figureOutDirs(testDirName, baseDirVis, baseDirOs):
     solutionDir = os.getcwd()
     sDirIdx = solutionDir.rfind(baseDirVis)
     commonBaseDir = solutionDir[0:sDirIdx]
-    openspaceDir = commonBaseDir + "/" + baseDirOs
-    fullOsPathTesting = commonBaseDir + "/" + baseDirOs + "/" + testDirName
+    #openspaceDir = commonBaseDir + "/" + baseDirOs
+    openspaceDir = baseDirOs
+    #fullOsPathTesting = commonBaseDir + "/" + baseDirOs + "/" + testDirName
+    fullOsPathTesting = "../../OpenSpace/" + testDirName
     return fullOsPathTesting, openspaceDir
 
 #Process all files in the directory passed in, recurse on any directories 
 #that are found, and process the files they contain.
-def processTestDirectory(targetDirectory, testDirName, baseOsDir, soloRunOpt):
+def processTestDirectory(targetDirectory, testDirName, baseOsDir, testSubsetString):
     idx = targetDirectory.rfind(testDirName) + len(testDirName) + 1
     testGroup = targetDirectory[idx:999]
     print("processTestDirectory: ", end="")
@@ -77,7 +87,7 @@ def processTestDirectory(targetDirectory, testDirName, baseOsDir, soloRunOpt):
     feNum = 1
     for fe in fileListing:
         #print("File entry " + str(feNum) + "/" + str(numFileEntries) + ":")
-        if soloRunOpt == "" or fe.name[0:len(soloRunOpt)] == soloRunOpt:
+        if testSubsetString == "" or fe.name[0:len(testSubsetString)] == testSubsetString:
             processTestFile(targetDirectory, fe, testGroup, baseOsDir)
         feNum += 1
 
@@ -98,9 +108,9 @@ def processTestFile(targetDirectory, path, testGroup, baseOsDir):
     time.sleep(30)
     print("AssetTester: Ready to start sending commands to OpenSpace.")
     ospace.focusOpenSpaceWindow()
-    time.sleep(0.1)
+    time.sleep(1.0)
     ospace.toggleHudVisibility()
-    time.sleep(0.1)
+    time.sleep(1.0)
 
     with open(targetDirectory + "/" + scenarioName + ".ostest") as f:
         data = json.load(f)
@@ -140,8 +150,13 @@ def processTestFile(targetDirectory, path, testGroup, baseOsDir):
 
 if __name__ == "__main__":
     checkForInstalledComponents()
-    if len(sys.argv) > 1:
-        runAssetTests(sys.argv[1])
-    else:
-        runAssetTests()
+    if len(sys.argv) == 1:
+        print("Error: Need an absolute path for OpenSpace instance installed directory")
+        quit(-1)
+    openspaceDirName = "OpenSpace"
+    openspaceDirName = sys.argv[1]
+    testSubsetString = ""
+    if len(sys.argv) > 2:
+        testSubsetString = sys.argv[2]
+    runAssetTests(openspaceDirName, testSubsetString)
     quit(0)

@@ -26,7 +26,7 @@ def appendJsonEntry(compList, testName, isNewTest, compareScore):
 
 def writeToVisualTestResultsJsonFile(items):
     with open("visualtests_results.json", 'w') as outfile:
-        json.dump(items, outfile)
+        json.dump({"items":items}, outfile)
 
 def processImageFilesAndProduceReports(targetDirectory):
     imageListing = list(glob("**/" + targetDirectory + "/Result*.png", recursive=True))

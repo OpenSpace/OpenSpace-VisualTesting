@@ -108,10 +108,10 @@ class OSSession:
         cmdString = "xdotool type \"" + string + "\""
         os.system(cmdString)
 
-    #Function that executes a single keypress (specified by 'keyPress' while holding
-    # down the key specified by 'keyHold'
-    def keyboardTypeWithHold(self, keyHold, keyPress):
-        cmdString = "xdotool keydown " + keyHold + " key " + keyPress + " keyup " + keyHold
+    #Function that executes a single keypress (specified by 'kPress' while holding
+    # down the key specified by 'kHold'
+    def keyboardTypeWithHold(self, kHold, kPress):
+        cmdString = "xdotool keydown " + kHold + " key " + kPress + " keyup " + kHold
         os.system(cmdString)
 
     def addAssetFile(self, scenarioGroup, scenarioName):
@@ -136,12 +136,13 @@ class OSSession:
         solutionDir = os.getcwd()
         tmpPath = self.basePath + "/../" + "screenshots/OpenSpace_000000.png"
         if not Path(tmpPath).is_file():
-            print("OSS: Screenshot was not successful. Expected to find '" + tmpPath + "'")
+            print("OSS: Screenshot wasn't successful. Expected to find '" + tmpPath + "'")
             return
         targetDir = solutionDir + "/TargetImages/linux/"
         Path(targetDir).mkdir(parents=True, exist_ok=True)
         if not Path(targetDir).is_dir():
-            print("Target dir for screenshots '" + targetDir + "' was not successfully created.")
+            print("Target dir for screenshots '" + targetDir + \
+                "' was not successfully created.")
             return
         targetFilename = "Result" + scenarioGroup + scenarioName + ".png"
         moveToPath = targetDir + targetFilename
