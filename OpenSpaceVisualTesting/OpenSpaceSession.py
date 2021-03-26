@@ -134,7 +134,7 @@ class OSSession:
         self.keyboardKeystroke("F12")
         time.sleep(10)
         solutionDir = os.getcwd()
-        tmpPath = self.basePath + "/../" + "screenshots/OpenSpace_000000.png"
+        tmpPath = self.basePath + "/../user/screenshots/OpenSpace_000000.png"
         if not Path(tmpPath).is_file():
             print("OSS: Screenshot wasn't successful. Expected to find '" + tmpPath + "'")
             return

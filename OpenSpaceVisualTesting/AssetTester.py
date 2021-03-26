@@ -139,7 +139,7 @@ def processTestFile(targetDirectory, path, testGroup, baseOsDir):
                 #Create a temporary link to the recording in ${RECORDINGS} dir
                 recordingFilename = d["value"] + ".osrecording"
                 os.symlink(targetDirectory + "/" + recordingFilename, \
-                    baseOsDir + "/recordings/" + recordingFilename)
+                    baseOsDir + "/user/recordings/" + recordingFilename)
                 recordingScript = "openspace.sessionRecording.startPlayback('"
                 recordingScript += recordingFilename + "')"
                 ospace.sendScript(recordingScript)
