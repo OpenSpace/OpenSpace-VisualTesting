@@ -138,13 +138,8 @@ class OSSession:
         if not Path(tmpPath).is_file():
             print("OSS: Screenshot wasn't successful. Expected to find '" + tmpPath + "'")
             return
-        targetDir = solutionDir + "/TargetImages/linux/"
-        Path(targetDir).mkdir(parents=True, exist_ok=True)
-        if not Path(targetDir).is_dir():
-            print("Target dir for screenshots '" + targetDir + \
-                "' was not successfully created.")
-            return
-        targetFilename = "Result" + scenarioGroup + scenarioName + ".png"
+        targetDir = solutionDir + "/ResultImages/linux/"
+        targetFilename = scenarioGroup + scenarioName + ".png"
         moveToPath = targetDir + targetFilename
         if os.path.isfile(moveToPath):
             os.remove(moveToPath)

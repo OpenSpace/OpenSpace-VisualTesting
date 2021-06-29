@@ -78,7 +78,7 @@
 		<ul id='same' class='hidden'></ul>
 	</div>
 	<script type="text/javascript">
-		fetch("visualtests_Win64vsLinux_results.json")
+		fetch('./visualtests_Win64vsLinux_results.json')
 		.then(response => response.json())
   		.then(json => {
   			console.log(json)
@@ -92,11 +92,10 @@
 					document.getElementById("new-tests").innerHTML += rowHTML;
 					++newCount;
 				} else {
-					var base = "TargetImages\\";
 					var tail = item.name + ".png";
-					var winSource = base + "win64\\" + "Target" + tail;
-					var linuxSource = base + "linux\\" + "Target" + tail;
-					var differenceSource = base + "Difference" + tail;
+					var winSource = "TargetImages\\win64\\" + "Target" + tail;
+					var linuxSource = "ResultImages\\linux\\" + tail;
+					var differenceSource = "DifferenceImages\\linux\\" + tail;
 					rowHTML += "<div class='row-cell image-cell'><a href='" + winSource;
 					rowHTML += "' target='_blank'><img src='" + winSource + "' /></a></div>";
 					rowHTML += "<div class='row-cell image-cell'><a href='" + linuxSource;
