@@ -4,6 +4,8 @@ import sys
 import os
 import json
 import pathlib
+import time
+import datetime
 from glob import glob
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 
@@ -23,8 +25,8 @@ def compareImage(target, current, diff):
     p = Popen(imgMgck, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
     return p.stdout.read()
 
-def appendJsonEntry(compList, testName, isNewTest, compareScore):
-    compList.append({"name":testName, "new":isNewTest, "score":compareScore})
+def appendJsonEntry(compList, testName, isNewTest, compareScore, dtStr):
+    compList.append({"name":testName, "new":isNewTest, "score":compareScore, "datet":dtStr})
     return compList
 
 def writeToVisualTestResultsJsonFile(items):
@@ -56,7 +58,11 @@ def processImageFilesAndProduceReports(resultDir, targetDir, diffDir, testSubset
             compareValue = str(compareValue.decode()).split(" ")[0]
             writeToReport(comparisonReportFilename, fileNameBase + "\n" \
                 + compareValue + ";\n")
-            items = appendJsonEntry(items, fileNameBase, False, str(compareValue))
+            dt = os.path.getmtime(fileNameLinux)
+            year,month,day,hour,minute,second = time.gmtime(dt)[:-3]
+            dtStr = str(year) + "-" + str(month) + "-" + str(day) + " " + \
+                str(hour) + ":" + str(minute) + ":" + str(second) + " UTC"
+            items = appendJsonEntry(items, fileNameBase, False, str(compareValue), dtStr)
         else:
             if not found_result:
                 print("Could not find result file '" + fileNameLinux + "'.")

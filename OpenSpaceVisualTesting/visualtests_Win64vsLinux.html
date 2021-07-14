@@ -22,6 +22,9 @@
 			position: relative;
 			height: 110;
 		}
+		.date-cell {
+			width:250px;
+		}
 		.score-cell {
 			width:150px;
 		}
@@ -89,6 +92,7 @@
 				rowHTML += "<div class='row-cell name-cell'><p>" + item.name + "</p></div>";
 				if (item.name == true) {
 					rowHTML += "<div class='row-cell score-cell'>NEW</div>";
+					rowHTML += "<div class='row-cell date-cell'>" + item.datet + "</div>";
 					document.getElementById("new-tests").innerHTML += rowHTML;
 					++newCount;
 				} else {
@@ -103,6 +107,7 @@
 					rowHTML += "<div class='row-cell image-cell'><a href='" + differenceSource;
 					rowHTML += "' target='_blank'><img src='" + differenceSource + "' /></a></div>";
 					rowHTML += "<div class='row-cell score-cell'>" + item.score + "</div>";
+					rowHTML += "<div class='row-cell date-cell'>" + item.datet + "</div>";
 				}
 				rowHTML += "</div></li>";
 				if (item.score == 0) {

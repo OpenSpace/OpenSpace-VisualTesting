@@ -3,6 +3,8 @@
 import os
 import json
 import pathlib
+import time
+import datetime
 from glob import glob
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 
@@ -20,8 +22,8 @@ def compareImage(target, current, diff):
     p = Popen(imgMgck, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
     return p.stdout.read()
 
-def appendJsonEntry(compList, testName, isNewTest, compareScore):
-    compList.append({"name":testName, "new":isNewTest, "score":compareScore})
+def appendJsonEntry(compList, testName, isNewTest, compareScore, dtStr):
+    compList.append({"name":testName, "new":isNewTest, "score":compareScore, "datet":dtStr})
     return compList
 
 def writeToVisualTestResultsJsonFile(items):
@@ -47,7 +49,11 @@ def processImageFilesAndProduceReports(targetDirectory):
         else:
             compareValue = str(compareValue.decode())
             writeToReport("newtests.report", targetPath)
-        items = appendJsonEntry(items, testName, isNewTest, str(compareValue))
+        dt = os.path.getmtime(resultPath)
+        year,month,day,hour,minute,second = time.gmtime(dt)[:-3]
+        dtStr = year + "-" + month + "-" + day + " " + \
+            hour + ":" + minute + ":" + second + " UTC"
+        items = appendJsonEntry(items, testName, isNewTest, str(compareValue), dtStr)
     writeToVisualTestResultsJsonFile(items)
 
 if __name__ == "__main__":
