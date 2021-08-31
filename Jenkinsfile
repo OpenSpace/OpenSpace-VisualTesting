@@ -49,10 +49,14 @@ parallel linux_gcc_make: {
       }
       stage('linux-gcc-make/build') {
           def cmakeCompileOptions = moduleCMakeFlags();
-          cmakeCompileOptions += ' -DMAKE_BUILD_TYPE=Release';
-          // Not sure why the linking of OpenSpaceTest takes so long
+          cmakeCompileOptions += ' -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS:STRING="-DGLM_ENABLE_EXPERIMENTAL"'
+          cmakeCompileOptions += ' -DOpenGL_GL_PREFERENCE:STRING=GLVND -DASSIMP_BUILD_MINIZIP=1';
           compileHelper.build(compileHelper.Make(), compileHelper.Gcc(), cmakeCompileOptions, 'OpenSpace', 'build-make');
           compileHelper.recordCompileIssues(compileHelper.Gcc());
+      }
+      stage('linux-gcc-make/img-compare') {
+        sh 'echo $(pwd) > ${IMAGE_TESTING_BASE_PATH}/latestBuild.txt'
+        sh 'while [ 1 ]; do sleep 300; if [ "$(cat ${IMAGE_TESTING_BASE_PATH}/latestBuild.txt)" = "" ]; then break; fi; done'
       }
       stage('linux-gcc-make/test') {
         // testHelper.runUnitTests('build/OpenSpaceTest');
