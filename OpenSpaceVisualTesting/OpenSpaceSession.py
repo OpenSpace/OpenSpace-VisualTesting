@@ -33,8 +33,9 @@ import shlex
 #   OpenSpaceVisualTesting/
 
 class OSSession:
-    def __init__(self, profileCL, baseOsDir):
+    def __init__(self, profileCL, baseOsDir, logFilename):
         self.basePath = baseOsDir
+        self.log = logFilename
         if len(profileCL) == 0:
             self.profile = "default"
         else:
@@ -50,17 +51,25 @@ class OSSession:
         self.runCommand = self.basePath + "/" + self.OpenSpaceAppId + " " + self.configValues
         self.osProcId = 0
 
+    def logMessage(self, message):
+        print(message)
+        lFile = open(self.log, "a+")
+        lFile.write("  " + message + "\n")
+        lFile.close()
+
     def startOpenSpace(self):
         self.osProcId = subprocess.Popen(shlex.split(self.runCommand))
-        print("OSS: Started OpenSpace instance with ID '" + str(self.osProcId.pid) + "'")
+        msg = "Started OpenSpace instance with ID '" + str(self.osProcId.pid) + "' (" \
+            + self.runCommand + ")"
+        self.logMessage(msg)
 
     def killOpenSpace(self):
-        print("OSS: kill OpenSpace instance")
+        self.logMessage("Kill OpenSpace instance")
         os.killpg(os.getpgid(int(self.osProcId.pid)), signal.SIGTERM)
         time.sleep(4)
 
     def quitOpenSpace(self):
-        print("OSS: quit OpenSpace instance")
+        self.logMessage("Quit OpenSpace instance")
         self.focusOpenSpaceWindow()
         self.keyboardKeystroke("Escape")
         time.sleep(4)
@@ -103,10 +112,12 @@ class OSSession:
 
     def keyboardKeystroke(self, key):
         os.system("xdotool key " + key)
+        self.logMessage("Keystroke: " + key)
 
     def keyboardType(self, string):
         cmdString = "xdotool type \"" + string + "\""
         os.system(cmdString)
+        self.logMessage("Keystroke: " + string)
 
     #Function that executes a single keypress (specified by 'kPress' while holding
     # down the key specified by 'kHold'
@@ -136,7 +147,8 @@ class OSSession:
         solutionDir = os.getcwd()
         tmpPath = self.basePath + "/../user/screenshots/OpenSpace_000000.png"
         if not Path(tmpPath).is_file():
-            print("OSS: Screenshot wasn't successful. Expected to find '" + tmpPath + "'")
+            self.logMessage("Screenshot wasn't successful. Expected to find '" \
+                + tmpPath + "'")
             return
         targetDir = solutionDir + "/ResultImages/linux/"
         targetFilename = scenarioGroup + scenarioName + ".png"
@@ -146,7 +158,7 @@ class OSSession:
         os.rename(tmpPath, moveToPath)
 
 if __name__ == "__main__":
-    ospace = OSSession("default", "~/Desktop/OpenSpace")
+    ospace = OSSession("default", "~/Desktop/OpenSpace", "testLog.txt")
     ospace.startOpenSpace()
     time.sleep(30)
     ospace.focusOpenSpaceWindow()

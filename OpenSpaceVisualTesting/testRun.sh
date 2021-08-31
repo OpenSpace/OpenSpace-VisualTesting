@@ -21,41 +21,58 @@ export OPENSPACE_SYNC=${IMAGE_TESTING_BASE_PATH}/sync
 # jenkins will put the path of the directory of its current build (which is
 # different every time) in this flag file
 buildFlag=${IMAGE_TESTING_BASE_PATH}/latestBuild.txt
+logFile="./testLog.txt"
+
+function logMsg
+{
+  datetime="$(date +%Y-%m-%d\ %H:%M:%S)"
+  echo "${datetime}  $1" >> ${logFile}
+}
+
+function errorMsg
+{
+  echo "$1" > /dev/stderr
+  logMsg "$1"
+}
 
 function setUpBuildDirectoryForRun
 {
   builtPath="$1"
   sudo chown -R ${NonRootUser}:${NonRootUser} ${builtPath}
   if [ ! -f ${builtPath}/bin/OpenSpace ]; then
-    echo "OpenSpace executable not found at ${builtPath}/bin" > /dev/stderr
+    errorMsg "OpenSpace executable not found at ${builtPath}/bin"
     exit
   fi
-  ln -s ${IMAGE_TESTING_BASE_PATH}/OpenSpace/sync ${builtPath}/sync
+  if [ -d ${IMAGE_TESTING_BASE_PATH}/OpenSpace/sync ]; then
+    rm -r ${IMAGE_TESTING_BASE_PATH}/OpenSpace/sync
+  fi
+  ln -s ${IMAGE_TESTING_BASE_PATH}/sync ${builtPath}/sync
   #Clear recordings because OpenSpace tests use same recording filenames
-  rm ${builtPath}/user/recordings
+  rm ${builtPath}/user/recordings/* 2>/dev/null
 }
 
 function runAllTests
 {
-  python3 AssetTester.py "$1"
+  python3 AssetTester.py "$1" ${logFile}
   echo; echo "Finished OpenSpace run tests."; echo
+  logMsg "Finished OpenSpace run tests."
 }
 
 function runComparisons
 {
-  echo "Run targetcompareWin64vsLinux.py script"
+  logMsg "Run targetcompareWin64vsLinux.py script"
   python3 targetcompareWin64vsLinux.py
 }
 
 function createFilesystemLinksAtWebServerDirectory
 {
-  echo "Update links for web server directory."
+  logMsg "Update links for web server directory."
   ./linkResultsFromWorkingDir.sh
 }
 
 function clearBuildFlagToSignalTestCompletionToJenkins
 {
-  echo "Clear flag in file '$1' to signal jenkins that test finished."
+  logMsg "Clear flag in file '$1' to signal jenkins that test finished."
   sudo echo "" > $1
 }
 
@@ -66,12 +83,13 @@ function verifyUser
     errMsg="Unfortunately this script needs to run as root in order to access "
     errMsg+="the build directory created by the remote jenkins controller. "
     errMsg+="Run with sudo."
-    echo "${errMsg}" > /dev/stderr
+    errorMsg "${errMsg}"
     exit
   fi
 }
 
 ###############################################################################
+rm ${logFile}
 verifyUser
 echo "Waiting for Jenkins build-completion trigger..."
 while [ 1 ]; do
