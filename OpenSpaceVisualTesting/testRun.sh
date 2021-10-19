@@ -22,11 +22,18 @@ export OPENSPACE_SYNC=${IMAGE_TESTING_BASE_PATH}/sync
 # different every time) in this flag file
 buildFlag=${IMAGE_TESTING_BASE_PATH}/latestBuild.txt
 logFile="./testLog.txt"
+imageTestingSubdirInOs="tests/visual"
 
 function logMsg
 {
   datetime="$(date +%Y-%m-%d\ %H:%M:%S)"
   echo "${datetime}  $1" >> ${logFile}
+}
+
+function logAndDisplayMsg
+{
+  echo "${1}"
+  logMsg "${1}"
 }
 
 function errorMsg
@@ -51,11 +58,31 @@ function setUpBuildDirectoryForRun
   rm ${builtPath}/user/recordings/* 2>/dev/null
 }
 
+function listAllTestFiles
+{
+  baseOsDir="$1"
+  testingDir="${baseOsDir}/${imageTestingSubdirInOs}"
+  allTestsList="$(find "${testingDir}" -name \*\.ostest)"
+  pathLen=${#testingDir}
+  echo "${allTestsList}" | while read line; do
+    echo "${line:pathLen+1:999}"
+  done
+}
+
 function runAllTests
 {
-  python3 AssetTester.py "$1" ${logFile}
-  echo; echo "Finished OpenSpace run tests."; echo
-  logMsg "Finished OpenSpace run tests."
+  baseOsDir="$1"
+  IFS=$'\r\n' fullTestList=($(echo "$2"))
+  numTests=${#fullTestList[@]}
+  for ((i=0; i<numTests; i++)); do
+    logAndDisplayMsg "Starting OpenSpace test '${fullTestList[i]}'."
+    testGroup="${fullTestList[i]%/*}"
+    thisTest="${fullTestList[i]##*/}"
+    python3 AssetTester.py "${baseOsDir}" "${imageTestingSubdirInOs}" "${testGroup}" \
+      "${thisTest}" "$3"
+    logAndDisplayMsg "Finished OpenSpace test '${thisTest}'."
+  done
+  logAndDisplayMsg "Finished all OpenSpace tests."
 }
 
 function runComparisons
@@ -88,19 +115,38 @@ function verifyUser
   fi
 }
 
-###############################################################################
-rm ${logFile}
+function executeTests
+{
+  openspaceDir="$1"
+  setUpBuildDirectoryForRun "${openspaceDir}"
+  allTestsListed="$(listAllTestFiles ${openspaceDir})"
+  runAllTests "${openspaceDir}"  "${allTestsListed}" "${logFile}"
+  runComparisons
+  createFilesystemLinksAtWebServerDirectory
+}
+
+##########################################################################################
+if [ -f ${logFile} ]; then
+  rm ${logFile}
+fi
 verifyUser
-echo "Waiting for Jenkins build-completion trigger..."
-while [ 1 ]; do
-  jenkinsBuildPath="$(sudo cat ${buildFlag})"
-  if [ "${jenkinsBuildPath}" != "" ]; then
-    setUpBuildDirectoryForRun "${jenkinsBuildPath}"
-    runAllTests "${jenkinsBuildPath}"
-    runComparisons
-    createFilesystemLinksAtWebServerDirectory
-    clearBuildFlagToSignalTestCompletionToJenkins ${buildFlag}
-    echo "Continuing to wait for next Jenkins build-completion trigger..."
-  fi
-  sleep 30
-done
+
+#Optional arg $1 makes it do a manual run on the provided OpenSpace installation dir,
+#instead of waiting for the Jenkins build trigger
+if [ "$1" != "" ] && [ -d $1 ]; then
+  echo "Running manual test on OpenSpace installation $1."
+  executeTests "$1"
+else
+  echo "Waiting for Jenkins build-completion trigger..."
+  while [ 1 ]; do
+    jenkinsBuildPath="$(sudo cat ${buildFlag})"
+    if [ "${jenkinsBuildPath}" != "" ]; then
+      executeTests "${jenkinsBuildPath}"
+      clearBuildFlagToSignalTestCompletionToJenkins ${buildFlag}
+      echo "Continuing to wait for next Jenkins build-completion trigger..."
+    fi
+    sleep 10
+  done
+fi
+
+

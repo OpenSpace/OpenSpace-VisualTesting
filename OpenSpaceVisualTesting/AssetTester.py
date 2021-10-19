@@ -90,15 +90,13 @@ def processTestDirectory(targetDirectory, testDirName, baseOsDir, testSubsetStri
         feNum += 1
 
 #Insert logic for processing foundTestCases files here
-def processTestFile(targetDirectory, path, testGroup, baseOsDir, log):
-    logMessage(log, "Located in " + targetDirectory)
-    logMessage(log, "Starting Test file '" + path.name + "'")
-    numSlashes = path.name.count("/")
-    if numSlashes > 0:
-        path.name = path.name[path.name.rfind("/")]
-    scenarioName = path.name[0:path.name.find(".ostest")]
-    logMessage(log, "testName '" + testGroup + "." + scenarioName + "'")
-    logMessage(log, "Starting asset '" + testGroup + "'.")
+def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log):
+    fullTestDir = baseOsDir + "/" + testOffsetDir + "/" + testGroup
+    logMessage(log, "Located in: " + fullTestDir)
+    logString = "Starting Test file '" + testFilename + "'"
+    if len(testGroup) > 0:
+        logString += " in group '" + testGroup + "'"
+    logMessage(log, logString)
 
     ospace = OSS.OSSession(testGroup, baseOsDir + "/bin", log)
     logMessage(log, "AssetTester: OpenSpace initialized")
@@ -110,18 +108,22 @@ def processTestFile(targetDirectory, path, testGroup, baseOsDir, log):
     ospace.toggleHudVisibility()
     time.sleep(1.0)
 
-    with open(targetDirectory + "/" + scenarioName + ".ostest") as f:
+    with open(fullTestDir + "/" + testFilename) as f:
         data = json.load(f)
         for d in data:
             time.sleep(0.25)
+            logMessage(log, "AssetTester: ostest parser found type '" + d["type"] + \
+                "' with value '" + d["value"] + "'.")
             if d["type"] == "script":
                 ospace.sendScript(d["value"])
             elif d["type"] == "wait":
                 time.sleep(int(d["value"]))
             elif d["type"] == "screenshot":
                 if len(d["value"]) < 1:
-                    d["value"] = scenarioName
-                ospace.moveScreenShot(testGroup, d["value"])
+                    shotName = testFilename[0:len(testFilename) - 7]
+                else:
+                    shotName = d["value"]
+                ospace.moveScreenShot(testGroup, shotName)
             elif d["type"] == "time":
                 timeScript = "openspace.time.setTime(\"" + d["value"] + "\");"
                 ospace.sendScript(timeScript)
@@ -136,30 +138,53 @@ def processTestFile(targetDirectory, path, testGroup, baseOsDir, log):
             elif d["type"] == "recording":
                 #Create a temporary link to the recording in ${RECORDINGS} dir
                 recordingFilename = d["value"] + ".osrecording"
-                os.symlink(targetDirectory + "/" + recordingFilename, \
+                os.symlink(fullTestDir + "/" + recordingFilename, \
                     baseOsDir + "/user/recordings/" + recordingFilename)
-                recordingScript = "openspace.sessionRecording.startPlayback('"
-                recordingScript += recordingFilename + "')"
+                recordingScript = "openspace.sessionRecording.startPlayback('" + \
+                    recordingFilename + "')"
                 ospace.sendScript(recordingScript)
+            else:
+                logMessage(log, "AssetTester: unhandled ostest entry of type '" + \
+                    d["type"] + "' with value '" + d["value"] + "'.")
+    logMessage(log, "Done parsing .ostest entries.")
     #ospace.killOpenSpace()
     ospace.quitOpenSpace()
+    time.sleep(5)
+    #Kill in case the quit command wasn't processed
+    #ospace.killOpenSpace()
     logMessage(log, "Processed test '" + path.name + "'.")
     time.sleep(10)
 
 if __name__ == "__main__":
     checkForInstalledComponents()
     if len(sys.argv) == 1:
-        print("Error: Need an absolute path for OpenSpace instance installed directory" \
-            + "as arg 1")
+        print("Error: Need a valid OpenSpace base directory as arg 1")
         quit(-1)
     elif len(sys.argv) == 2:
-        print("Error: Need a path to a log file as arg 2")
+        print("Error: Need a valid test directory within base dir as arg 2")
         quit(-1)
-    openspaceDirName = sys.argv[1]
-    logFilename = sys.argv[2]
+    elif len(sys.argv) == 3:
+        print("Error: Need a valid test group name/dir as arg 3")
+        quit(-1)
+    elif len(sys.argv) == 4:
+        print("Error: Need a valid .ostest file to run as arg 4")
+        quit(-1)
+    elif len(sys.argv) == 5:
+        print("Error: Need a path to a log file as arg 5")
+        quit(-1)
+
+    baseOsDir = sys.argv[1]
+    testOffsetDir = sys.argv[2]
+    testGroup = sys.argv[3]
+    testFilename = sys.argv[4]
+    if testFilename[-7::] != ".ostest":
+        print("Error: Need a valid .ostest file to run as arg 2")
+        quit(-1)
+    logFilename = sys.argv[5]
     checkForProperDirectories(logFilename)
-    testSubsetString = ""
-    if len(sys.argv) > 3:
-        testSubsetString = sys.argv[3]
-    runAssetTests(openspaceDirName, logFilename, testSubsetString)
+    #testSubsetString = ""
+    #if len(sys.argv) > 3:
+    #    testSubsetString = sys.argv[3]
+    #runAssetTests(openspaceTestName, logFilename, testSubsetString)
+    processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, logFilename)
     quit(0)

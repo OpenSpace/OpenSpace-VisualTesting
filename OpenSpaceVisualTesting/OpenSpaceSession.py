@@ -140,6 +140,8 @@ class OSSession:
         time.sleep(1)
 
     def moveScreenShot(self, scenarioGroup, scenarioName):
+        self.logMessage("move screenshot group/name :" + scenarioGroup + "/" \
+            + scenarioName)
         time.sleep(1)
         #self.keyboardType("openspace.takeScreenshot();")
         self.keyboardKeystroke("F12")
@@ -156,6 +158,8 @@ class OSSession:
         if os.path.isfile(moveToPath):
             os.remove(moveToPath)
         os.rename(tmpPath, moveToPath)
+        self.logMessage("Moved screenshot: '" + targetFilename + "' to '" \
+            + moveToPath + "'")
 
 if __name__ == "__main__":
     ospace = OSSession("default", "~/Desktop/OpenSpace", "testLog.txt")
