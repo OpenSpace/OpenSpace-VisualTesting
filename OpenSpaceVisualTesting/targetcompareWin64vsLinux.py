@@ -43,7 +43,8 @@ def processImageFilesAndProduceReports(resultDir, targetDir, diffDir, testSubset
     for resultPath in imageListingWinTargets:
         fileNameBase = pathlib.Path(os.path.basename(resultPath)).stem
         fileNameBase = fileNameBase.replace("Target", "")
-        if testSubset != "" and fileNameBase[0:len(testSubset)] != testSubset:
+        print(fileNameBase[0:len(testSubset)])
+        if testSubset != "" and fileNameBase[0:len(testSubset)] != testSubset.replace("/", ""):
             continue
         fileNameWin = winDir + "Target" + fileNameBase + ".png"
         fileNameLinux = linuxDir + fileNameBase + ".png"
@@ -51,7 +52,6 @@ def processImageFilesAndProduceReports(resultDir, targetDir, diffDir, testSubset
         compareValue = b""
         found_target = pathlib.Path(fileNameWin).exists()
         found_result = pathlib.Path(fileNameLinux).exists()
-        print("File '" + fileNameBase + "':")
         if found_target and found_result:
             print("Comparing '" + fileNameLinux + "' against win64 target '" + fileNameWin + "'.")
             compareValue = compareImage(fileNameWin, fileNameLinux, fileNameDiff)
@@ -69,7 +69,9 @@ def processImageFilesAndProduceReports(resultDir, targetDir, diffDir, testSubset
             if not found_target:
                 print("Could not find target file '" + fileNameWin + "'.")
         print("")
-    writeToVisualTestResultsJsonFile(items)
+    if testSubset == "":
+        #Only write json results if all tests were run
+        writeToVisualTestResultsJsonFile(items)
 
 if __name__ == "__main__":
     if pathlib.Path(comparisonReportFilename).exists():

@@ -2,10 +2,6 @@
 src=/home/openspace/Desktop/OpenSpaceVisualTesting/OpenSpaceVisualTesting
 tgt=/var/www/html/vis
 
-function doCopyFiles
-{
-  cp ${src}/$1 ${tgt}/$1
-}
 
 #Creates soft links for .png images in a relative path
 # This path must exist in both $src and $tgt

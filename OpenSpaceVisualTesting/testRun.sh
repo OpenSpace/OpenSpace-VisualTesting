@@ -87,8 +87,13 @@ function runAllTests
 
 function runComparisons
 {
-  logMsg "Run targetcompareWin64vsLinux.py script"
-  python3 targetcompareWin64vsLinux.py
+  if [ "$1" = "" ]; then
+    logMsg "Run targetcompareWin64vsLinux.py script on all tests"
+    python3 targetcompareWin64vsLinux.py
+  else
+    logMsg "Run targetcompareWin64vsLinux.py script on test '$1'"
+    python3 targetcompareWin64vsLinux.py "$1"
+  fi
 }
 
 function createFilesystemLinksAtWebServerDirectory
@@ -119,9 +124,14 @@ function executeTests
 {
   openspaceDir="$1"
   setUpBuildDirectoryForRun "${openspaceDir}"
-  allTestsListed="$(listAllTestFiles ${openspaceDir})"
-  runAllTests "${openspaceDir}"  "${allTestsListed}" "${logFile}"
-  runComparisons
+  if [ "$2" = "" ]; then
+    allTestsListed="$(listAllTestFiles ${openspaceDir})"
+    runAllTests "${openspaceDir}" "${allTestsListed}" "${logFile}"
+    runComparisons
+  else
+    runAllTests "${openspaceDir}" "$2" "${logFile}"
+    runComparisons "$2"
+  fi
   createFilesystemLinksAtWebServerDirectory
 }
 
@@ -134,8 +144,19 @@ verifyUser
 #Optional arg $1 makes it do a manual run on the provided OpenSpace installation dir,
 #instead of waiting for the Jenkins build trigger
 if [ "$1" != "" ] && [ -d $1 ]; then
-  echo "Running manual test on OpenSpace installation $1."
-  executeTests "$1"
+  if [ "$2" != "" ]; then
+    manualTestFile=$1/${imageTestingSubdirInOs}/$2
+    if [ -f ${manualTestFile} ]; then
+      logAndDisplayMsg "Running manual test on OpenSpace installation $1 (test $2)."
+      executeTests "$1" "$2"
+    else
+      logAndDisplayMsg "Error: cannot find specified test file ${manualTestFile}."
+      exit
+    fi
+  else
+    logAndDisplayMsg "Running manual test on OpenSpace installation $1 (all tests)."
+    executeTests "$1"
+  fi
 else
   echo "Waiting for Jenkins build-completion trigger..."
   while [ 1 ]; do
@@ -148,5 +169,4 @@ else
     sleep 10
   done
 fi
-
 
