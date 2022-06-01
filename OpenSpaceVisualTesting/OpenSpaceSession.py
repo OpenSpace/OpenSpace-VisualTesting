@@ -68,11 +68,27 @@ class OSSession:
         os.killpg(os.getpgid(int(self.osProcId.pid)), signal.SIGTERM)
         time.sleep(4)
 
+    def isOpenSpaceRunning(self):
+        pgid = os.getpgid(int(self.osProcId.pid))
+        if pgid == self.osProcId.pid:
+            return True
+        else:
+            self.logMessage("OpenSpace instance is not running")
+            return False
+
     def quitOpenSpace(self):
+        quitRetries = 0
         self.logMessage("Quit OpenSpace instance")
         self.focusOpenSpaceWindow()
         self.keyboardKeystroke("Escape")
-        time.sleep(4)
+        time.sleep(8)
+        while isOpenSpaceRunning():
+            killOpenSpace()
+            quitRetries += 1
+            if quitRetries > 3:
+                self.logMessage("Failing to force-quit OpenSpace instance")
+                quit(-2)
+        self.logMessage("Confirmed that OpenSpace instance successfully quit")
 
     def toggleHudVisibility(self):
         self.keyboardTypeWithHold("shift", "Tab")
