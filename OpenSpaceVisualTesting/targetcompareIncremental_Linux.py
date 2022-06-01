@@ -9,7 +9,7 @@ import datetime
 from glob import glob
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 
-comparisonReportFilename = "comparisonWin64vsLinux.report"
+comparisonReportFilename = "comparisonIncrementalLinux.report"
 
 def writeToReport(filename, s):
     try:
@@ -30,13 +30,13 @@ def appendJsonEntry(compList, testName, isNewTest, compareScore, dtStr):
     return compList
 
 def writeToVisualTestResultsJsonFile(items):
-    with open("visualtests_Win64vsLinux_results.json", 'w') as outfile:
+    with open("visualtests_IncrementalLinux_results.json", 'w') as outfile:
         json.dump({"items":items}, outfile)
 
 def processImageFilesAndProduceReports(resultDir, targetDir, diffDir, testSubset):
-    targetDir = targetDir + "/win64/"
+    targetDir = targetDir + "/linux/"
     resultDir = resultDir + "/linux/"
-    diffDir = diffDir + "/win64vsLinux/"
+    diffDir = diffDir + "/linux/"
     imageListingTargets = list(glob("**/" + targetDir + "/Target*.png", \
         recursive=True))
     items = []
@@ -53,7 +53,8 @@ def processImageFilesAndProduceReports(resultDir, targetDir, diffDir, testSubset
         found_target = pathlib.Path(fileNameTarget).exists()
         found_result = pathlib.Path(fileNameResult).exists()
         if found_target and found_result:
-            print("Comparing '" + fileNameResult + "' against win64 target '" + fileNameTarget + "'.")
+            print("Comparing '" + fileNameResult + "' against prev linux target '"
+                  + fileNameTarget + "'.")
             compareValue = compareImage(fileNameTarget, fileNameResult, fileNameDiff)
             compareValue = str(compareValue.decode()).split(" ")[0]
             writeToReport(comparisonReportFilename, fileNameBase + "\n" \

@@ -30,8 +30,9 @@ function makePngImageLinks
 #Clean up first
 #rm ${tgt}/*.html
 #rm ${tgt}/*.json
-makePngImageLinks TargetImages
+#makePngImageLinks TargetImages
 makePngImageLinks TargetImages/linux
 makePngImageLinks TargetImages/win64
 makePngImageLinks ResultImages/linux
+makePngImageLinks DifferenceImages/win64vsLinux
 makePngImageLinks DifferenceImages/linux

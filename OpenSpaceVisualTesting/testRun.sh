@@ -89,11 +89,11 @@ function runComparisons
 {
   if [ "$1" = "" ]; then
     logMsg "Run targetcompareWin64vsLinux.py script on all tests"
-    python3 targetcompareWin64vsLinux.py
   else
     logMsg "Run targetcompareWin64vsLinux.py script on test '$1'"
-    python3 targetcompareWin64vsLinux.py "$1"
   fi
+  python3 targetcompareWin64vsLinux.py "$1"
+  python3 targetcompareIncrementalLinux.py "$1"
 }
 
 function createFilesystemLinksAtWebServerDirectory
