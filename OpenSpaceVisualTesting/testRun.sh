@@ -13,6 +13,21 @@
 #root.
 #Set environment variable OPENSPACE_SYNC to a local dir that already has the
 #necessary data
+#
+# USAGE:
+#   sudo testRun.sh [-d OpenSpaceInstallDir] [-t SpecificTestName]
+#
+#   The normal mode runs without any options, finding the latest Jenkins build
+#     and running all test cases that it contains. After completion, it will bo
+#     back to looping and waiting for the next build which will re-trigger the
+#     full process of running the tests and image comparisons
+#   If -d option is used followed by a path, then the instance of OpenSpace
+#     at that location (runs bin/OpenSpace from there) will run instead of
+#     using the latest jenkins build of OpenSpace. After this the script will
+#     finish.
+#   If -t option is used followed by a valid relative path to an .ostest file,
+#     then only that test will run. After this the script will finish.
+
 IMAGE_TESTING_BASE_PATH=/home/openspace/Desktop
 NonRootUser=openspace
 export OPENSPACE_SYNC=${IMAGE_TESTING_BASE_PATH}/sync
@@ -141,23 +156,61 @@ if [ -f ${logFile} ]; then
 fi
 verifyUser
 
-#Optional arg $1 makes it do a manual run on the provided OpenSpace installation dir,
-#instead of waiting for the Jenkins build trigger
-if [ "$1" != "" ] && [ -d $1 ]; then
-  if [ "$2" != "" ]; then
-    manualTestFile=$1/${imageTestingSubdirInOs}/$2
-    if [ -f ${manualTestFile} ]; then
-      logAndDisplayMsg "Running manual test on OpenSpace installation $1 (test $2)."
-      executeTests "$1" "$2"
-    else
-      logAndDisplayMsg "Error: cannot find specified test file ${manualTestFile}."
-      exit
-    fi
-  else
-    logAndDisplayMsg "Running manual test on OpenSpace installation $1 (all tests)."
-    executeTests "$1"
+installationDir=""
+testName=""
+CustomDir="false"
+CustomTest="false"
+LoopTesting="false"
+for i in "$@"; do
+  case $i in
+    -d)
+      CustomDir="true"
+      ;;
+    -t)
+      CustomTest="true"
+      ;;
+    *)
+      if [ $CustomDir = "true" ]; then
+        installationDir=${i}
+        CustomDir="false"
+      elif [ $CustomTest = "true" ]; then
+        testName=${i}
+        CustomTest="false"
+      fi
+      ;;
+    -*|--*)
+      echo "Unknown option $i"
+      exit 1
+      ;;
+  esac
+done
+
+#Determine which installation directory for OpenSpace to run
+if [ "${installationDir}" = "" ]; then
+  jenkinsBuildPath="$(sudo cat ${buildFlag})"
+  if [ "${jenkinsBuildPath}" != "" ]; then
+    installationDir="${jenkinsBuildPath}"
   fi
 else
+  logAndDisplayMsg "Running test(s) on OpenSpace installation at ${installationDir}."
+fi
+
+#Verify custom test directory to run (if specified)
+if [ "${testName}" != "" ]; then
+  testName=${installationDir}/${imageTestingSubdirInOs}/${testName}
+  if [ -f ${testName} ]; then
+    logAndDisplayMsg "Running manual test on OpenSpace installation (test ${testName})."
+  else
+    logAndDisplayMsg "Error: cannot find specified test file ${testName}."
+    exit
+  fi
+fi
+
+if [ ${installationDir}!="" ] || [ ${testName}!="" ]; then
+  #Run a single test if a custom directory or specific test was named
+  executeTests "${installationDir}" "${testName}"
+else
+  #Loop to wait for Jenkins trigger to run tests
   echo "Waiting for Jenkins build-completion trigger..."
   while [ 1 ]; do
     jenkinsBuildPath="$(sudo cat ${buildFlag})"

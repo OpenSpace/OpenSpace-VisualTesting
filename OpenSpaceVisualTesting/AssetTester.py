@@ -1,14 +1,17 @@
 #!/usr/bin/python3
 
-import sys
-import os
-import time
+import asyncio
+from concurrent.futures import TimeoutError
+from glob import glob
 import json
+import os
+import sys
+import time
 import pathlib
 from pathlib import Path
-from glob import glob
-from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 import subprocess
+from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
+import websockets
 import OpenSpaceSession as OSS
 
 #Standalone script usage:
@@ -90,7 +93,7 @@ def processTestDirectory(targetDirectory, testDirName, baseOsDir, testSubsetStri
         feNum += 1
 
 #Insert logic for processing foundTestCases files here
-def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log):
+async def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log):
     fullTestDir = baseOsDir + "/" + testOffsetDir + "/" + testGroup
     logMessage(log, "Located in: " + fullTestDir)
     logString = "Starting Test file '" + testFilename + "'"
@@ -101,7 +104,25 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log):
     ospace = OSS.OSSession(testGroup, baseOsDir + "/bin", log)
     logMessage(log, "AssetTester: OpenSpace initialized")
     ospace.startOpenSpace()
-    time.sleep(30)
+    time.sleep(15)
+    websocket_url = "ws://localhost:4682"
+    #ws = websockets.connect(websocket_resource_url)
+    #waitMsg = json.dumps({"topic": 4,
+    #                      "type": "subscribe",
+    #                      "payload": {
+    #                          "event": "start_subscription",
+    #                          "property": "Scene.Earth.ShowDebugSphere"
+    #                      }
+    #                    })
+    #ws.send(waitMsg)
+    timeout1 = 120
+    try:
+        cxn = await asyncio.wait_for(ws = websockets.connects(websocket_url), timeout=timeout1)
+    except TimeoutError as e:
+        logMessage(log, "AssetTester: Failed to successfully start OpenSpace.")
+        ospace.quitOpenSpace()
+        return
+
     logMessage(log, "AssetTester: Ready to start sending commands to OpenSpace.")
     ospace.focusOpenSpaceWindow()
     time.sleep(1.0)
@@ -153,9 +174,10 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log):
     #Kill in case the quit command wasn't processed
     #ospace.killOpenSpace()
     logMessage(log, "Processed test '" + path.name + "'.")
-    time.sleep(10)
+    time.sleep(5)
 
 if __name__ == "__main__":
+    assert sys.version_info >= (3, 5), "Script requires Python 3.5+."
     checkForInstalledComponents()
     if len(sys.argv) == 1:
         print("Error: Need a valid OpenSpace base directory as arg 1")
@@ -186,5 +208,5 @@ if __name__ == "__main__":
     #if len(sys.argv) > 3:
     #    testSubsetString = sys.argv[3]
     #runAssetTests(openspaceTestName, logFilename, testSubsetString)
-    processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, logFilename)
+    asyncio.run(processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, logFilename))
     quit(0)
