@@ -135,17 +135,26 @@ function verifyUser
   fi
 }
 
+#Run the test(s) using the specified OpenSpace installation directory
+# USAGE:
+# $1 - Full path to the OpenSpace directory to be used for the test
+#      (the executable is located at bin/OpenSpace relative to this path)
+# [$2] - Optional relative path to the specific test file to run. OpenSpace
+#        will only run once with this test. The path that this is relative to is
+#        tests/visual/ in the base OpenSpace directory (not this OpenSpaceVisualTesting
+#        repository directory). The path format is:  testFolder/testName.ostest
 function executeTests
 {
   openspaceDir="$1"
+  testRelPath="$2"
   setUpBuildDirectoryForRun "${openspaceDir}"
-  if [ "$2" = "" ]; then
+  if [ "${testRelPath}" = "" ]; then
     allTestsListed="$(listAllTestFiles ${openspaceDir})"
     runAllTests "${openspaceDir}" "${allTestsListed}" "${logFile}"
     runComparisons
   else
-    runAllTests "${openspaceDir}" "$2" "${logFile}"
-    runComparisons "$2"
+    runAllTests "${openspaceDir}" "${testRelPath}" "${logFile}"
+    runComparisons "${testRelPath}"
   fi
   createFilesystemLinksAtWebServerDirectory
 }
@@ -197,11 +206,11 @@ fi
 
 #Verify custom test directory to run (if specified)
 if [ "${testName}" != "" ]; then
-  testName=${installationDir}/${imageTestingSubdirInOs}/${testName}
-  if [ -f ${testName} ]; then
+  testPath=${installationDir}/${imageTestingSubdirInOs}/${testName}
+  if [ -f ${testPath} ]; then
     logAndDisplayMsg "Running manual test on OpenSpace installation (test ${testName})."
   else
-    logAndDisplayMsg "Error: cannot find specified test file ${testName}."
+    logAndDisplayMsg "Error: cannot find specified test file at ${testPath}."
     exit
   fi
 fi

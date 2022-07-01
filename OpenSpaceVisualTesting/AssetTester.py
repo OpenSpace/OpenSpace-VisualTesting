@@ -95,8 +95,8 @@ def processTestDirectory(targetDirectory, testDirName, baseOsDir, testSubsetStri
 #Insert logic for processing foundTestCases files here
 async def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log):
     fullTestDir = baseOsDir + "/" + testOffsetDir + "/" + testGroup
-    logMessage(log, "Located in: " + fullTestDir)
-    logString = "Starting Test file '" + testFilename + "'"
+    logMessage(log, "AssetTester: Located in: " + fullTestDir)
+    logString = "AssetTester: Starting Test file '" + testFilename + "'"
     if len(testGroup) > 0:
         logString += " in group '" + testGroup + "'"
     logMessage(log, logString)
@@ -117,7 +117,7 @@ async def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log
     #ws.send(waitMsg)
     timeout1 = 120
     try:
-        cxn = await asyncio.wait_for(ws = websockets.connects(websocket_url), timeout=timeout1)
+        cxn = await asyncio.wait_for(websockets.connect(websocket_url), timeout=timeout1)
     except TimeoutError as e:
         logMessage(log, "AssetTester: Failed to successfully start OpenSpace.")
         ospace.quitOpenSpace()
