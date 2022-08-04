@@ -1,12 +1,12 @@
 #!/bin/bash
 
 #This is the main polling script for the image comparison tests. This script
-#needs to run as su ('sudo testRun.sh'), and stay running continuously. It
-#does the work of running the image comparison python scripts, rather than
-#having jenkins do this. The main reason for this is that jenkins is so far
-#unable to start OpenSpace with X window support (graphics). This current
+#needs to stay running continuously. It does the work of running the image
+#comparison python scripts, rather than having jenkins do this.
+#The main reason for this is that jenkins is so far unable to start
+#OpenSpace with X window support (graphics). This current
 #method only requires jenkins to set its current build directory at the
-#location specified by IMAGE_TESTING_BASE_PATH. This variable needs to match
+#location specified by ImageTestingBasePath. This variable needs to match
 #the "exported" environment variable of the same name that is configured in
 #this node's settings on the Jenkins master.
 #Set NonRootUser to normal username, to prevent problems running OpenSpace as
@@ -15,7 +15,7 @@
 #necessary data
 #
 # USAGE:
-#   sudo testRun.sh [-d OpenSpaceInstallDir] [-t SpecificTestName]
+#   testRun.sh [-d OpenSpaceInstallDir] [-t SpecificTestName]
 #
 #   The normal mode runs without any options, finding the latest Jenkins build
 #     and running all test cases that it contains. After completion, it will bo
@@ -28,14 +28,13 @@
 #   If -t option is used followed by a valid relative path to an .ostest file,
 #     then only that test will run. After this the script will finish.
 
-IMAGE_TESTING_BASE_PATH=/home/openspace/Desktop
+ImageTestingBasePath=/home/openspace/Desktop
 NonRootUser=openspace
-export OPENSPACE_SYNC=${IMAGE_TESTING_BASE_PATH}/sync
 
 #buildFlag is a file that is empty when idle. When a jenkins build is triggered,
 # jenkins will put the path of the directory of its current build (which is
 # different every time) in this flag file
-buildFlag=${IMAGE_TESTING_BASE_PATH}/latestBuild.txt
+buildFlag=${ImageTestingBasePath}/latestBuild.txt
 logFile="./testLog.txt"
 imageTestingSubdirInOs="tests/visual"
 
@@ -60,15 +59,18 @@ function errorMsg
 function setUpBuildDirectoryForRun
 {
   builtPath="$1"
-  sudo chown -R ${NonRootUser}:${NonRootUser} ${builtPath}
+  chown -R ${NonRootUser}:${NonRootUser} ${builtPath}
   if [ ! -f ${builtPath}/bin/OpenSpace ]; then
     errorMsg "OpenSpace executable not found at ${builtPath}/bin"
     exit
   fi
-  if [ -d ${IMAGE_TESTING_BASE_PATH}/OpenSpace/sync ]; then
-    rm -r ${IMAGE_TESTING_BASE_PATH}/OpenSpace/sync
+  if [ ${CustomSync} = "false" ]; then
+    export OPENSPACE_SYNC=${ImageTestingBasePath}/sync
+    if [ -d ${ImageTestingBasePath}/OpenSpace/sync ]; then
+      rm -r ${ImageTestingBasePath}/OpenSpace/sync
+    fi
+    ln -s ${ImageTestingBasePath}/sync ${builtPath}/sync
   fi
-  ln -s ${IMAGE_TESTING_BASE_PATH}/sync ${builtPath}/sync
   #Clear recordings because OpenSpace tests use same recording filenames
   rm ${builtPath}/user/recordings/* 2>/dev/null
 }
@@ -163,20 +165,28 @@ function executeTests
 if [ -f ${logFile} ]; then
   rm ${logFile}
 fi
-verifyUser
+#verifyUser
 
 installationDir=""
 testName=""
 CustomDir="false"
+CustomSync="false"
 CustomTest="false"
+CustomUser="false"
 LoopTesting="false"
 for i in "$@"; do
   case $i in
     -d)
       CustomDir="true"
       ;;
+    -s)
+      CustomSync="true"
+      ;;
     -t)
       CustomTest="true"
+      ;;
+    -u)
+      CustomUser="true"
       ;;
     *)
       if [ $CustomDir = "true" ]; then
@@ -185,6 +195,9 @@ for i in "$@"; do
       elif [ $CustomTest = "true" ]; then
         testName=${i}
         CustomTest="false"
+      elif [ $CustomUser = "true" ]; then
+        NonRootUser=${i}
+        CustomUser="false"
       fi
       ;;
     -*|--*)
@@ -196,7 +209,7 @@ done
 
 #Determine which installation directory for OpenSpace to run
 if [ "${installationDir}" = "" ]; then
-  jenkinsBuildPath="$(sudo cat ${buildFlag})"
+  jenkinsBuildPath="$(cat ${buildFlag})"
   if [ "${jenkinsBuildPath}" != "" ]; then
     installationDir="${jenkinsBuildPath}"
   fi
@@ -222,7 +235,7 @@ else
   #Loop to wait for Jenkins trigger to run tests
   echo "Waiting for Jenkins build-completion trigger..."
   while [ 1 ]; do
-    jenkinsBuildPath="$(sudo cat ${buildFlag})"
+    jenkinsBuildPath="$(cat ${buildFlag})"
     if [ "${jenkinsBuildPath}" != "" ]; then
       executeTests "${jenkinsBuildPath}"
       clearBuildFlagToSignalTestCompletionToJenkins ${buildFlag}

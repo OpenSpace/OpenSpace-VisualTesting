@@ -1,16 +1,19 @@
 #!/usr/bin/python3
 
-import sys
+import asyncio
+from glob import glob
+import json
 import os
-import time
+import pathlib
+from pathlib import Path
+import shlex
 import signal
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 import subprocess
-import json
-import pathlib
-from glob import glob
-from pathlib import Path
-import shlex
+import sys
+import time
+import websockets
+
 
 #This script expects to run within the OpenSpaceVisualTesting repo cloned directory
 # structure, and also expects that this repo exists in the same directory as the
@@ -32,6 +35,115 @@ import shlex
 # OpenSpaceVisualTesting/
 #   OpenSpaceVisualTesting/
 
+configFile = """
+ScreenshotUseDate=false;
+ModuleConfigurations.GlobeBrowsing.WMSCacheEnabled=true;
+BypassLauncher=true;
+Paths={
+    DATA='${BASE}/data',
+    ASSETS='${DATA}/assets',
+    PROFILES='${DATA}/profiles',
+    USER='${BASE}/user',
+    USER_ASSETS='${USER}/data/assets',
+    USER_PROFILES='${USER}/data/profiles',
+    USER_CONFIG='${USER}/config',
+    FONTS='${DATA}/fonts',
+    TASKS='${DATA}/tasks',
+    SYNC='${BASE}/sync',
+    SCREENSHOTS='${USER}/screenshots',
+    WEB='${DATA}/web',
+    RECORDINGS='${USER}/recordings',
+    CACHE='${BASE}/cache',
+    CONFIG='${BASE}/config',
+    DOCUMENTATION='${BASE}/documentation',
+    LOGS='${BASE}/logs',
+    MODULES='${BASE}/modules',
+    SCRIPTS='${BASE}/scripts',
+    SHADERS='${BASE}/shaders',
+    TEMPORARY='${BASE}/temp',
+    GLOBEBROWSING='${BASE}/../OpenSpaceData'
+}
+ModuleConfigurations = {
+    GlobeBrowsing = {
+        WMSCacheEnabled = false,
+        WMSCacheLocation = '${BASE}/cache_gdal',
+        WMSCacheSize = 1024, -- in megabytes PER DATASET
+        TileCacheSize = 2048 -- for all globes (CPU and GPU memory)
+    },
+    Sync = {
+        SynchronizationRoot = '${SYNC}',
+        HttpSynchronizationRepositories = {
+            'http://data.openspaceproject.com/request'
+        }
+    },
+    Server = {
+        AllowAddresses = { '127.0.0.1', 'localhost' },
+        SkyBrowserUpdateTime = 50,
+        Interfaces = {
+            {
+                Type = 'TcpSocket',
+                Identifier = 'DefaultTcpSocketInterface',
+                Port = 4681,
+                Enabled = true,
+                DefaultAccess = 'Deny',
+                RequirePasswordAddresses = {},
+                Password = ''
+            },
+            {
+                Type = 'WebSocket',
+                Identifier = 'DefaultWebSocketInterface',
+                Port = 4682,
+                Enabled = true,
+                DefaultAccess = 'Deny',
+                RequirePasswordAddresses = {},
+                Password = ''
+            }
+        }
+    },
+    WebBrowser = {
+        Enabled = true
+    },
+    WebGui = {
+        Address = 'localhost',
+        HttpPort = 4680,
+        WebSocketInterface = 'DefaultWebSocketInterface'
+    },
+    CefWebGui = {
+        Enabled = true,
+        Visible = true
+    },
+    Space = {
+        ShowExceptions = false
+    }
+}
+Logging = {
+    LogDir = '${LOGS}',
+    LogLevel = 'Debug',
+    ImmediateFlush = true,
+    Logs = {
+        { Type = 'html', File = '${LOGS}/log.html', Append = false }
+    },
+    CapabilitiesVerbosity = 'Full'
+}
+ScriptLog = '${LOGS}/ScriptLog.txt'
+Documentation = {
+    Path = '${DOCUMENTATION}/'
+}
+VersionCheckUrl = 'http://data.openspaceproject.com/latest-version'
+UseMultithreadedInitialization = true
+LoadingScreen = {
+    ShowMessage = true,
+    ShowNodeNames = true,
+    ShowProgressbar = false
+}
+CheckOpenGLState = false
+LogEachOpenGLCall = false
+PrintEvents = false
+ShutdownCountdown = 1
+ScreenshotUseDate = true
+BypassLauncher = true
+"""
+
 class OSSession:
     def __init__(self, profileCL, baseOsDir, logFilename):
         self.basePath = baseOsDir
@@ -42,12 +154,9 @@ class OSSession:
             self.profile = profileCL
         self.OpenSpaceAppId = "OpenSpace"
         self.configValues = "--config \""
-        self.configValues += "ScreenshotUseDate=false;ModuleConfigurations.Server={};"
-        self.configValues += "ModuleConfigurations.WebBrowser.Enabled=false;"
-        self.configValues += "ModuleConfigurations.WebGui={};"
-        self.configValues += "ModuleConfigurations.GlobeBrowsing.WMSCacheEnabled=true;"
-        self.configValues += "BypassLauncher=true;"
+        self.configValues += configFile
         self.configValues += "Profile='" + self.profile + "'" + "\""
+
         self.runCommand = self.basePath + "/" + self.OpenSpaceAppId + " " + self.configValues
         self.osProcId = 0
 
@@ -57,11 +166,56 @@ class OSSession:
         lFile.write("  " + message + "\n")
         lFile.close()
 
+    async def connectRetries(self, url: str, nRetries: int):
+        for t in range(0, nRetries):
+            try:
+                async with websockets.connect(url) as websocket:
+                    await self.testTransmit(websocket)
+                    await websocket.close()
+                    self.logMessage(f"connectRetries finished with {t} retries.")
+                    return True
+            # This exception happens if a valid OpenSpace connection is established,
+            # but times-out because of a long startup period (e.g. long sync)
+            except asyncio.exceptions.TimeoutError:
+                self.logMessage("Asyncio TimeoutError")
+                time.sleep(120)
+            # Handle exceptions that occur when no connection to OpenSpace exists
+            # (OpenSpace is not running)
+            except ConnectionRefusedError:
+                self.logMessage("ConnectionRefusedError")
+                time.sleep(1)
+            except Exception:
+                time.sleep(1)
+        return False
+  
+    async def startupSocketTest(self, hostname: str, port: int, nRetries: int):
+        websocket_resource_url = f"ws://{hostname}:{port}"
+        success = False
+        try:
+            success = await self.connectRetries(websocket_resource_url, nRetries)
+        except asyncio.TimeoutError:
+            self.logMessage("Timed-out from asyncio.wait_for()")
+        return success
+    
+    async def testTransmit(self, websocket: websockets.WebSocketClientProtocol) -> None:
+        message = json.dumps({"topic": 4,
+                      "type": "luascript",
+                      "payload": {"function": "openspace.time.setPause",
+                                  "arguments": [False],
+                                  "return": False}})
+        try:
+            await websocket.send(message)
+        except Exception as e:
+            template = "In testTransmit exception {0} occurred. Arguments:\n{1!r}"
+            message = template.format(type(e).__name__, e.args)
+            self.logMessage(message)
+
     def startOpenSpace(self):
         self.osProcId = subprocess.Popen(shlex.split(self.runCommand))
-        msg = "Started OpenSpace instance with ID '" + str(self.osProcId.pid) + "' (" \
-            + self.runCommand + ")"
-        self.logMessage(msg)
+        self.logMessage(f"Started OpenSpace instance with ID '{str(self.osProcId.pid)}'")
+        #self.logMessage(f"OpenSpace run command: ({self.runCommand})")
+        time.sleep(1)
+        return asyncio.run(self.startupSocketTest("localhost", 4682, 30))
 
     def killOpenSpace(self):
         self.logMessage("Kill OpenSpace instance")
