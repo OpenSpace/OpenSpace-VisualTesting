@@ -23,11 +23,13 @@ import OpenSpaceSession as OSS
 #       will run. To restrict to one test file only, the exact filename would need
 #       to be provided.
 
+
 def logMessage(filename, message):
     print(message)
     lFile = open(filename, "a+")
     lFile.write(" " + message + "\n")
     lFile.close()
+
 
 def checkForInstalledComponents():
     p = Popen("wmctrl --version", shell=True, stdin=PIPE, stdout=PIPE, close_fds=True)
@@ -41,21 +43,22 @@ def checkForInstalledComponents():
         print("Error: xdotool does not appear to be installed (apt install xdotool)")
         quit(-1)
 
+
 def checkForProperDirectories(logFile):
     intendedDir = os.getcwd() + "/ResultImages/linux/"
     Path(intendedDir).mkdir(parents=True, exist_ok=True)
     if not Path(intendedDir).is_dir():
-        msg = "Result dir for screenshots '" + intendedDir + \
-              "' was not successfully created."
+        msg = f"Result dir for screenshots '{intendedDir}' was not successfully created."
         logMessage(logFile, msg)
         quit(-1)
     intendedDir = os.getcwd() + "/DifferenceImages/linux/"
     Path(intendedDir).mkdir(parents=True, exist_ok=True)
     if not Path(intendedDir).is_dir():
-        msg = "Difference dir for diff result images '" + intendedDir + \
-              "' was not successfully created."
+        msg = f"Difference dir for diff result images '{intendedDir}' " \
+              "was not successfully created."
         logMessage(logFile, msg)
         quit(-1)
+
 
 def runAssetTests(baseDirOpenSpace, logFilename, testSubsetString):
     baseDirOpenSpaceVisualTesting = "OpenSpaceVisualTesting/OpenSpaceVisualTesting"
@@ -65,15 +68,15 @@ def runAssetTests(baseDirOpenSpace, logFilename, testSubsetString):
     numTestCases = len(dirs)
     testCaseNum = 1
     for dir in dirs:
-        logMessage(logFilename, "Test case " + str(testCaseNum) + "/" \
-            + str(numTestCases) + ": " + dir)
+        logMessage(logFilename, f"Test case {str(testCaseNum)}/{str(numTestCases)}:{dir}")
         if testSubsetString == "" or dir == testSubsetString:
-            whereIsTest = baseTestDir + "/" + dir
-            processTestDirectory(whereIsTest, testDirName, baseDirOpenSpace, \
-                testSubsetString, logFilename)
+            whereIsTest = f"{baseTestDir}/{dir}"
+            processTestDirectory(whereIsTest, testDirName, baseDirOpenSpace,
+                                 testSubsetString, logFilename)
         else:
             logMessage(logFilename, "SKIPPED")
         testCaseNum += 1
+
 
 #Process all files in the directory passed in, recurse on any directories 
 #that are found, and process the files they contain.
@@ -90,73 +93,78 @@ def processTestDirectory(targetDirectory, testDirName, baseOsDir, testSubsetStri
         processTestFile(targetDirectory, fe, testGroup, baseOsDir, log)
         feNum += 1
 
+
 #Insert logic for processing foundTestCases files here
 def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log):
     fullTestDir = baseOsDir + "/" + testOffsetDir + "/" + testGroup
-    logMessage(log, "AssetTester: Located in: " + fullTestDir)
-    logString = "AssetTester: Starting Test file '" + testFilename + "'"
+    logMessage(log, f"AssetTester: Located in: {fullTestDir}")
+    logString = f"AssetTester: Starting Test file '{testFilename}'"
     if len(testGroup) > 0:
-        logString += " in group '" + testGroup + "'"
+        logString += f" in group '{testGroup}'"
     logMessage(log, logString)
-
-    ospace = OSS.OSSession(testGroup, baseOsDir + "/bin", log)
+    ospace = OSS.OSSession(testGroup, f"{baseOsDir}/bin", log)
     logMessage(log, "AssetTester: OpenSpace initialized")
     result = ospace.startOpenSpace()
     if not result:
-        logMessage("Failed to connect to a running instance of OpenSpace")
-
+        logMessage(log, "Failed to connect to a running instance of OpenSpace")
+        ospace.quitOpenSpace()
+        time.sleep(3)
+        quit(-3)
     logMessage(log, "AssetTester: Ready to start sending commands to OpenSpace.")
-    ospace.focusOpenSpaceWindow()
-    time.sleep(1.0)
-    ospace.toggleHudVisibility()
+    ospace.disableHudVisibility()
     time.sleep(1.0)
 
-    with open(fullTestDir + "/" + testFilename) as f:
+    with open(f"{fullTestDir}/{testFilename}") as f:
         data = json.load(f)
         for d in data:
             time.sleep(0.25)
-            logMessage(log, "AssetTester: ostest parser found type '" + d["type"] + \
-                "' with value '" + d["value"] + "'.")
-            if d["type"] == "script":
-                ospace.sendScript(d["value"])
-            elif d["type"] == "wait":
-                time.sleep(int(d["value"]))
-            elif d["type"] == "screenshot":
-                if len(d["value"]) < 1:
+            ostestType = d["type"]
+            ostestValue = d["value"]
+            msg = f"AssetTester: ostest parser found type '{ostestType}' "
+            msg += f"with value '{ostestValue}'."
+            logMessage(log, msg)
+            if ostestType == "script":
+                ospace.sendScript(ostestValue)
+            elif ostestType == "wait":
+                time.sleep(int(ostestValue))
+            elif ostestType == "screenshot":
+                if len(ostestValue) < 1:
                     shotName = testFilename[0:len(testFilename) - 7]
                 else:
-                    shotName = d["value"]
+                    shotName = ostestValue
                 ospace.moveScreenShot(testGroup, shotName)
-            elif d["type"] == "time":
-                timeScript = "openspace.time.setTime(\"" + d["value"] + "\");"
+            elif ostestType == "time":
+                timeScript = f"openspace.time.setTime({ostestValue});"
                 ospace.sendScript(timeScript)
-            elif d["type"] == "keys":
-                ospace.keyboardKeystroke(d["value"])
-            elif d["type"] == "pause":
-                pauseScript = "openspace.time.setPause(" + d["value"] + ");";
-                ospace.sendScript(pauseScript);
-            elif d["type"] == "navigationstate":
-                navScript = "openspace.navigation.setNavigationState(" + d["value"] + ");"
+            elif ostestType == "action":
+                ospace.action(ostestValue)
+            elif ostestType == "pause":
+                pauseScript = f"openspace.time.setPause({ostestValue});"
+                ospace.sendScript(pauseScript)
+            elif ostestType == "navigationstate":
+                navScript = f"openspace.navigation.setNavigationState({ostestValue});"
                 ospace.sendScript(navScript)
-            elif d["type"] == "recording":
+            elif ostestType == "recording":
                 #Create a temporary link to the recording in ${RECORDINGS} dir
-                recordingFilename = d["value"] + ".osrecording"
-                os.symlink(fullTestDir + "/" + recordingFilename, \
-                    baseOsDir + "/user/recordings/" + recordingFilename)
-                recordingScript = "openspace.sessionRecording.startPlayback('" + \
-                    recordingFilename + "')"
-                ospace.sendScript(recordingScript)
+                recordingFilename = f"{ostestValue}"
+                src = f"{fullTestDir}/{recordingFilename}"
+                dest = f"{baseOsDir}/user/recordings/{recordingFilename}"
+                if not os.path.exists(dest):
+                    os.symlink(src, dest)
+                recordingScript = "openspace.sessionRecording.startPlayback"
+                ospace.sendScript(f"{recordingScript}('{recordingFilename}')")
+                ospace.waitForPlaybackToFinish()
             else:
-                logMessage(log, "AssetTester: unhandled ostest entry of type '" + \
-                    d["type"] + "' with value '" + d["value"] + "'.")
+                logMessage(log, f"AssetTester: unhandled ostest entry of type " \
+                           "'{ostestType}' with value '{ostestValue}'.")
     logMessage(log, "Done parsing .ostest entries.")
-    #ospace.killOpenSpace()
     ospace.quitOpenSpace()
     time.sleep(5)
     #Kill in case the quit command wasn't processed
     #ospace.killOpenSpace()
-    logMessage(log, "Processed test '" + path.name + "'.")
+    logMessage(log, f"Processed test '{testGroup}/{testFilename}'.")
     time.sleep(5)
+
 
 if __name__ == "__main__":
     assert sys.version_info >= (3, 5), "Script requires Python 3.5+."
