@@ -49,11 +49,8 @@ parallel linux_gcc_make: {
       }
       stage('linux-gcc-make/build') {
           def cmakeCompileOptions = moduleCMakeFlags();
-          cmakeCompileOptions += ' -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS:STRING="-DGLM_ENABLE_EXPERIMENTAL"'
+          cmakeCompileOptions += ' -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_FLAGS:STRING="-DGLM_ENABLE_EXPERIMENTAL"'
           cmakeCompileOptions += ' -DOpenGL_GL_PREFERENCE:STRING=GLVND -DASSIMP_BUILD_MINIZIP=1';
-          cmakeCompileOptions += ' -DOPENSPACE_MODULE_CEFWEBGUI=OFF -DOPENSPACE_MODULE_SERVER=OFF';
-          cmakeCompileOptions += ' -DOPENSPACE_MODULE_SKYBROWSER=OFF -DOPENSPACE_MODULE_WEBBROWSER=OFF';
-          cmakeCompileOptions += ' -DOPENSPACE_MODULE_WEBGUI=OFF';
           compileHelper.build(compileHelper.Make(), compileHelper.Gcc(), cmakeCompileOptions, 'OpenSpace', 'build-make');
           compileHelper.recordCompileIssues(compileHelper.Gcc());
       }
