@@ -42,7 +42,7 @@ def moduleCMakeFlags() {
 //hi micah
 parallel linux_gcc_make: {
   if (env.USE_BUILD_OS_LINUX == 'true') {
-    node('linux-visual' && 'gcc') {
+    node('linux-visual') {
       stage('linux-gcc-make/scm') {
         deleteDir();
         gitHelper.checkoutGit(url, branch);
