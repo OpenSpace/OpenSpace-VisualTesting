@@ -59,7 +59,7 @@ function errorMsg
 function setUpBuildDirectoryForRun
 {
   builtPath="$1"
-  chown -R ${NonRootUser}:${NonRootUser} ${builtPath}
+  #chown -R ${NonRootUser}:${NonRootUser} ${builtPath}
   if [ ! -f ${builtPath}/bin/OpenSpace ]; then
     errorMsg "OpenSpace executable not found at ${builtPath}/bin"
     exit
@@ -110,7 +110,7 @@ function runComparisons
     logMsg "Run targetcompareWin64vsLinux.py script on test '$1'"
   fi
   python3 targetcompareWin64vsLinux.py "$1"
-  python3 targetcompareIncrementalLinux.py "$1"
+  python3 targetcompareIncremental_Linux.py "$1"
 }
 
 function createFilesystemLinksAtWebServerDirectory

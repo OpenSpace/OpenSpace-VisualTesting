@@ -18,12 +18,15 @@ function makePngImageLinks
   fi
   fileType="*.png"
   #Remove existing links first
-  rm ${tgt}/${fileType} 2>/dev/null
+  rm ${tgt}/${relativeDir}/${fileType} 2>/dev/null
   #Loop and make the links
   lsResults="$(ls -1 ${src}/${relativeDir}/${fileType})"
   echo "${lsResults}" | while read file; do
     b="$(basename ${file})"
-    ln -s ${src}/${relativeDir}/${b} ${tgt}/${relativeDir}/${b}
+    filepath=${relativeDir}/${b}
+    if [ ! -L ${tgt}/${filepath} ]; then
+      ln -s ${src}/${filepath} ${tgt}/${filepath}
+    fi
   done
 }
 

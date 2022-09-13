@@ -347,7 +347,7 @@ class OSSession:
         self.executeSocketSend(screenshotMsg, "screenshot message", 0)
         time.sleep(2)
         solutionDir = os.getcwd()
-        tmpPath = f"{self.basePath}/../user/screenshots/{folderName}OpenSpace_000000.png"
+        tmpPath = f"{self.basePath}/../user/screenshots/imagetestingfolder/OpenSpace_000000.png"
         if not Path(tmpPath).is_file():
             self.logMessage(f"Screenshot wasn't successful. Expected to find '{tmpPath}'")
             return
