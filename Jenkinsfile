@@ -51,7 +51,15 @@ parallel linux_gcc_make: {
           def cmakeCompileOptions = moduleCMakeFlags();
           cmakeCompileOptions += ' -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS:STRING="-DGLM_ENABLE_EXPERIMENTAL"'
           cmakeCompileOptions += ' -DOpenGL_GL_PREFERENCE:STRING=GLVND -DASSIMP_BUILD_MINIZIP=1';
-          cmakeCompileOptions += ' -DQT_NO_CREATE_TARGETS=ON';
+          cmakeCompileOptions += ' -DQT_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6 ';
+          cmakeCompileOptions += ' -DQt6_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6 ';
+          cmakeCompileOptions += ' -DQt6CoreTools_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6CoreTools ';
+          cmakeCompileOptions += ' -DQt6Core_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6Core ';
+          cmakeCompileOptions += ' -DQt6Network_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6Network ';
+          cmakeCompileOptions += ' -DQt6WidgetsTools_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6WidgetsTools ';
+          cmakeCompileOptions += ' -DQt6Widgets_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6Widgets ';
+          cmakeCompileOptions += ' -DQt6GuiTools_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6GuiTools ';
+          cmakeCompileOptions += ' -DQt6DBusTools_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6DBusTools';
           compileHelper.build(compileHelper.Make(), compileHelper.Gcc(), cmakeCompileOptions, 'OpenSpace', 'build-make');
           compileHelper.recordCompileIssues(compileHelper.Gcc());
       }
