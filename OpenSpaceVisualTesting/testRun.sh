@@ -1,18 +1,22 @@
 #!/bin/bash
 
-#This is the main polling script for the image comparison tests. This script
-#needs to stay running continuously. It does the work of running the image
-#comparison python scripts, rather than having jenkins do this.
-#The main reason for this is that jenkins is so far unable to start
-#OpenSpace with X window support (graphics). This current
-#method only requires jenkins to set its current build directory at the
-#location specified by ImageTestingBasePath. This variable needs to match
-#the "exported" environment variable of the same name that is configured in
-#this node's settings on the Jenkins master.
-#Set NonRootUser to normal username, to prevent problems running OpenSpace as
-#root.
-#Set environment variable OPENSPACE_SYNC to a local dir that already has the
-#necessary data
+#This is the main polling script for the image comparison tests. This script needs to stay
+#running continuously. It does the work of running the image comparison python scripts,
+#rather than having jenkins do this. The main reason for this is that jenkins is so far
+#unable to start OpenSpace with X window support (graphics). This method only requires
+#jenkins to set its current build directory at the location specified by ${buildFlag}.
+#
+#Notes on configuration:
+#  1. Set ${buildFlag} to the full path to the file that will contain the latest jenkins
+#     build, the location of which is unknown until jenkins finishes. This file is blank
+#     until a new build is done, which this script's loop uses as a trigger to run a new
+#     comparison test.
+#     Add an environment variable with this same name to the node configuration for the
+#     image test server node at the Jenkins host, so that the build will access it.
+#  2. Set ${OPENSPACE_SYNC} to the sync/ directory that is used for all tests. This dir
+#     is the same for all tests.
+#     Also add this same environment variable to the node configuration for the image
+#     test server node at the Jenkins host.
 #
 # USAGE:
 #   testRun.sh [-d OpenSpaceInstallDir] [-t SpecificTestName]
@@ -25,19 +29,17 @@
 #     at that location (runs bin/OpenSpace from there) will run instead of
 #     using the latest jenkins build of OpenSpace. After this the script will
 #     finish.
-#   If -t option is used followed by a valid relative path to an .ostest file,
-#     then only that test will run. After this the script will finish.
-
-ImageTestingBasePath=/home/openspace/Desktop
-NonRootUser=openspace
-
-#buildFlag is a file that is empty when idle. When a jenkins build is triggered,
-# jenkins will put the path of the directory of its current build (which is
-# different every time) in this flag file
-buildFlag=${ImageTestingBasePath}/latestBuild.txt
+#   If -t option is used followed by a valid relative path from ${imageTestingSubdirInOs}
+#     to an .ostest file (e.g. juno/junomodel.ostest), then only that test will run and
+#     the script will finish afterward. If this is not provided then all tests will run,
+#     and the script will continue to loop indefinitely for the next jenkins build.
+buildFlag=/home/openspace/Desktop/latestBuild.txt
+export OPENSPACE_SYNC=/home/openspace/Desktop/sync
 logFile="./testLog.txt"
 imageTestingSubdirInOs="tests/visual"
 
+
+########## FUNCTIONS
 function logMsg
 {
   datetime="$(date +%Y-%m-%d\ %H:%M:%S)"
@@ -56,25 +58,21 @@ function errorMsg
   logMsg "$1"
 }
 
+#Given the base directory of an OpenSpace build ($1), this function prepares that
+#directory for running the image comparison tests.
 function setUpBuildDirectoryForRun
 {
   builtPath="$1"
-  #chown -R ${NonRootUser}:${NonRootUser} ${builtPath}
   if [ ! -f ${builtPath}/bin/OpenSpace ]; then
     errorMsg "OpenSpace executable not found at ${builtPath}/bin"
     exit
-  fi
-  if [ ${CustomSync} = "false" ]; then
-    export OPENSPACE_SYNC=${ImageTestingBasePath}/sync
-    if [ -d ${ImageTestingBasePath}/OpenSpace/sync ]; then
-      rm -r ${ImageTestingBasePath}/OpenSpace/sync
-    fi
-    ln -s ${ImageTestingBasePath}/sync ${builtPath}/sync
   fi
   #Clear recordings because OpenSpace tests use same recording filenames
   rm ${builtPath}/user/recordings/* 2>/dev/null
 }
 
+#Given the base directory of an OpenSpace build ($1), this function finds all .ostest
+#files in the tests/visual/ directory and returns them in a string of names with newlines
 function listAllTestFiles
 {
   baseOsDir="$1"
@@ -86,6 +84,8 @@ function listAllTestFiles
   done
 }
 
+#Runs one or more tests which are listed in string list arg $2, at the base OpenSpace
+# build directory specified at arg $1.
 function runAllTests
 {
   baseOsDir="$1"
@@ -95,13 +95,17 @@ function runAllTests
     logAndDisplayMsg "Starting OpenSpace test '${fullTestList[i]}'."
     testGroup="${fullTestList[i]%/*}"
     thisTest="${fullTestList[i]##*/}"
-    python3 AssetTester.py "${baseOsDir}" "${imageTestingSubdirInOs}" "${testGroup}" \
-      "${thisTest}" "$3"
+    python3 AssetTester.py -d "${baseOsDir}" -t "${imageTestingSubdirInOs}" \
+      -g "${testGroup}" -f "${thisTest}" -l "${logFile}"
     logAndDisplayMsg "Finished OpenSpace test '${thisTest}'."
   done
   logAndDisplayMsg "Finished all OpenSpace tests."
 }
 
+#Function to run image comparisons after test(s) run. If a specific test name is
+#provided ($1), then comparisons will only run on that test. If no $1 arg is provided,
+#then all tests will run. Note that the web page .json report file will only be
+#generated if all tests are run.
 function runComparisons
 {
   if [ "$1" = "" ]; then
@@ -121,8 +125,8 @@ function createFilesystemLinksAtWebServerDirectory
 
 function clearBuildFlagToSignalTestCompletionToJenkins
 {
-  logMsg "Clear flag in file '$1' to signal jenkins that test finished."
-  sudo echo "" > $1
+  logMsg "Clear flag in file '${buildFlag}' to signal jenkins that test finished."
+  sudo echo "" > ${buildFlag}
 }
 
 function verifyUser
@@ -138,7 +142,6 @@ function verifyUser
 }
 
 #Run the test(s) using the specified OpenSpace installation directory
-# USAGE:
 # $1 - Full path to the OpenSpace directory to be used for the test
 #      (the executable is located at bin/OpenSpace relative to this path)
 # [$2] - Optional relative path to the specific test file to run. OpenSpace
@@ -152,16 +155,16 @@ function executeTests
   setUpBuildDirectoryForRun "${openspaceDir}"
   if [ "${testRelPath}" = "" ]; then
     allTestsListed="$(listAllTestFiles ${openspaceDir})"
-    runAllTests "${openspaceDir}" "${allTestsListed}" "${logFile}"
+    runAllTests "${openspaceDir}" "${allTestsListed}"
     runComparisons
   else
-    runAllTests "${openspaceDir}" "${testRelPath}" "${logFile}"
+    runAllTests "${openspaceDir}" "${testRelPath}"
     runComparisons "${testRelPath}"
   fi
   createFilesystemLinksAtWebServerDirectory
 }
 
-##########################################################################################
+########## MAIN
 if [ -f ${logFile} ]; then
   rm ${logFile}
 fi
@@ -170,23 +173,15 @@ fi
 installationDir=""
 testName=""
 CustomDir="false"
-CustomSync="false"
 CustomTest="false"
-CustomUser="false"
 LoopTesting="false"
 for i in "$@"; do
   case $i in
     -d)
       CustomDir="true"
       ;;
-    -s)
-      CustomSync="true"
-      ;;
     -t)
       CustomTest="true"
-      ;;
-    -u)
-      CustomUser="true"
       ;;
     *)
       if [ $CustomDir = "true" ]; then
@@ -195,9 +190,6 @@ for i in "$@"; do
       elif [ $CustomTest = "true" ]; then
         testName=${i}
         CustomTest="false"
-      elif [ $CustomUser = "true" ]; then
-        NonRootUser=${i}
-        CustomUser="false"
       fi
       ;;
     -*|--*)
@@ -206,7 +198,6 @@ for i in "$@"; do
       ;;
   esac
 done
-
 #Determine which installation directory for OpenSpace to run
 if [ "${installationDir}" = "" ]; then
   jenkinsBuildPath="$(cat ${buildFlag})"
@@ -216,7 +207,6 @@ if [ "${installationDir}" = "" ]; then
 else
   logAndDisplayMsg "Running test(s) on OpenSpace installation at ${installationDir}."
 fi
-
 #Verify custom test directory to run (if specified)
 if [ "${testName}" != "" ]; then
   testPath=${installationDir}/${imageTestingSubdirInOs}/${testName}
@@ -227,7 +217,6 @@ if [ "${testName}" != "" ]; then
     exit
   fi
 fi
-
 if [ ${installationDir}!="" ] || [ ${testName}!="" ]; then
   #Run a single test if a custom directory or specific test was named
   executeTests "${installationDir}" "${testName}"
@@ -238,7 +227,7 @@ else
     jenkinsBuildPath="$(cat ${buildFlag})"
     if [ "${jenkinsBuildPath}" != "" ]; then
       executeTests "${jenkinsBuildPath}"
-      clearBuildFlagToSignalTestCompletionToJenkins ${buildFlag}
+      clearBuildFlagToSignalTestCompletionToJenkins
       echo "Continuing to wait for next Jenkins build-completion trigger..."
     fi
     sleep 10

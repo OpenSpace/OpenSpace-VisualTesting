@@ -2,6 +2,7 @@
 
 from concurrent.futures import TimeoutError
 from glob import glob
+import argparse
 import json
 import os
 import sys
@@ -13,15 +14,55 @@ from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 import OpenSpaceSession as OSS
 
 #Standalone script usage:
-#  $1 - the name of the OpenSpace install directory to use to run OpenSpace. This is
-#       expected to be further down in the same file path as this dir (see comments below)
-#  $2 - the name of the log file to write information messages to. Error messages will be
-#       printed directly to the terminal as well as the log file. The purpose of a log
-#       file is to avoid too much output in the terminal (OpenSpace produces a lot)
-#  $3 - [optional] is a name prefix used to restrict the testing to a subset of
-#       test files. Any tests in any directory that start with the provided string
-#       will run. To restrict to one test file only, the exact filename would need
-#       to be provided.
+#  Read the configuration for the python 'argparse' package below for usage, or
+#  run this script with '-h' argument to print the help. All arguments are listed
+#  with their functionality description, and whether or not they are required.
+
+
+def parserInitialization():
+    try:
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-d", "--osdir", dest="baseOsDir",
+                            help="specify base OpenSpace directory in which to run "\
+                            "tests (uses jenkins-supplied build dir by default)",
+                            required=True)
+        parser.add_argument("-t", "--testdir", dest="testOffsetDir",
+                            help="specify a directory path where .ostest files reside, "\
+                            "relative to the base OpenSpace directory (if different "\
+                            "from the default (tests/visual/)",
+                            required=True)
+        parser.add_argument("-g", "--testgroup", dest="testGroup",
+                            help="the test group (directory) containing the .ostest "\
+                            "file to be run (file is a separate arg)",
+                            required=True)
+        parser.add_argument("-f", "--testfile", dest="testFilename",
+                            help="the .ostest file for the test to be run, which "\
+                            "resides within the testGroup directory",
+                            required=True)
+        parser.add_argument("-l", "--logfile", dest="logFilename",
+                            help="the filename of the log file for this test run",
+                            required=True)
+    except ImportError:
+        parser = None
+    return parser
+
+
+def handleArgumentParsing(parser):
+    args = parser.parse_args()
+    return args
+
+
+def verifyBaseOsDirectoryExists(directory):
+    if not os.path.exists(directory):
+        print(f"Error: cannot find base OpenSpace directory '{directory}'.")
+        quit(-1)
+
+
+def verifyTestFileExists(filepath):
+    if not os.path.exists(filepath):
+        print(f"Error: cannot find specified test file at '{filepath}'.")
+        quit(-1)
 
 
 def logMessage(filename, message):
@@ -169,34 +210,15 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log):
 if __name__ == "__main__":
     assert sys.version_info >= (3, 5), "Script requires Python 3.5+."
     checkForInstalledComponents()
-    if len(sys.argv) == 1:
-        print("Error: Need a valid OpenSpace base directory as arg 1")
-        quit(-1)
-    elif len(sys.argv) == 2:
-        print("Error: Need a valid test directory within base dir as arg 2")
-        quit(-1)
-    elif len(sys.argv) == 3:
-        print("Error: Need a valid test group name/dir as arg 3")
-        quit(-1)
-    elif len(sys.argv) == 4:
-        print("Error: Need a valid .ostest file to run as arg 4")
-        quit(-1)
-    elif len(sys.argv) == 5:
-        print("Error: Need a path to a log file as arg 5")
-        quit(-1)
+    parser = parserInitialization()
+    args = handleArgumentParsing(parser)
 
-    baseOsDir = sys.argv[1]
-    testOffsetDir = sys.argv[2]
-    testGroup = sys.argv[3]
-    testFilename = sys.argv[4]
-    if testFilename[-7::] != ".ostest":
-        print("Error: Need a valid .ostest file to run as arg 2")
-        quit(-1)
-    logFilename = sys.argv[5]
-    checkForProperDirectories(logFilename)
-    #testSubsetString = ""
-    #if len(sys.argv) > 3:
-    #    testSubsetString = sys.argv[3]
-    #runAssetTests(openspaceTestName, logFilename, testSubsetString)
-    processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, logFilename)
+    verifyBaseOsDirectoryExists(args.baseOsDir)
+    verifyTestFileExists(args.baseOsDir + "/" +
+                         args.testOffsetDir + "/" +
+                         args.testGroup + "/" +
+                         args.testFilename)
+    checkForProperDirectories(args.logFilename)
+    processTestFile(args.baseOsDir, args.testOffsetDir, args.testGroup,
+                    args.testFilename, args.logFilename)
     quit(0)

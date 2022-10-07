@@ -381,6 +381,7 @@ class OSSession:
             retryCount -= 1
         ws.close()
 
+
 def isParamFloat(test):
     try:
         float(test)
@@ -406,6 +407,8 @@ def isParamBool(test):
         return False
 
 
+#Extract single float value from a navigation string as found in value of
+#'Anchor', 'Pitch', and 'Yaw' keys
 def extractValueFromNavString(navString: str, headerIdx: int):
     idxEquals = navString.find("=", headerIdx)
     idxComma = navString.find(",", headerIdx)
@@ -416,6 +419,8 @@ def extractValueFromNavString(navString: str, headerIdx: int):
     return extracted.lstrip(" '\"[{(").rstrip(" '\")}];")
 
 
+#Extract x,y,z float values from a navigation string as found in value of
+#'Position' and 'Up' keys
 def extractArrayFromNavString(navString: str, headerIdx: int):
     idxStart = navString.find("{", headerIdx)
     idxEnd = navString.find("}", headerIdx)
