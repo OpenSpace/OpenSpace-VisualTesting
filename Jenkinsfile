@@ -64,8 +64,8 @@ parallel linux_gcc_make: {
           compileHelper.recordCompileIssues(compileHelper.Gcc());
       }
       stage('linux-gcc-make/img-compare') {
-        sh 'echo $(pwd) > ${IMAGE_TESTING_BASE_PATH}/latestBuild.txt'
-        sh 'while [ 1 ]; do sleep 300; if [ "$(cat ${IMAGE_TESTING_BASE_PATH}/latestBuild.txt)" = "" ]; then break; fi; done'
+        sh 'echo $(pwd) > ${buildFlag}'
+        sh 'while [ 1 ]; do sleep 300; if [ "$(cat ${buildFlag})" = "" ]; then break; fi; done'
       }
       stage('linux-gcc-make/test') {
         // testHelper.runUnitTests('build/OpenSpaceTest');
