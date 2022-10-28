@@ -217,7 +217,7 @@ if [ "${testName}" != "" ]; then
     exit
   fi
 fi
-if [ ${installationDir}!="" ] || [ ${testName}!="" ]; then
+if [ "${installationDir}" != "" ] || [ "${testName}" != "" ]; then
   #Run a single test if a custom directory or specific test was named
   executeTests "${installationDir}" "${testName}"
 else
