@@ -96,7 +96,7 @@ function runAllTests
     testGroup="${fullTestList[i]%/*}"
     thisTest="${fullTestList[i]##*/}"
     python3 AssetTester.py -d "${baseOsDir}" -t "${imageTestingSubdirInOs}" \
-      -g "${testGroup}" -f "${thisTest}" -l "${logFile}"
+      -g "${testGroup}" -f "${thisTest}" -l "${logFile}" -s "${OPENSPACE_SYNC}"
     logAndDisplayMsg "Finished OpenSpace test '${thisTest}'."
   done
   logAndDisplayMsg "Finished all OpenSpace tests."

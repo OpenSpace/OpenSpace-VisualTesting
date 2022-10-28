@@ -43,6 +43,9 @@ def parserInitialization():
         parser.add_argument("-l", "--logfile", dest="logFilename",
                             help="the filename of the log file for this test run",
                             required=True)
+        parser.add_argument("-s", "--sync", dest="syncDir",
+                            help="the absolute path of the sync dir to use",
+                            required=False)
     except ImportError:
         parser = None
     return parser
@@ -101,42 +104,8 @@ def checkForProperDirectories(logFile):
         quit(-1)
 
 
-def runAssetTests(baseDirOpenSpace, logFilename, testSubsetString):
-    baseDirOpenSpaceVisualTesting = "OpenSpaceVisualTesting/OpenSpaceVisualTesting"
-    testDirName = "tests/visual"
-    baseTestDir = baseDirOpenSpace + "/" + testDirName
-    dirs = os.listdir(baseTestDir)
-    numTestCases = len(dirs)
-    testCaseNum = 1
-    for dir in dirs:
-        logMessage(logFilename, f"Test case {str(testCaseNum)}/{str(numTestCases)}:{dir}")
-        if testSubsetString == "" or dir == testSubsetString:
-            whereIsTest = f"{baseTestDir}/{dir}"
-            processTestDirectory(whereIsTest, testDirName, baseDirOpenSpace,
-                                 testSubsetString, logFilename)
-        else:
-            logMessage(logFilename, "SKIPPED")
-        testCaseNum += 1
-
-
-#Process all files in the directory passed in, recurse on any directories 
-#that are found, and process the files they contain.
-def processTestDirectory(targetDirectory, testDirName, baseOsDir, testSubsetString, log):
-    idx = targetDirectory.rfind(testDirName) + len(testDirName) + 1
-    testGroup = targetDirectory[idx:999]
-    logMessage(log, "processTestDirectory: " + targetDirectory)
-    fileEntries = pathlib.Path(targetDirectory).glob("*.ostest")
-    fileListing = list(fileEntries)
-    numFileEntries = len(fileListing)
-    feNum = 1
-    for fe in fileListing:
-        logMessage(log, "File " + fe.name)
-        processTestFile(targetDirectory, fe, testGroup, baseOsDir, log)
-        feNum += 1
-
-
 #Insert logic for processing foundTestCases files here
-def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log):
+def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log, sync):
     fullTestDir = baseOsDir + "/" + testOffsetDir + "/" + testGroup
     logMessage(log, f"AssetTester: Located in: {fullTestDir}")
     logString = f"AssetTester: Starting Test file '{testFilename}'"
@@ -144,6 +113,7 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log):
         logString += f" in group '{testGroup}'"
     logMessage(log, logString)
     ospace = OSS.OSSession(testGroup, f"{baseOsDir}/bin", log)
+    ospace.setSyncDirectory(sync)
     logMessage(log, "AssetTester: OpenSpace initialized")
     result = ospace.startOpenSpace()
     if not result:
@@ -220,5 +190,5 @@ if __name__ == "__main__":
                          args.testFilename)
     checkForProperDirectories(args.logFilename)
     processTestFile(args.baseOsDir, args.testOffsetDir, args.testGroup,
-                    args.testFilename, args.logFilename)
+                    args.testFilename, args.logFilename, args.syncDir)
     quit(0)

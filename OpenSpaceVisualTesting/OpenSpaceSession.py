@@ -138,18 +138,30 @@ class OSSession:
         else:
             self.profile = profileCL
         self.OpenSpaceAppId = "OpenSpace"
-        self.configValues = "--config \""
-        self.configValues += configFile
-        self.configValues += "Profile='" + self.profile + "'" + "\""
+        self.setConfigString()
         self.runCommand = self.basePath + "/" + self.OpenSpaceAppId + " "
         self.runCommand += self.configValues
         self.osProcId = 0
+
+    def setConfigString(self):
+        self.configValues = "--config \""
+        self.configValues += configFile
+        self.configValues += "Profile='" + self.profile + "'" + "\""
 
     def logMessage(self, message):
         print(message)
         lFile = open(self.log, "a+")
         lFile.write("  " + message + "\n")
         lFile.close()
+
+    def setSyncDirectory(self, syncPath):
+        syncPos1 = configFile.find("SYNC=\'")
+        if syncPos1 != -1:
+            syncPos2 = configFile.find("\'", syncPos1 + 7)
+            syncPathExisting = configFile[syncPos1:syncPos2+1]
+            syncPath = "SYNC=\'" + syncPath + "\'"
+            configFile.replace(syncPathExisting, syncPath)
+            self.setConfigString()
 
     async def connectRetries(self, url: str, message, nRetries: int):
         for t in range(0, nRetries+1):
