@@ -177,18 +177,28 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, log, sync
     time.sleep(5)
 
 
-if __name__ == "__main__":
+def assetRun(baseDir, testOffsetDir, testGroup, testFile, logFile, syncDir):
+    checkInstallation(baseDir, testOffsetDir, testGroup, testFile, logFile)
+    processTestFile(baseDir, testOffsetDir, testGroup, testFile, logFile, syncDir)
+
+
+def checkInstallation(baseDir, testOffsetDir, testGroup, testFilename, logFilename):
     assert sys.version_info >= (3, 5), "Script requires Python 3.5+."
     checkForInstalledComponents()
+    verifyBaseOsDirectoryExists(baseDir)
+    verifyTestFileExists(baseDir + "/" +
+                         testOffsetDir + "/" +
+                         testGroup + "/" +
+                         testFilename)
+    checkForProperDirectories(logFilename)
+
+
+if __name__ == "__main__":
+    assert sys.version_info >= (3, 5), "Script requires Python 3.5+."
     parser = parserInitialization()
     args = handleArgumentParsing(parser)
-
-    verifyBaseOsDirectoryExists(args.baseOsDir)
-    verifyTestFileExists(args.baseOsDir + "/" +
-                         args.testOffsetDir + "/" +
-                         args.testGroup + "/" +
-                         args.testFilename)
-    checkForProperDirectories(args.logFilename)
-    processTestFile(args.baseOsDir, args.testOffsetDir, args.testGroup,
-                    args.testFilename, args.logFilename, args.syncDir)
+    checkInstallation(args.baseOsDir, args.testOffsetDir, args.testGroup,
+                      args.testFilename, args.logFilename)
+    assetRun(args.baseOsDir, args.testOffsetDir, args.testGroup, args.testFilename,
+             args.logFilename, args.syncDir)
     quit(0)

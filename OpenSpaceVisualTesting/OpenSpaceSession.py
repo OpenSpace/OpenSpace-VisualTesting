@@ -133,20 +133,25 @@ class OSSession:
     def __init__(self, profileCL, baseOsDir, logFilename):
         self.basePath = baseOsDir
         self.log = logFilename
+        self.configFile = configFile
         if len(profileCL) == 0:
             self.profile = "default"
         else:
             self.profile = profileCL
         self.OpenSpaceAppId = "OpenSpace"
         self.setConfigString()
-        self.runCommand = self.basePath + "/" + self.OpenSpaceAppId + " "
-        self.runCommand += self.configValues
+        self.generateRunCommand()
         self.osProcId = 0
 
     def setConfigString(self):
         self.configValues = "--config \""
-        self.configValues += configFile
+        self.configValues += self.configFile
         self.configValues += "Profile='" + self.profile + "'" + "\""
+        self.generateRunCommand()
+
+    def generateRunCommand(self):
+        self.runCommand = self.basePath + "/" + self.OpenSpaceAppId + " "
+        self.runCommand += self.configValues
 
     def logMessage(self, message):
         print(message)
@@ -155,12 +160,13 @@ class OSSession:
         lFile.close()
 
     def setSyncDirectory(self, syncPath):
-        syncPos1 = configFile.find("SYNC=\'")
+        syncPos1 = self.configFile.find("SYNC=\'")
         if syncPos1 != -1:
-            syncPos2 = configFile.find("\'", syncPos1 + 7)
-            syncPathExisting = configFile[syncPos1:syncPos2+1]
-            syncPath = "SYNC=\'" + syncPath + "\'"
-            configFile.replace(syncPathExisting, syncPath)
+            syncPos2 = self.configFile.find("\'", syncPos1 + 7)
+            syncPathExisting = self.configFile[syncPos1:syncPos2+1]
+            syncPath = f"SYNC=\'{syncPath}\'"
+            self.configFile = self.configFile[0:syncPos1] + syncPath \
+                + self.configFile[syncPos2+1:]
             self.setConfigString()
 
     async def connectRetries(self, url: str, message, nRetries: int):
@@ -212,6 +218,7 @@ class OSSession:
             self.logMessage(message)
 
     def startOpenSpace(self):
+        #self.logMessage(f"Starting OpenSpace with comand:\n{self.runCommand}")
         self.osProcId = subprocess.Popen(shlex.split(self.runCommand))
         self.logMessage(f"Started OpenSpace instance with ID '{str(self.osProcId.pid)}'")
         time.sleep(1)

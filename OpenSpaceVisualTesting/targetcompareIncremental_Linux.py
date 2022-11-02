@@ -11,6 +11,7 @@ from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 
 comparisonReportFilename = "comparisonIncrementalLinux.report"
 
+
 def writeToReport(filename, s):
     try:
         r = open(filename, 'a')
@@ -20,18 +21,22 @@ def writeToReport(filename, s):
     finally:
         r.close()
 
+
 def compareImage(target, current, diff):
     imgMgck = "compare -fuzz 4%% -metric rmse " + target + " " + current + " " + diff
     p = Popen(imgMgck, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
     return p.stdout.read()
 
+
 def appendJsonEntry(compList, testName, isNewTest, compareScore, dtStr):
     compList.append({"name":testName, "new":isNewTest, "score":compareScore, "datet":dtStr})
     return compList
 
+
 def writeToVisualTestResultsJsonFile(items):
     with open("visualtests_IncrementalLinux_results.json", 'w') as outfile:
         json.dump({"items":items}, outfile)
+
 
 def processImageFilesAndProduceReports(resultDir, targetDir, diffDir, testSubset):
     targetDir = targetDir + "/linux/"
@@ -44,8 +49,9 @@ def processImageFilesAndProduceReports(resultDir, targetDir, diffDir, testSubset
         fileNameBase = pathlib.Path(os.path.basename(resultPath)).stem
         fileNameBase = fileNameBase.replace("Target", "")
         print(fileNameBase[0:len(testSubset)])
-        if testSubset != "" and fileNameBase[0:len(testSubset)] != testSubset.replace("/", ""):
-            continue
+        if testSubset != "":
+            if fileNameBase[0:len(testSubset)] != testSubset.replace("/", ""):
+                continue
         fileNameTarget = targetDir + "Target" + fileNameBase + ".png"
         fileNameResult = resultDir + fileNameBase + ".png"
         fileNameDiff = diffDir + fileNameBase + ".png"
@@ -53,8 +59,8 @@ def processImageFilesAndProduceReports(resultDir, targetDir, diffDir, testSubset
         found_target = pathlib.Path(fileNameTarget).exists()
         found_result = pathlib.Path(fileNameResult).exists()
         if found_target and found_result:
-            print("Comparing '" + fileNameResult + "' against prev linux target '"
-                  + fileNameTarget + "'.")
+            print(f"Comparing '{fileNameResult}' against prev linux target "\
+                   "'{fileNameTarget}'.")
             compareValue = compareImage(fileNameTarget, fileNameResult, fileNameDiff)
             compareValue = str(compareValue.decode()).split(" ")[0]
             writeToReport(comparisonReportFilename, fileNameBase + "\n" \
@@ -74,7 +80,8 @@ def processImageFilesAndProduceReports(resultDir, targetDir, diffDir, testSubset
         #Only write json results if all tests were run
         writeToVisualTestResultsJsonFile(items)
 
-if __name__ == "__main__":
+
+def runComparison(testSubsetString):
     if pathlib.Path(comparisonReportFilename).exists():
         os.remove(comparisonReportFilename)
     testSubsetString = ""
@@ -86,3 +93,11 @@ if __name__ == "__main__":
         "./DifferenceImages", \
         testSubsetString
     )
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        runComparison(sys.argv[1])
+    else:
+        print("Need 1 argument for testSubset name", file=sys.stderr)
+        quit(-1)
