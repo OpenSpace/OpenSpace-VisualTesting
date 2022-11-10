@@ -7,16 +7,25 @@ import pathlib
 from pathlib import Path
 import sys
 import time
-
 import AssetTester as AST
-import targetcompareIncremental_Linux as compareIncLinux
-#import targetcompareIncremental_Windows as compareIncWin
-import targetcompareWin64vsLinux as compareWinVsLinux
 
-buildFlag = "/home/openspace/Desktop/latestBuild.txt"
-OsSyncDir= "/home/openspace/Desktop/sync"
-logFile = "./testLog.txt"
-imageTestingSubdirInOs = "tests/visual"
+#BuildFlag is the full path to the file that Jenkins will modify when its build
+#is complete. The single-line content of this file is the full path to the directory
+#where Jenkins built the latest version of OpenSpace
+BuildFlag = "C:/Users/OpenSpace/Desktop/latestBuild.txt"
+#OsSyncDir is the full path to the sync directory that all Jenkins builds should use.
+#This saves test time, preventing the new build from downloading all of the sync data.
+OsSyncDir= "C:/Users/OpenSpace/Desktop/SYNC"
+#OpenSpaceExeInOs is the relative path (from ${BASE}) to the OpenSpace executable.
+OpenSpaceExeInOs = "bin/Debug/OpenSpace.exe"
+LogFile = "testLog.txt"
+#Platform must be either "windows" or "linux"
+Platform = "windows"
+#ImageTestingSubdirInOs is relative path to the visual tests (.ostest files) from ${BASE}
+ImageTestingSubdirInOs = "tests/visual"
+#UsrRecordSubdirInOs is relative path to the session recording files from ${BASE}
+UsrRecordSubdirInOs = "user/recordings"
+import targetcompare
 
 
 def parserInitialization():
@@ -28,8 +37,8 @@ def parserInitialization():
                             required=False, default="")
         parser.add_argument("-t", "--test", dest="customTest",
                             help="Specify a custom test to run, instead of all by "\
-                            "default. Provide only the test name without the .ostest "\
-                            "extension", required=False, default="")
+                            "default. Provide in 'group/testFile.ostest' format.",
+                            required=False, default="")
     except ImportError:
         parser = None
     return parser
@@ -42,8 +51,11 @@ def handleArgumentParsing(parser):
 
 def logMsg(message):
     today = datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-    f = open(logFile, 'a')
+    f = open(LogFile, 'a')
     f.write(today + " " + message)
+    if Platform == "windows":
+        f.write("\r")
+    f.write("\n")
     f.close()
 
 
@@ -60,11 +72,13 @@ def errorMsg(message):
 #Given the base directory of an OpenSpace build ($1), this function prepares that
 #directory for running the image comparison tests.
 def setUpBuildDirectoryForRun(builtPath):
-    if not os.path.isfile(f"{builtPath}/bin/OpenSpace"):
-        errorMsg(f"OpenSpace executable not found at {builtPath}/bin")
+    OpenSpaceFullPath = os.path.abspath(os.path.join(builtPath, OpenSpaceExeInOs))
+    if not os.path.isfile(OpenSpaceFullPath):
+        errorMsg(f"OpenSpace executable not found at {OpenSpaceFullPath}")
         quit(-1)
+    return #Skip the deletion of session recording dir for now
     #Clear recordings because OpenSpace tests use same recording filenames
-    userRecDir = f"{builtPath}/user/recordings"
+    userRecDir = os.path.abspath(os.path.join(builtPath, UsrRecordSubdirInOs))
     if os.path.isdir(userRecDir):
         for root, dirs, files in os.walk(userRecDir):
             for rec in files:
@@ -74,12 +88,12 @@ def setUpBuildDirectoryForRun(builtPath):
 #Given the base directory of an OpenSpace build ($1), this function finds all .ostest
 #files in the tests/visual/ directory and returns them in a string of names with newlines
 def listAllTestFiles(baseOsDir):
-    testingDir = f"{baseOsDir}/{imageTestingSubdirInOs}"
+    testingDir = os.path.abspath(os.path.join(baseOsDir, ImageTestingSubdirInOs))
     listing = []
     for root, dirs, files in os.walk(testingDir):
         for testFile in files:
             if testFile.endswith(".ostest"):
-                fullName = f"{root}/{testFile}"
+                fullName = os.path.abspath(os.path.join(root, testFile))
                 listing.append(fullName[len(testingDir)+1:])
     return listing
 
@@ -88,18 +102,17 @@ def listAllTestFiles(baseOsDir):
 # build directory specified at arg $1.
 def runAllTests(baseOsDir, fileList):
     for test in fileList:
-        baseTestPath = f"{baseOsDir}/{imageTestingSubdirInOs}"
-        fullTestPath = f"{baseTestPath}/{test}"
+        baseTestPath = os.path.abspath(os.path.join(baseOsDir, ImageTestingSubdirInOs))
+        fullTestPath = os.path.abspath(os.path.join(baseTestPath, test))
         if os.path.isfile(fullTestPath):
             logAndDisplayMsg(f"Starting OpenSpace test '{test}'")
-            basePathLen = len(baseTestPath)
-            lastSlash = fullTestPath.rfind("/")
-            testGroup = fullTestPath[basePathLen+1:lastSlash]
-            thisTest = fullTestPath[lastSlash+1:]
+            testGroup = os.path.split(test)[0]
+            thisTest = os.path.split(test)[1]
             print(f"Run test '{thisTest}' of group '{testGroup}'")
-            assetTest = AST.assetRun(baseOsDir, imageTestingSubdirInOs, testGroup,
-                                     thisTest, logFile, OsSyncDir)
-            logAndDisplayMsg(f"Finished OpenSpace test '{testGroup}/{thisTest}'.")
+            assetTest = AST.assetRun(baseOsDir, ImageTestingSubdirInOs, testGroup,
+                                     thisTest, OpenSpaceExeInOs, LogFile, OsSyncDir,
+                                     Platform)
+            logAndDisplayMsg(f"Finished OpenSpace test '{test}'.")
     logAndDisplayMsg("Finished all OpenSpace tests.")
 
 
@@ -109,11 +122,12 @@ def runAllTests(baseOsDir, fileList):
 #generated if all tests are run.
 def runComparisons(test):
     if not test.strip():
-        logMsg("Run targetcompareWin64vsLinux.py script on all tests")
+        logMsg("Run targetcompare.py script on all tests")
     else:
-        logMsg(f"Run targetcompareWin64vsLinux.py script on test '{test}'")
-    compareWinVsLinux.runComparison(test)
-    compareIncLinux.runComparison(test)
+        logMsg(f"Run targetcompare.py script on test '{test}'")
+    if Platform == "linux":
+        targetcompare.runComparison(test, "linux", "windows")
+    targetcompare.runComparison(test, Platform, Platform)
 
 
 def createFilesystemLinksAtWebServerDirectory():
@@ -123,8 +137,8 @@ def createFilesystemLinksAtWebServerDirectory():
 
 
 def clearBuildFlagToSignalTestCompletionToJenkins():
-    logMsg(f"Clear flag in file '{buildFlag}' to signal jenkins that test finished.")
-    f = open(buildFlag, 'w')
+    logMsg(f"Clear flag in file '{BuildFlag}' to signal jenkins that test finished.")
+    f = open(BuildFlag, 'w')
     f.write("")
     f.close()
 
@@ -143,41 +157,47 @@ def executeTests(openspaceDir, testRelPath):
         runAllTests(openspaceDir, allTestsListed)
         runComparisons("")
     else:
-        runAllTests(openspaceDir, testRelPath)
+        runAllTests(openspaceDir, {testRelPath})
         runComparisons(testRelPath)
     createFilesystemLinksAtWebServerDirectory
 
 
 def getPathFromJenkinsTriggerFile():
-    f = open(buildFlag, 'r')
-    readLine = f.read()
-    f.close()
-    if readLine.strip():
-        return readLine.strip()
-    return ""
+    if os.path.isfile(BuildFlag):
+        f = open(BuildFlag, 'r')
+        readLine = f.read()
+        f.close()
+        if readLine.strip():
+            return readLine.strip()
+        return ""
+    else:
+        print(f"Cannot find jenkins trigger file at {BuildFlag}")
+        quit(-1)
 
 
 if __name__ == "__main__":
     assert sys.version_info >= (3, 5), "Script requires Python 3.5+."
-    if os.path.isfile(logFile):
-        os.remove(logFile)
+    if os.path.isfile(LogFile):
+        os.remove(LogFile)
     parser = parserInitialization()
     args = handleArgumentParsing(parser)
     #Determine which installation directory for OpenSpace to run
     if not args.customDir.strip():
         args.customDir = getPathFromJenkinsTriggerFile()
     else:
-        logAndDisplayMsg(f"Running test(s) on OpenSpace installation at {customDir}.")
+        logAndDisplayMsg(f"Running test(s) on OpenSpace installation at " \
+                         f"{args.customDir}.")
     #Verify custom test directory to run (if specified)
     if args.customTest != "":
-        testPath = f"{args.customTest}/{imageTestingSubdirInOs}/{args.customTest}"
-        if os.path.isdir(testPath):
+        testPath = os.path.abspath(os.path.join(args.customDir, ImageTestingSubdirInOs,\
+                                                args.customTest))
+        if os.path.isfile(testPath):
             logAndDisplayMsg(f"Running manual test on OpenSpace installation "\
-                              "(test {args.customTest}).")
+                             f"(test {args.customTest}).")
         else:
             errorMsg(f"Error: cannot find specified test file at {testPath}.")
             quit(-1)
-    if args.customDir.strip() and args.customTest.strip():
+    if args.customDir.strip():
         #Run a single test if a custom directory or specific test was named
         executeTests(args.customDir, args.customTest)
     else:

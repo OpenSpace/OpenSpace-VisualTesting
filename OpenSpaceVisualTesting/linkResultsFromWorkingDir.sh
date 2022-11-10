@@ -35,7 +35,7 @@ function makePngImageLinks
 #rm ${tgt}/*.json
 #makePngImageLinks TargetImages
 makePngImageLinks TargetImages/linux
-makePngImageLinks TargetImages/win64
+makePngImageLinks TargetImages/windows
 makePngImageLinks ResultImages/linux
-makePngImageLinks DifferenceImages/win64vsLinux
+makePngImageLinks DifferenceImages/windowsvsLinux
 makePngImageLinks DifferenceImages/linux

@@ -6,6 +6,7 @@ import json
 import os
 import pathlib
 from pathlib import Path
+import re
 import shlex
 import signal
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
@@ -45,13 +46,13 @@ Paths={
     SHADERS='${BASE}/shaders',
     TEMPORARY='${BASE}/temp',
     GLOBEBROWSING='${BASE}/../OpenSpaceData'
-}
+};
 ModuleConfigurations = {
     GlobeBrowsing = {
         WMSCacheEnabled = false,
         WMSCacheLocation = '${BASE}/cache_gdal',
-        WMSCacheSize = 1024, -- in megabytes PER DATASET
-        TileCacheSize = 2048 -- for all globes (CPU and GPU memory)
+        WMSCacheSize = 1024,
+        TileCacheSize = 2048
     },
     Sync = {
         SynchronizationRoot = '${SYNC}',
@@ -98,7 +99,7 @@ ModuleConfigurations = {
     Space = {
         ShowExceptions = false
     }
-}
+};
 Logging = {
     LogDir = '${LOGS}',
     LogLevel = 'Debug',
@@ -107,30 +108,30 @@ Logging = {
         { Type = 'html', File = '${LOGS}/log.html', Append = false }
     },
     CapabilitiesVerbosity = 'Full'
-}
-ScriptLog = '${LOGS}/ScriptLog.txt'
+};
+ScriptLog = '${LOGS}/ScriptLog.txt';
 Documentation = {
     Path = '${DOCUMENTATION}/'
-}
-VersionCheckUrl = 'http://data.openspaceproject.com/latest-version'
-UseMultithreadedInitialization = true
+};
+VersionCheckUrl = 'http://data.openspaceproject.com/latest-version';
+UseMultithreadedInitialization = true;
 LoadingScreen = {
     ShowMessage = true,
     ShowNodeNames = true,
     ShowProgressbar = false
-}
-CheckOpenGLState = false
-LogEachOpenGLCall = false
-PrintEvents = false
-ShutdownCountdown = 1
-ScreenshotUseDate = true
-BypassLauncher = true
+};
+CheckOpenGLState = false;
+LogEachOpenGLCall = false;
+PrintEvents = false;
+ShutdownCountdown = 1;
+ScreenshotUseDate = true;
+BypassLauncher = true;
 """
 websocket_resource_url = f"ws://localhost:4682/websocket"
 
 
 class OSSession:
-    def __init__(self, profileCL, baseOsDir, logFilename):
+    def __init__(self, profileCL, baseOsDir, appPath, logFilename, platform):
         self.basePath = baseOsDir
         self.log = logFilename
         self.configFile = configFile
@@ -138,25 +139,29 @@ class OSSession:
             self.profile = "default"
         else:
             self.profile = profileCL
-        self.OpenSpaceAppId = "OpenSpace"
+        self.OpenSpaceAppPath = appPath
         self.setConfigString()
         self.generateRunCommand()
         self.osProcId = 0
+        self.platform = platform
 
     def setConfigString(self):
-        self.configValues = "--config \""
-        self.configValues += self.configFile
-        self.configValues += "Profile='" + self.profile + "'" + "\""
+        self.configValues = f"{self.configFile}Profile='{self.profile}'"
         self.generateRunCommand()
 
     def generateRunCommand(self):
-        self.runCommand = self.basePath + "/" + self.OpenSpaceAppId + " "
-        self.runCommand += self.configValues
+        self.runCommand = [os.path.abspath(os.path.join(
+            self.basePath, self.OpenSpaceAppPath))]
+        self.runCommand.append("--config")
+        self.runCommand.append("".join(self.configValues.split()))
 
     def logMessage(self, message):
         print(message)
         lFile = open(self.log, "a+")
-        lFile.write("  " + message + "\n")
+        lFile.write("  " + message)
+        if self.platform == "windows":
+            lFile.write("\r")
+        lFile.write("\n")
         lFile.close()
 
     def setSyncDirectory(self, syncPath):
@@ -218,8 +223,11 @@ class OSSession:
             self.logMessage(message)
 
     def startOpenSpace(self):
-        #self.logMessage(f"Starting OpenSpace with comand:\n{self.runCommand}")
-        self.osProcId = subprocess.Popen(shlex.split(self.runCommand))
+        print("=============================================")
+        for sp in self.runCommand:
+            print(f"*{sp}")
+        print("=============================================")
+        self.osProcId = subprocess.Popen(self.runCommand)
         self.logMessage(f"Started OpenSpace instance with ID '{str(self.osProcId.pid)}'")
         time.sleep(1)
         startTryMsg = self.generateJsonForPause()
@@ -227,12 +235,19 @@ class OSSession:
 
     def killOpenSpace(self):
         self.logMessage("Kill OpenSpace instance")
-        os.killpg(os.getpgid(int(self.osProcId.pid)), signal.SIGTERM)
+        if self.platform == "linux":
+            os.killpg(os.getpgid(int(self.osProcId.pid)), signal.SIGTERM)
+        elif self.platform == "windows":
+            self.osProcId.send_signal(signal.CTRL_BREAK_EVENT)
+            self.osProcId.kill()
         time.sleep(4)
 
     def isOpenSpaceRunning(self):
-        pgid = os.getpgid(int(self.osProcId.pid))
-        if pgid == self.osProcId.pid:
+        if self.platform == "linux":
+            id = os.getpgid(int(self.osProcId.pid))
+        elif self.platform == "windows":
+            id = os.getpid()
+        if id == self.osProcId.pid:
             return True
         else:
             self.logMessage("OpenSpace instance is not running")
@@ -366,11 +381,13 @@ class OSSession:
         self.executeSocketSend(screenshotMsg, "screenshot message", 0)
         time.sleep(2)
         solutionDir = os.getcwd()
-        tmpPath = f"{self.basePath}/../user/screenshots/imagetestingfolder/OpenSpace_000000.png"
+        tmpPath = os.path.abspath(os.path.join(self.basePath, "user", "screenshots",
+                                               "imagetestingfolder",
+                                               "OpenSpace_000000.png"))
         if not Path(tmpPath).is_file():
             self.logMessage(f"Screenshot wasn't successful. Expected to find '{tmpPath}'")
             return
-        targetDir = f"{solutionDir}/ResultImages/linux/"
+        targetDir = f"{solutionDir}/ResultImages/{self.platform}/"
         targetFilename = f"{scenarioGroup}{scenarioName}.png"
         moveToPath = targetDir + targetFilename
         if os.path.isfile(moveToPath):
@@ -456,7 +473,7 @@ def extractArrayFromNavString(navString: str, headerIdx: int):
 
 
 if __name__ == "__main__":
-    ospace = OSSession("default", "~/Desktop/OpenSpace", "testLog.txt")
+    ospace = OSSession("default", "~/Desktop/OpenSpace", "bin/OpenSpace", "testLog.txt")
     ospace.startOpenSpace()
     time.sleep(30)
     ospace.disableHudVisibility()
