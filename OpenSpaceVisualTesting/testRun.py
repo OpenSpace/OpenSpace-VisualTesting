@@ -111,7 +111,7 @@ def runAllTests(baseOsDir, fileList):
             print(f"Run test '{thisTest}' of group '{testGroup}'")
             assetTest = AST.assetRun(baseOsDir, ImageTestingSubdirInOs, testGroup,
                                      thisTest, OpenSpaceExeInOs, LogFile, OsSyncDir,
-                                     Platform)
+                                     UsrRecordSubdirInOs, Platform)
             logAndDisplayMsg(f"Finished OpenSpace test '{test}'.")
     logAndDisplayMsg("Finished all OpenSpace tests.")
 

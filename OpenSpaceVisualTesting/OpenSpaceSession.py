@@ -274,8 +274,8 @@ class OSSession:
     def generateJsonForQuit(self):
         return self.generateJson("openspace.toggleShutdown", [])
 
-    def generateJsonForSetTime(self, time: str):
-        return self.generateJson("openspace.time.setTime", [time])
+    def generateJsonForSetTime(self, timeStr: str):
+        return self.generateJson("openspace.time.setTime", [timeStr])
 
     def generateJsonForScreenshotFolder(self, folder):
         return self.generateJson("openspace.setScreenshotFolder", [folder])
@@ -366,9 +366,9 @@ class OSSession:
         self.executeSocketSend(actionMsg, f"action message ({actionName})", 0)
         time.sleep(1)
  
-    def setTime(self, time):
-        setTimeMsg = self.generateJsonForSetTime(time)
-        self.executeSocketSend(setTimeMsg, f"setTime message ({time})", 0)
+    def setTime(self, timeStr):
+        setTimeMsg = self.generateJsonForSetTime(timeStr)
+        self.executeSocketSend(setTimeMsg, f"setTime message ({timeStr})", 0)
         time.sleep(1)
 
     def moveScreenShot(self, scenarioGroup, scenarioName):

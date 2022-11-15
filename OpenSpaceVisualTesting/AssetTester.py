@@ -50,6 +50,9 @@ def parserInitialization():
         parser.add_argument("-s", "--sync", dest="syncDir",
                             help="the absolute path of the sync dir to use",
                             required=False)
+        parser.add_argument("-r", "--rec", dest="recDir",
+                            help="the relative path of the user recordings dir",
+                            required=False, default="user/recordings")
         parser.add_argument("-p", "--platform", dest="platform",
                             help="the operating system platform for the test (currently"\
                             " either 'windows' or 'linux'",
@@ -112,7 +115,7 @@ def checkForProperDirectories(logFile, platform):
 
 #Insert logic for processing foundTestCases files here
 def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSpace,
-                    log, sync, platform):
+                    log, sync, usrRecDir, platform):
     fullTestDir = os.path.abspath(os.path.join(baseOsDir, testOffsetDir, testGroup))
     logMessage(log, f"AssetTester: Located in: {fullTestDir}", platform)
     logString = f"AssetTester: Starting Test file '{testFilename}'"
@@ -152,8 +155,7 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
                     shotName = ostestValue
                 ospace.moveScreenShot(testGroup, shotName)
             elif ostestType == "time":
-                timeScript = f"openspace.time.setTime({ostestValue});"
-                ospace.sendScript(timeScript)
+                ospace.setTime(ostestValue)
             elif ostestType == "action":
                 ospace.action(ostestValue)
             elif ostestType == "pause":
@@ -164,9 +166,10 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
                 ospace.sendScript(navScript)
             elif ostestType == "recording":
                 #Create a temporary link to the recording in ${RECORDINGS} dir
-                recordingFilename = f"{ostestValue}"
-                src = f"{fullTestDir}/{recordingFilename}"
-                dest = f"{baseOsDir}/user/recordings/{recordingFilename}"
+                recordingFilename = f"{ostestValue}.osrec"
+                src = os.path.abspath(os.path.join(fullTestDir, recordingFilename))
+                dest = os.path.abspath(os.path.join(baseOsDir, usrRecDir, \
+                                                    recordingFilename))
                 if not os.path.exists(dest):
                     os.symlink(src, dest)
                 recordingScript = "openspace.sessionRecording.startPlayback"
@@ -185,11 +188,11 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
 
 
 def assetRun(baseDir, testOffsetDir, testGroup, testFile, appPath, logFile, syncDir,
-             platform):
+             usrRecDir, platform):
     checkInstallation(baseDir, appPath, testOffsetDir, testGroup, testFile, logFile,\
                       platform)
     processTestFile(baseDir, testOffsetDir, testGroup, testFile, appPath,
-                    logFile, syncDir, platform)
+                    logFile, syncDir, usrRecDir, platform)
 
 
 def checkInstallation(baseDir, appPath, testOffsetDir, testGroup, testFilename,
@@ -213,5 +216,6 @@ if __name__ == "__main__":
                       args.testGroup, args.testFilename, args.logFilename,
                       args.platform)
     assetRun(args.baseOsDir, args.testOffsetDir, args.testGroup, args.testFilename,
-             args.appOpenSpace, args.logFilename, args.syncDir, args.platform)
+             args.appOpenSpace, args.logFilename, args.syncDir, args.recDir,
+             args.platform)
     quit(0)
