@@ -42,7 +42,7 @@ def moduleCMakeFlags() {
 //hi micah
 parallel linux_gcc_make: {
   if (env.USE_BUILD_OS_LINUX == 'true') {
-    node('linux-visual' && 'gcc') {
+    node('linux-visual') {
       stage('linux-gcc-make/scm') {
         deleteDir();
         gitHelper.checkoutGit(url, branch);
@@ -51,12 +51,21 @@ parallel linux_gcc_make: {
           def cmakeCompileOptions = moduleCMakeFlags();
           cmakeCompileOptions += ' -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS:STRING="-DGLM_ENABLE_EXPERIMENTAL"'
           cmakeCompileOptions += ' -DOpenGL_GL_PREFERENCE:STRING=GLVND -DASSIMP_BUILD_MINIZIP=1';
+          cmakeCompileOptions += ' -DQT_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6 ';
+          cmakeCompileOptions += ' -DQt6_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6 ';
+          cmakeCompileOptions += ' -DQt6CoreTools_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6CoreTools ';
+          cmakeCompileOptions += ' -DQt6Core_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6Core ';
+          cmakeCompileOptions += ' -DQt6Network_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6Network ';
+          cmakeCompileOptions += ' -DQt6WidgetsTools_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6WidgetsTools ';
+          cmakeCompileOptions += ' -DQt6Widgets_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6Widgets ';
+          cmakeCompileOptions += ' -DQt6GuiTools_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6GuiTools ';
+          cmakeCompileOptions += ' -DQt6DBusTools_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6DBusTools';
           compileHelper.build(compileHelper.Make(), compileHelper.Gcc(), cmakeCompileOptions, 'OpenSpace', 'build-make');
           compileHelper.recordCompileIssues(compileHelper.Gcc());
       }
       stage('linux-gcc-make/img-compare') {
-        sh 'echo $(pwd) > ${IMAGE_TESTING_BASE_PATH}/latestBuild.txt'
-        sh 'while [ 1 ]; do sleep 300; if [ "$(cat ${IMAGE_TESTING_BASE_PATH}/latestBuild.txt)" = "" ]; then break; fi; done'
+        sh 'echo $(pwd) > ${buildFlag}'
+        sh 'while [ 1 ]; do sleep 300; if [ "$(cat ${buildFlag})" = "" ]; then break; fi; done'
       }
       stage('linux-gcc-make/test') {
         // testHelper.runUnitTests('build/OpenSpaceTest');
