@@ -86,6 +86,11 @@ windows_msvc: {
         compileHelper.build(compileHelper.VisualStudio(), compileHelper.VisualStudio(), moduleCMakeFlags(), '', 'build-msvc');
         compileHelper.recordCompileIssues(compileHelper.VisualStudio());
       }
+      stage('windows-msvc/test') {
+        buildFlag = System.getenv("buildFlag")
+        File file = new File(buildFlag)
+        file.write(new File(".").getAbsolutePath())
+      }
       stage('windows/visual-tests') {
           dir('OpenSpace') {
             testHelper.linkFolder(env.OPENSPACE_FILES + "\\sync_full", "sync", );
