@@ -59,6 +59,15 @@ def logMsg(message):
     f.close()
 
 
+def logHeaderLine(message):
+    f = open(LogFile, 'a')
+    f.write(message)
+    if Platform == "windows":
+        f.write("\r")
+    f.write("\n")
+    f.close()
+
+
 def logAndDisplayMsg(message):
     print(message)
     logMsg(message)
@@ -101,11 +110,14 @@ def listAllTestFiles(baseOsDir):
 #Runs one or more tests which are listed in string list arg $2, at the base OpenSpace
 # build directory specified at arg $1.
 def runAllTests(baseOsDir, fileList):
+    nTestsTotal = len(fileList)
+    testIndex = 1
     for test in fileList:
         baseTestPath = os.path.abspath(os.path.join(baseOsDir, ImageTestingSubdirInOs))
         fullTestPath = os.path.abspath(os.path.join(baseTestPath, test))
         if os.path.isfile(fullTestPath):
-            logAndDisplayMsg(f"Starting OpenSpace test '{test}'")
+            logHeaderLine("")
+            logAndDisplayMsg(f"Start OpenSpace test '{test}' ({testIndex}/{nTestsTotal})")
             testGroup = os.path.split(test)[0]
             thisTest = os.path.split(test)[1]
             print(f"Run test '{thisTest}' of group '{testGroup}'")
@@ -113,6 +125,9 @@ def runAllTests(baseOsDir, fileList):
                                      thisTest, OpenSpaceExeInOs, LogFile, OsSyncDir,
                                      UsrRecordSubdirInOs, Platform)
             logAndDisplayMsg(f"Finished OpenSpace test '{test}'.")
+        else:
+            logAndDisplayMsg(f"ERROR: test file '{fullTestPath}' not found.")
+        testIndex += 1
     logAndDisplayMsg("Finished all OpenSpace tests.")
 
 
@@ -154,6 +169,9 @@ def executeTests(openspaceDir, testRelPath):
     setUpBuildDirectoryForRun(openspaceDir)
     if testRelPath == "":
         allTestsListed = listAllTestFiles(openspaceDir)
+        logAndDisplayMsg(f"Start looping through all found .ostest files:")
+        for i in range(0, len(allTestsListed)):
+            logAndDisplayMsg(f"    {i+1} {allTestsListed[i]}")
         runAllTests(openspaceDir, allTestsListed)
         runComparisons("")
     else:
@@ -199,15 +217,17 @@ if __name__ == "__main__":
             quit(-1)
     if args.customDir.strip():
         #Run a single test if a custom directory or specific test was named
+        logAndDisplayMsg(f"Run tests from {args.customDir}.")
         executeTests(args.customDir, args.customTest)
+        logAndDisplayMsg("Finished with one-off custom test run")
     else:
         #Loop to wait for Jenkins trigger to run tests
-        print("Waiting for Jenkins build-completion trigger...")
+        logAndDisplayMsg("Waiting for Jenkins build-completion trigger...")
         while True:
             args.customDir = getPathFromJenkinsTriggerFile()
             if args.customDir.strip():
                 executeTests(args.customDir, "")
                 clearBuildFlagToSignalTestCompletionToJenkins()
-                print("Continuing to wait for next Jenkins build-completion trigger...")
+                logAndDisplayMsg("Continuing to wait for next Jenkins trigger...")
             time.sleep(10)
 

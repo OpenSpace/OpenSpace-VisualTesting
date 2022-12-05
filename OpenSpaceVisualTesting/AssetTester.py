@@ -3,6 +3,7 @@
 from concurrent.futures import TimeoutError
 from glob import glob
 import argparse
+import datetime
 import json
 import os
 import sys
@@ -89,8 +90,9 @@ def verifyTestFileExists(filepath):
 
 def logMessage(filename, message, platform):
     print(message)
+    today = datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
     lFile = open(filename, "a+")
-    lFile.write(" " + message)
+    lFile.write(today + " " + message)
     if platform == "windows":
         lFile.write("\r")
     lFile.write("\n")

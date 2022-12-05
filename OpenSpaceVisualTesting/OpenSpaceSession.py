@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import asyncio
+import datetime
 from glob import glob
 import json
 import os
@@ -157,8 +158,9 @@ class OSSession:
 
     def logMessage(self, message):
         print(message)
+        today = datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
         lFile = open(self.log, "a+")
-        lFile.write("  " + message)
+        lFile.write(today + "  " + message)
         if self.platform == "windows":
             lFile.write("\r")
         lFile.write("\n")
