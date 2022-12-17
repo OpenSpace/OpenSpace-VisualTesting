@@ -25,6 +25,8 @@ Platform = "windows"
 ImageTestingSubdirInOs = "tests/visual"
 #UsrRecordSubdirInOs is relative path to the session recording files from ${BASE}
 UsrRecordSubdirInOs = "user/recordings"
+#RetriesPerTest is the number of times to retry a test if OpenSpace crashes/unresponsive
+RetriesPerTest = 3
 import targetcompare
 
 
@@ -120,11 +122,15 @@ def runAllTests(baseOsDir, fileList):
             logAndDisplayMsg(f"Start OpenSpace test '{test}' ({testIndex}/{nTestsTotal})")
             testGroup = os.path.split(test)[0]
             thisTest = os.path.split(test)[1]
-            print(f"Run test '{thisTest}' of group '{testGroup}'")
-            assetTest = AST.assetRun(baseOsDir, ImageTestingSubdirInOs, testGroup,
-                                     thisTest, OpenSpaceExeInOs, LogFile, OsSyncDir,
-                                     UsrRecordSubdirInOs, Platform)
-            logAndDisplayMsg(f"Finished OpenSpace test '{test}'.")
+            for testAttempt in range(0, RetriesPerTest):
+                logAndDisplayMsg(f"Run test '{thisTest}' of group '{testGroup}' "\
+                                 f"({testAttempt+1}/{RetriesPerTest} tries)")
+                successful = AST.assetRun(baseOsDir, ImageTestingSubdirInOs, testGroup,
+                                          thisTest, OpenSpaceExeInOs, LogFile, OsSyncDir,
+                                          UsrRecordSubdirInOs, Platform)
+                if successful:
+                    logAndDisplayMsg(f"Finished OpenSpace test '{test}'.")
+                    break
         else:
             logAndDisplayMsg(f"ERROR: test file '{fullTestPath}' not found.")
         testIndex += 1

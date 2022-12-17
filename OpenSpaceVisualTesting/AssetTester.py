@@ -118,6 +118,7 @@ def checkForProperDirectories(logFile, platform):
 #Insert logic for processing foundTestCases files here
 def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSpace,
                     log, sync, usrRecDir, platform):
+    successfullyCompletedAllSteps = False
     fullTestDir = os.path.abspath(os.path.join(baseOsDir, testOffsetDir, testGroup))
     logMessage(log, f"AssetTester: Located in: {fullTestDir}", platform)
     logString = f"AssetTester: Starting Test file '{testFilename}'"
@@ -131,8 +132,8 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
     if not result:
         logMessage(log, "Failed to connect to a running instance of OpenSpace", platform)
         ospace.quitOpenSpace()
-        time.sleep(3)
-        quit(-3)
+        time.sleep(2)
+        return False
     logMessage(log, "AssetTester: Ready to send commands to OpenSpace.", platform)
     ospace.disableHudVisibility()
     time.sleep(1.0)
@@ -140,6 +141,8 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
     with open(f"{fullTestDir}/{testFilename}") as f:
         data = json.load(f)
         for d in data:
+            if not ospace.isOpenSpaceRunning():
+                break
             time.sleep(0.25)
             ostestType = d["type"]
             ostestValue = d["value"]
@@ -180,6 +183,7 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
             else:
                 logMessage(log, f"AssetTester: unhandled ostest entry of type " \
                            "'{ostestType}' with value '{ostestValue}'.", platform)
+        successfullyCompletedAllSteps = True
     logMessage(log, "Done parsing .ostest entries.", platform)
     ospace.quitOpenSpace()
     time.sleep(5)
@@ -187,14 +191,15 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
     #ospace.killOpenSpace()
     logMessage(log, f"Processed test '{testGroup}/{testFilename}'.", platform)
     time.sleep(5)
+    return successfullyCompletedAllSteps
 
 
 def assetRun(baseDir, testOffsetDir, testGroup, testFile, appPath, logFile, syncDir,
              usrRecDir, platform):
-    checkInstallation(baseDir, appPath, testOffsetDir, testGroup, testFile, logFile,\
+    checkInstallation(baseDir, appPath, testOffsetDir, testGroup, testFile, logFile,
                       platform)
-    processTestFile(baseDir, testOffsetDir, testGroup, testFile, appPath,
-                    logFile, syncDir, usrRecDir, platform)
+    return processTestFile(baseDir, testOffsetDir, testGroup, testFile, appPath,
+                           logFile, syncDir, usrRecDir, platform)
 
 
 def checkInstallation(baseDir, appPath, testOffsetDir, testGroup, testFilename,

@@ -214,7 +214,7 @@ class OSSession:
             ws.send(message)
         except Exception:
             self.logMessage("Unable to create socket connection in startSocketConnection")
-            quit(-3)
+            #quit(-3)
 
     async def transmit(self, websocket: websockets.WebSocketClientProtocol, message):
         try:
