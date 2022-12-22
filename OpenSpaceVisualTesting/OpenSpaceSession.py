@@ -7,6 +7,7 @@ import json
 import os
 import pathlib
 from pathlib import Path
+import psutil
 import re
 import shlex
 import signal
@@ -230,7 +231,7 @@ class OSSession:
             print(f"*{sp}")
         print("=============================================")
         self.osProcId = subprocess.Popen(self.runCommand)
-        self.logMessage(f"Started OpenSpace instance with ID '{str(self.osProcId.pid)}'")
+        self.logMessage(f"Started OpenSpace instance with ID {str(self.osProcId.pid)}")
         time.sleep(1)
         startTryMsg = self.generateJsonForPause()
         return asyncio.run(self.startSocketConnectionWithRetries(startTryMsg, 2))
@@ -238,7 +239,15 @@ class OSSession:
     def killOpenSpace(self):
         self.logMessage("Kill OpenSpace instance")
         if self.platform == "linux":
-            os.killpg(os.getpgid(int(self.osProcId.pid)), signal.SIGTERM)
+            try:
+                self.logMessage(f"Kill process ID {str(self.osProcId.pid)}")
+                self.osProcId.terminate()
+                self.osProcId.kill()
+                os.kill(int(self.osProcId.pid), signal.SIGTERM)
+                os.kill(int(self.osProcId.pid), signal.SIGKILL)
+                os.system(f"kill -9 {self.osProcId.pid}")
+            except OSError:
+                self.logMessage("OpenSpace instance already shut down")
         elif self.platform == "windows":
             self.osProcId.send_signal(signal.CTRL_BREAK_EVENT)
             self.osProcId.kill()
@@ -246,14 +255,23 @@ class OSSession:
 
     def isOpenSpaceRunning(self):
         if self.platform == "linux":
-            id = os.getpgid(int(self.osProcId.pid))
+            for proc in psutil.process_iter():
+                if proc.pid == self.osProcId.pid:
+                    if self.osProcId.poll() != None:
+                        return False
+                    else:
+                        return True
+            return False
         elif self.platform == "windows":
             id = os.getpid()
-        if id == self.osProcId.pid:
-            return True
-        else:
-            self.logMessage("OpenSpace instance is not running")
+            if id == self.osProcId.pid:
+                return True
+            else:
+                msg = f"OpenSpace instance is not running (mismatch of {id} & "\
+                      f"{self.osProcId.pid} pIDs)"
+            self.logMessage(msg)
             return False
+
 
     def quitOpenSpace(self):
         quitRetries = 0

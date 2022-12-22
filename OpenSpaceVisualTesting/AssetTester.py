@@ -70,7 +70,7 @@ def handleArgumentParsing(parser):
 
 def verifyBaseOsDirectoryExists(directory):
     if not os.path.exists(directory):
-        print(f"Error: cannot find base OpenSpace directory '{directory}'.")
+        logMessage(f"Error: cannot find base OpenSpace directory '{directory}'.")
         quit(-1)
 
 
@@ -78,13 +78,13 @@ def verifyOpenSpaceAppExists(baseDir, appPath):
     fullAppPath = os.path.abspath(os.path.join(baseDir, appPath))
     print(f"{fullAppPath}")
     if not os.path.isfile(fullAppPath):
-        print(f"Error: cannot find OpenSpace application at '{fullAppPath}'.")
+        logMessage(f"Error: cannot find OpenSpace application at '{fullAppPath}'.")
         quit(-1)
 
 
 def verifyTestFileExists(filepath):
     if not os.path.exists(filepath):
-        print(f"Error: cannot find specified test file at '{filepath}'.")
+        logMessage(f"Error: cannot find specified test file at '{filepath}'.")
         quit(-1)
 
 

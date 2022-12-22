@@ -117,6 +117,7 @@ def runAllTests(baseOsDir, fileList):
     for test in fileList:
         baseTestPath = os.path.abspath(os.path.join(baseOsDir, ImageTestingSubdirInOs))
         fullTestPath = os.path.abspath(os.path.join(baseTestPath, test))
+        logAndDisplayMsg(f"Run '{fullTestPath}'.")
         if os.path.isfile(fullTestPath):
             logHeaderLine("")
             logAndDisplayMsg(f"Start OpenSpace test '{test}' ({testIndex}/{nTestsTotal})")
@@ -208,9 +209,11 @@ if __name__ == "__main__":
     #Determine which installation directory for OpenSpace to run
     if not args.customDir.strip():
         args.customDir = getPathFromJenkinsTriggerFile()
+        customTest = False
     else:
         logAndDisplayMsg(f"Running test(s) on OpenSpace installation at " \
                          f"{args.customDir}.")
+        customTest = True
     #Verify custom test directory to run (if specified)
     if args.customTest != "":
         testPath = os.path.abspath(os.path.join(args.customDir, ImageTestingSubdirInOs,\
@@ -221,7 +224,7 @@ if __name__ == "__main__":
         else:
             errorMsg(f"Error: cannot find specified test file at {testPath}.")
             quit(-1)
-    if args.customDir.strip():
+    if customTest:
         #Run a single test if a custom directory or specific test was named
         logAndDisplayMsg(f"Run tests from {args.customDir}.")
         executeTests(args.customDir, args.customTest)
