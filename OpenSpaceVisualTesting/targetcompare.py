@@ -53,15 +53,15 @@ def processImageFilesAndProduceReports(srcPlatform, targetPlatform, testSubset):
         if testSubset != "":
             if fileNameBase[0:len(testSubset)] != testSubset.replace("/", ""):
                 continue
-        fileNameTarget = f"{targetDir}Target{fileNameBase}.png"
-        fileNameResult = f"{resultDir}{fileNameBase}.png"
+        fileNameTarget = f"{targetDir}/Target{fileNameBase}.png"
+        fileNameResult = f"{resultDir}/{fileNameBase}.png"
         fileNameDiff = f"{diffDir}{fileNameBase}.png"
         compareValue = b""
         found_target = pathlib.Path(fileNameTarget).exists()
         found_result = pathlib.Path(fileNameResult).exists()
         if found_target and found_result:
             print(f"Comparing source '{fileNameResult}' against target "\
-                  "'{fileNameTarget}'.")
+                  f"'{fileNameTarget}'.")
             compareValue = compareImage(fileNameTarget, fileNameResult, fileNameDiff)
             compareValue = str(compareValue.decode()).split(" ")[0]
             writeToReport(comparisonReportFilename,
