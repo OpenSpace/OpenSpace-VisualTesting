@@ -138,7 +138,9 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
     ospace.disableHudVisibility()
     time.sleep(1.0)
 
-    with open(f"{fullTestDir}/{testFilename}") as f:
+    testFilePath = os.path.abspath(os.path.join(fullTestDir, testFilename))
+    logMessage(log, f"Opening test file {testFilePath}", platform)
+    with open(testFilePath) as f:
         data = json.load(f)
         for d in data:
             if not ospace.isOpenSpaceRunning():
