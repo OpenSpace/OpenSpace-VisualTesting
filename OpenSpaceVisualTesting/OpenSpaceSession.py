@@ -145,6 +145,7 @@ class OSSession:
         self.setConfigString()
         self.generateRunCommand()
         self.osProcId = 0
+        self.osPythonProcId = 0
         self.platform = platform
 
     def setConfigString(self):
@@ -231,6 +232,7 @@ class OSSession:
             print(f"*{sp}")
         print("=============================================")
         self.osProcId = subprocess.Popen(self.runCommand)
+        self.osPythonProcId = os.getpid()
         self.logMessage(f"Started OpenSpace instance with ID {str(self.osProcId.pid)}")
         time.sleep(1)
         startTryMsg = self.generateJsonForPause()
@@ -264,7 +266,7 @@ class OSSession:
             return False
         elif self.platform == "windows":
             id = os.getpid()
-            if id == self.osProcId.pid:
+            if id == self.osProcId.pid or id == self.osPythonProcId:
                 return True
             else:
                 msg = f"OpenSpace instance is not running (mismatch of {id} & "\
