@@ -358,6 +358,7 @@ class OSSession:
         positionIdx = navString.find("Position")
         upIdx = navString.find("Up")
         yawIdx = navString.find("Yaw")
+        referenceFrameIdx = navString.find("ReferenceFrame")
         result = {}
         if anchorIdx != -1:
             result["Anchor"] = extractValueFromNavString(navString, anchorIdx)
@@ -369,6 +370,9 @@ class OSSession:
             result["Up"] = extractArrayFromNavString(navString, upIdx)
         if yawIdx != -1:
             result["Yaw"] = float(extractValueFromNavString(navString, yawIdx))
+        if referenceFrameIdx != -1:
+            result["ReferenceFrame"] = extractValueFromNavString(navString,
+                                                                 referenceFrameIdx)
         return result
 
     def generateJson(self, func: str, args: []):
