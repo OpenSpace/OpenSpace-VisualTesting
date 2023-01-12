@@ -55,7 +55,7 @@ def processImageFilesAndProduceReports(srcPlatform, targetPlatform, testSubset):
                 continue
         fileNameTarget = f"{targetDir}/Target{fileNameBase}.png"
         fileNameResult = f"{resultDir}/{fileNameBase}.png"
-        fileNameDiff = f"{diffDir}{fileNameBase}.png"
+        fileNameDiff = f"{diffDir}/{fileNameBase}.png"
         compareValue = b""
         found_target = pathlib.Path(fileNameTarget).exists()
         found_result = pathlib.Path(fileNameResult).exists()
