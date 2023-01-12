@@ -186,7 +186,7 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
                 logMessage(log, f"AssetTester: unhandled ostest entry of type " \
                            "'{ostestType}' with value '{ostestValue}'.", platform)
         successfullyCompletedAllSteps = True
-    logMessage(log, "Done parsing .ostest entries.", platform)
+    logMessage(log, f"Done parsing .ostest entries in {testFilePath}.", platform)
     ospace.quitOpenSpace()
     time.sleep(5)
     #Kill in case the quit command wasn't processed

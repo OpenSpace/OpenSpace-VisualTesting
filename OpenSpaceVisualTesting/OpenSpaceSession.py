@@ -413,9 +413,9 @@ class OSSession:
         if not Path(tmpPath).is_file():
             self.logMessage(f"Screenshot wasn't successful. Expected to find '{tmpPath}'")
             return
-        targetDir = f"{solutionDir}/ResultImages/{self.platform}/"
         targetFilename = f"{scenarioGroup}{scenarioName}.png"
-        moveToPath = targetDir + targetFilename
+        moveToPath = os.path.abspath(os.path.join(solutionDir, "ResultImages",
+                                                  self.platform, targetFilename))
         if os.path.isfile(moveToPath):
             os.remove(moveToPath)
         os.rename(tmpPath, moveToPath)
