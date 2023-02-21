@@ -173,7 +173,7 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
                 ospace.sendScript(navScript)
             elif ostestType == "recording":
                 #Create a temporary link to the recording in ${RECORDINGS} dir
-                recordingFilename = f"{ostestValue}.osrec"
+                recordingFilename = f"{ostestValue}"
                 src = os.path.abspath(os.path.join(fullTestDir, recordingFilename))
                 dest = os.path.abspath(os.path.join(baseOsDir, usrRecDir, \
                                                     recordingFilename))
