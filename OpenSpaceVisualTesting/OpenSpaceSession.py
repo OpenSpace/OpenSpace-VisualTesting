@@ -10,6 +10,7 @@ from pathlib import Path
 import psutil
 import re
 import shlex
+import shutil
 import signal
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 import subprocess
@@ -149,7 +150,8 @@ class OSSession:
         self.platform = platform
 
     def setConfigString(self):
-        self.configValues = f"{self.configFile}Profile='{self.profile}'"
+        self.configValues = f"{self.configFile}Profile='{self.profile}';"
+        #self.configValues += "SGCTConfig='${CONFIG}/image_comparison.json'"
         self.generateRunCommand()
 
     def generateRunCommand(self):
@@ -418,7 +420,7 @@ class OSSession:
                                                   self.platform, targetFilename))
         if os.path.isfile(moveToPath):
             os.remove(moveToPath)
-        os.rename(tmpPath, moveToPath)
+        shutil.move(tmpPath, moveToPath)
         self.logMessage(f"Moved screenshot: '{targetFilename}' to '{moveToPath}'")
 
     def executeSocketSend(self, message, description, nRetries):

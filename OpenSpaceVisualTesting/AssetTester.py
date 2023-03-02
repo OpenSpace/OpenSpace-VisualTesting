@@ -10,6 +10,7 @@ import sys
 import time
 import pathlib
 from pathlib import Path
+import shutil
 import subprocess
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 import OpenSpaceSession as OSS
@@ -178,7 +179,7 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
                 dest = os.path.abspath(os.path.join(baseOsDir, usrRecDir, \
                                                     recordingFilename))
                 if not os.path.exists(dest):
-                    os.symlink(src, dest)
+                    shutil.copyfile(src, dest)
                 recordingScript = "openspace.sessionRecording.startPlayback"
                 ospace.sendScript(f"{recordingScript}('{recordingFilename}')")
                 ospace.waitForPlaybackToFinish()
@@ -207,10 +208,13 @@ def assetRun(baseDir, testOffsetDir, testGroup, testFile, appPath, logFile, sync
 def checkInstallation(baseDir, appPath, testOffsetDir, testGroup, testFilename,
                       logFilename, platform):
     assert sys.version_info >= (3, 5), "Script requires Python 3.5+."
+    sgctConfigFile="image_comparison.json"
     verifyBaseOsDirectoryExists(baseDir)
     verifyOpenSpaceAppExists(baseDir, appPath)
     verifyTestFileExists(f"{baseDir}/{testOffsetDir}/{testGroup}/{testFilename}")
     checkForProperDirectories(logFilename, platform)
+    if not os.path.exists(f"{baseDir}/config/{sgctConfigFile}"):
+        shutil.copyfile(f"./{sgctConfigFile}", f"{baseDir}/config/{sgctConfigFile}")
     if (not platform == "windows") and (not platform == "linux"):
         logMessage(logFilename, f"Platform '{platform}' is not supported "\
                    f"(only 'windows' or 'linux').", platform)
