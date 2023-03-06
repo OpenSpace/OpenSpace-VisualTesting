@@ -258,23 +258,23 @@ class OSSession:
         time.sleep(4)
 
     def isOpenSpaceRunning(self):
-        if self.platform == "linux":
-            for proc in psutil.process_iter():
-                if proc.pid == self.osProcId.pid:
-                    if self.osProcId.poll() != None:
-                        return False
-                    else:
-                        return True
-            return False
-        elif self.platform == "windows":
-            id = os.getpid()
-            if id == self.osProcId.pid or id == self.osPythonProcId:
-                return True
-            else:
-                msg = f"OpenSpace instance is not running (mismatch of {id} & "\
-                      f"{self.osProcId.pid} pIDs)"
-            self.logMessage(msg)
-            return False
+        # if self.platform == "linux":
+        for proc in psutil.process_iter():
+            if proc.pid == self.osProcId.pid:
+                if self.osProcId.poll() != None:
+                    return False
+                else:
+                    return True
+        return False
+        # elif self.platform == "windows":
+        #     id = os.getpid()
+        #     if id == self.osProcId.pid or id == self.osPythonProcId:
+        #         return True
+        #     else:
+        #         msg = f"OpenSpace instance is not running (mismatch of {id} & "\
+        #               f"{self.osProcId.pid} pIDs)"
+        #     self.logMessage(msg)
+        #     return False
 
 
     def quitOpenSpace(self):
