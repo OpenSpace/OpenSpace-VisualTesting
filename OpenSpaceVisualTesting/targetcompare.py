@@ -44,6 +44,8 @@ def processImageFilesAndProduceReports(srcPlatform, targetPlatform, testSubset):
         recursive=True))
     items = []
     comparisonReportFilename = f"Comparison_{srcPlatform}-vs-{targetPlatform}.report"
+    if testSubset.endswith(".ostest"):
+        testSubset = testSubset[:-(len(".ostest"))]
     if pathlib.Path(comparisonReportFilename).exists():
         os.remove(comparisonReportFilename)
     for resultPath in imageListingTargets:
