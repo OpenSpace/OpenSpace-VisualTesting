@@ -42,7 +42,7 @@ def moduleCMakeFlags() {
 parallel linux_run: {
   if (env.USE_BUILD_OS_LINUX == 'true') {
     node('linux-visual') {
-      stage('linux/run') {
+      wrap([$class: 'Xvfb']) {
         sh '/var/lib/jenkins/Desktop/OpenSpace/bin/OpenSpace'
       }
       cleanWs()
