@@ -40,6 +40,10 @@ def moduleCMakeFlags() {
 // Pipeline start
 //
 parallel linux_run: {
+  environment {
+    DISPLAY = ":1"
+  }
+
   if (env.USE_BUILD_OS_LINUX == 'true') {
     node('linux-visual') {
       wrap([$class: 'Xvfb']) {
