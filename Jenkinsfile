@@ -46,8 +46,8 @@ parallel linux_run: {
 
   if (env.USE_BUILD_OS_LINUX == 'true') {
     node('linux-visual') {
-      wrap([$class: 'Xvfb']) {
-        sh 'export DISPLAY=:1; /var/lib/jenkins/Desktop/OpenSpace/bin/OpenSpace'
+      wrap([$class: 'Xvfb :1 1280x960x24']) {
+        sh '/var/lib/jenkins/Desktop/OpenSpace/bin/OpenSpace'
       }
       cleanWs()
     } // node('linux')
