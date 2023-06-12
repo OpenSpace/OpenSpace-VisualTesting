@@ -48,6 +48,7 @@ parallel linux_run: {
     node('linux-visual') {
       wrap([$class: 'Xvfb']) {
         displayName = 1;
+        screen = "1280x960x24";
         sh '/var/lib/jenkins/Desktop/OpenSpace/bin/OpenSpace'
       }
       cleanWs()
