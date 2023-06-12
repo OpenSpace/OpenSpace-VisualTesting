@@ -47,6 +47,7 @@ parallel linux_run: {
   if (env.USE_BUILD_OS_LINUX == 'true') {
     node('linux-visual') {
       wrap([$class: 'Xvfb']) {
+        displayName = 1;
         sh '/var/lib/jenkins/Desktop/OpenSpace/bin/OpenSpace'
       }
       cleanWs()
