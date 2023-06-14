@@ -46,7 +46,7 @@ parallel linux_run: {
 
   if (env.USE_BUILD_OS_LINUX == 'true') {
     node('linux-visual') {
-      wrappers {
+      wrap {
         xvfb('default') {
           screen('1280x960x24') {
             sh '/var/lib/jenkins/Desktop/OpenSpace/bin/OpenSpace'
