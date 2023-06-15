@@ -41,12 +41,12 @@ def moduleCMakeFlags() {
 //
 parallel linux_run: {
   environment {
-    DISPLAY = ":1"
+    export DISPLAY = ":1"
   }
 
   if (env.USE_BUILD_OS_LINUX == 'true') {
     node('linux-visual') {
-      wrap([$class: 'Xvfb', displayNameOffset: 1, screen: '1 1280x960x24']) {
+      wrap([$class: 'Xvfb', displayNameOffset: 1, screen: '1280x960x24']) {
         sh '/var/lib/jenkins/Desktop/OpenSpace/bin/OpenSpace'
       }
       cleanWs()
