@@ -51,6 +51,7 @@ parallel linux_gcc_make: {
           def cmakeCompileOptions = moduleCMakeFlags();
           cmakeCompileOptions += ' -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS:STRING="-DGLM_ENABLE_EXPERIMENTAL"'
           cmakeCompileOptions += ' -DOpenGL_GL_PREFERENCE:STRING=GLVND -DASSIMP_BUILD_MINIZIP=1';
+          cmakeCompileOptions += ' -DOPENSPACE_MODULE_VIDEO=OFF';
           cmakeCompileOptions += ' -DQT_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6 ';
           cmakeCompileOptions += ' -DQt6_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6 ';
           cmakeCompileOptions += ' -DQt6CoreTools_DIR=/home/openspace/Qt6/6.3.1/gcc_64/lib/cmake/Qt6CoreTools ';
