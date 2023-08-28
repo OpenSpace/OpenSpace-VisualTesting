@@ -18,7 +18,7 @@ BuildFlag = "C:/Users/OpenSpace/Desktop/latestBuild.txt"
 OsSyncDir= "C:/Users/OpenSpace/Desktop/SYNC"
 #OpenSpaceExeInOs is the relative path (from ${BASE}) to the OpenSpace executable.
 OpenSpaceExeInOs = "bin/Debug/OpenSpace.exe"
-LogFile = "testLog.txt"
+LogFile = "log/testLog.txt"
 #Platform must be either "windows" or "linux"
 Platform = "windows"
 #ImageTestingSubdirInOs is relative path to the visual tests (.ostest files) from ${BASE}

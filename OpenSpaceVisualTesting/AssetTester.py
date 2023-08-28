@@ -48,7 +48,7 @@ def parserInitialization():
                             required=True)
         parser.add_argument("-l", "--logfile", dest="logFilename",
                             help="the filename of the log file for this test run",
-                            required=False, default="testLog.txt")
+                            required=False, default="log/testLog.txt")
         parser.add_argument("-s", "--sync", dest="syncDir",
                             help="the absolute path of the sync dir to use",
                             required=False)
@@ -194,6 +194,8 @@ def processTestFile(baseOsDir, testOffsetDir, testGroup, testFilename, appOpenSp
     #ospace.killOpenSpace()
     logMessage(log, f"Processed test '{testGroup}/{testFilename}'.", platform)
     time.sleep(5)
+    shutil.copyfile(f"{baseOsDir}/logs/log.html",
+                    f"./log/log_{testGroup}{testFilename}.html")
     return successfullyCompletedAllSteps
 
 
