@@ -1,5 +1,8 @@
 import groovy.io.FileType
 
+//Immediate return statement to prevent running builds
+return;
+
 library('sharedSpace'); // jenkins-pipeline-lib
 
 def url = 'https://github.com/OpenSpace/OpenSpace';
