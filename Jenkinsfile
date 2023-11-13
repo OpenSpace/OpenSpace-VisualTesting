@@ -1,5 +1,8 @@
 import groovy.io.FileType
 
+//Immediate return statement to prevent running builds
+return;
+
 library('sharedSpace'); // jenkins-pipeline-lib
 
 def url = 'https://github.com/OpenSpace/OpenSpace';
@@ -43,6 +46,8 @@ def moduleCMakeFlags() {
 parallel linux_gcc_make: {
   if (env.USE_BUILD_OS_LINUX == 'true') {
     node('linux-visual') {
+      // Just do an early return for now; this groovy script is not currently used
+      return;
       stage('linux-gcc-make/scm') {
         deleteDir();
         gitHelper.checkoutGit(url, branch);
