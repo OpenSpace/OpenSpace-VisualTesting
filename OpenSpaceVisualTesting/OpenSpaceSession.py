@@ -22,114 +22,6 @@ import websockets
 
 #This script handles the OpenSpace-specific parts of running an .ostest file
 
-configFile = """
-ScreenshotUseDate=false;
-ModuleConfigurations.GlobeBrowsing.WMSCacheEnabled=true;
-BypassLauncher=true;
-Paths={
-    DATA='${BASE}/data',
-    ASSETS='${DATA}/assets',
-    PROFILES='${DATA}/profiles',
-    USER='${BASE}/user',
-    USER_ASSETS='${USER}/data/assets',
-    USER_PROFILES='${USER}/data/profiles',
-    USER_CONFIG='${USER}/config',
-    FONTS='${DATA}/fonts',
-    TASKS='${DATA}/tasks',
-    SYNC='${BASE}/sync',
-    SCREENSHOTS='${USER}/screenshots',
-    WEB='${DATA}/web',
-    RECORDINGS='${USER}/recordings',
-    CACHE='${BASE}/cache',
-    CONFIG='${BASE}/config',
-    DOCUMENTATION='${BASE}/documentation',
-    LOGS='${BASE}/logs',
-    MODULES='${BASE}/modules',
-    SCRIPTS='${BASE}/scripts',
-    SHADERS='${BASE}/shaders',
-    TEMPORARY='${BASE}/temp',
-    GLOBEBROWSING='${BASE}/../OpenSpaceData'
-};
-ModuleConfigurations = {
-    GlobeBrowsing = {
-        WMSCacheEnabled = false,
-        WMSCacheLocation = '${BASE}/cache_gdal',
-        WMSCacheSize = 1024,
-        TileCacheSize = 2048
-    },
-    Sync = {
-        SynchronizationRoot = '${SYNC}',
-        HttpSynchronizationRepositories = {
-            'http://data.openspaceproject.com/request'
-        }
-    },
-    Server = {
-        AllowAddresses = { '127.0.0.1', 'localhost' },
-        SkyBrowserUpdateTime = 50,
-        Interfaces = {
-            {
-                Type = 'TcpSocket',
-                Identifier = 'DefaultTcpSocketInterface',
-                Port = 4681,
-                Enabled = true,
-                DefaultAccess = 'Deny',
-                RequirePasswordAddresses = {},
-                Password = ''
-            },
-            {
-                Type = 'WebSocket',
-                Identifier = 'DefaultWebSocketInterface',
-                Port = 4682,
-                Enabled = true,
-                DefaultAccess = 'Deny',
-                RequirePasswordAddresses = {},
-                Password = ''
-            }
-        }
-    },
-    WebBrowser = {
-        Enabled = true
-    },
-    WebGui = {
-        Address = 'localhost',
-        HttpPort = 4680,
-        WebSocketInterface = 'DefaultWebSocketInterface'
-    },
-    CefWebGui = {
-        Enabled = true,
-        Visible = true
-    },
-    Space = {
-        ShowExceptions = false
-    }
-};
-Logging = {
-    LogDir = '${LOGS}',
-    LogLevel = 'Debug',
-    ImmediateFlush = true,
-    Logs = {
-        { Type = 'html', File = '${LOGS}/log.html', Append = false }
-    },
-    CapabilitiesVerbosity = 'Full'
-};
-ScriptLog = '${LOGS}/ScriptLog.txt';
-Documentation = {
-    Path = '${DOCUMENTATION}/'
-};
-VersionCheckUrl = 'http://data.openspaceproject.com/latest-version';
-UseMultithreadedInitialization = true;
-LoadingScreen = {
-    ShowMessage = true,
-    ShowNodeNames = true,
-    ShowProgressbar = false
-};
-CheckOpenGLState = false;
-LogEachOpenGLCall = false;
-PrintEvents = false;
-ShutdownCountdown = 1;
-ScreenshotUseDate = true;
-BypassLauncher = true;
-"""
 websocket_resource_url = f"ws://localhost:4682/websocket"
 
 
@@ -137,28 +29,23 @@ class OSSession:
     def __init__(self, profileCL, baseOsDir, appPath, logFilename, platform):
         self.basePath = baseOsDir
         self.log = logFilename
-        self.configFile = configFile
         if len(profileCL) == 0:
             self.profile = "default"
         else:
             self.profile = profileCL
         self.OpenSpaceAppPath = appPath
-        self.setConfigString()
         self.generateRunCommand()
         self.osProcId = 0
         self.osPythonProcId = 0
         self.platform = platform
 
-    def setConfigString(self):
-        self.configValues = f"{self.configFile}Profile='{self.profile}';"
-        #self.configValues += "SGCTConfig='${CONFIG}/image_comparison.json'"
-        self.generateRunCommand()
-
     def generateRunCommand(self):
         self.runCommand = [os.path.abspath(os.path.join(
             self.basePath, self.OpenSpaceAppPath))]
-        self.runCommand.append("--config")
-        self.runCommand.append("".join(self.configValues.split()))
+        self.runCommand.append("--profile")
+        self.runCommand.append(f"{self.profile}")
+        self.runCommand.append("--bypassLauncher")
+        self.runCommand.append("true")
 
     def logMessage(self, message):
         print(message)
@@ -171,14 +58,7 @@ class OSSession:
         lFile.close()
 
     def setSyncDirectory(self, syncPath):
-        syncPos1 = self.configFile.find("SYNC=\'")
-        if syncPos1 != -1:
-            syncPos2 = self.configFile.find("\'", syncPos1 + 7)
-            syncPathExisting = self.configFile[syncPos1:syncPos2+1]
-            syncPath = f"SYNC=\'{syncPath}\'"
-            self.configFile = self.configFile[0:syncPos1] + syncPath \
-                + self.configFile[syncPos2+1:]
-            self.setConfigString()
+        os.environ["OPENSPACE_SYNC"] = syncPath
 
     async def connectRetries(self, url: str, message, nRetries: int):
         for t in range(0, nRetries+1):
@@ -230,8 +110,7 @@ class OSSession:
 
     def startOpenSpace(self):
         print("=============================================")
-        for sp in self.runCommand:
-            print(f"*{sp}")
+        print(f"{self.runCommand}")
         print("=============================================")
         self.osProcId = subprocess.Popen(self.runCommand)
         self.osPythonProcId = os.getpid()
