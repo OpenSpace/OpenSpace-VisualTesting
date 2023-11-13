@@ -1,10 +1,15 @@
 .vs*
+*.swp
+__pycache__
 packages/
 OpenSpaceVisualTesting/obj/*
 OpenSpaceVisualTesting/bin/*
 **/Result*.png
 **/Difference*.png
+OpenSpaceVisualTesting/DifferenceImages/linux/*.png
+OpenSpaceVisualTesting/ResultImages/linux/*.png
 *.report
 **/result.txt
 **/*.json.tmp
-**/visualtests_results.json
+**/visualtests_*_results.json
+OpenSpaceVisualTesting/log/log_*.html
