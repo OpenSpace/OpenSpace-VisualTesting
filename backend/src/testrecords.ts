@@ -1,3 +1,4 @@
+import { printAudit } from "./audit";
 import { Config } from "./configuration";
 import { OperatingSystem } from "./globals";
 import fs from "fs";
@@ -26,21 +27,28 @@ export function saveTestData(data: TestData, path: string) {
   fs.writeFileSync(path, JSON.stringify(data, null, 2));
 }
 
-export function addTestRecord(group: string, name: string, os: OperatingSystem, data: TestData) {
+export function addTestRecord(group: string, name: string, os: OperatingSystem,
+                              data: TestData)
+{
+  printAudit(`Adding new record for (${group}/${name}/${os})`);
+
   for (let record of TestRecords) {
     if (record.group != group || record.name != name)  continue;
 
     if (os in record.data) {
+      printAudit("  Adding to data existing record");
       record.data[os]?.push(data);
       record.data[os]?.sort((a, b) => a.timeStamp.getTime() - b.timeStamp.getTime())
     }
     else {
+      printAudit("  Creating new record list");
       record.data[os] = [ data ];
     }
     return;
   }
 
   // if we get here, it's a new record
+  printAudit("Creating new test record");
   TestRecords.push({
     group: group,
     name: name,
@@ -51,6 +59,8 @@ export function addTestRecord(group: string, name: string, os: OperatingSystem, 
 }
 
 export function loadTestResults() {
+  printAudit("Loading test results");
+
   let oss = fs.readdirSync(`${Config.data}/tests`);
   for (let os of oss) {
     const base = `${Config.data}/tests/${os}`;

@@ -1,4 +1,5 @@
 import { registerRoute } from "./api";
+import { initializeAudit, printAudit } from "./audit";
 import { Config, loadConfiguration } from "./configuration";
 import { OperatingSystemList } from "./globals";
 import { loadTestResults } from "./testrecords";
@@ -9,7 +10,6 @@ import fs from "fs";
 
 export function main() {
   loadConfiguration("config.json");
-
 
   // Create the folder infrastructure if it doesn't exist already
   if (!fs.existsSync(Config.data)) {
@@ -28,6 +28,7 @@ export function main() {
     }
   }
 
+  initializeAudit();
   loadTestResults();
 
   // @TODO: Go through all images in the system and ensure they have the same size

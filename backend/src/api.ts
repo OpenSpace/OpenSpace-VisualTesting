@@ -1,3 +1,4 @@
+import { printAudit } from "./audit";
 import { Config } from "./configuration";
 import {
   candidateImage, clearReferencePointer, differenceImage, hasReferenceImage,
@@ -92,31 +93,6 @@ function handleImage(req: express.Request, res: express.Response) {
   res.sendFile(path, { root: "." });
 }
 
-// function handleReferenceImages(req: express.Request, res: express.Response) {
-//   let images = referenceImages();
-// 
-//   let results = [];
-//   for (let image of images) {
-//     results.push({
-//       group: image.group,
-//       name: image.name,
-//       os: image.operatingSystem,
-//       path: image.path
-//     })
-//   }
-//   res.send(JSON.stringify(results)).status(200).end();
-// }
-// 
-// function handleGroups(req: express.Request, res: express.Response) {
-//   let grps = groups();
-//   res.send(JSON.stringify(grps)).status(200).end();
-// }
-// 
-// function handleOperatingSystems(req: express.Request, res: express.Response) {
-//   let os = operatingSystems();
-//   res.send(JSON.stringify(os)).status(200).end();
-// }
-// 
 function handleTestRecords(req: express.Request, res: express.Response) {
   res.type("application/json");
   res.send(JSON.stringify(TestRecords)).status(200).end();
@@ -150,6 +126,8 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
     return;
   }
 
+  printAudit(`Submitting new result for (${group}/${name}/${os}/${ts.toISOString()}`);
+
   const path = testPath(group, name, os, ts);
   if (!fs.existsSync(path)) {
     fs.mkdirSync(path, { recursive: true });
@@ -158,6 +136,7 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
   // @TODO: Check size size of the image
 
   if (!hasReferenceImage(group, name, os)) {
+    printAudit("  No reference image found");
     // We are either the first, or someone has marked the previous reference as not valid
     let path = updateReferencePointer(group, name, os, ts);
     // Write the current candidate image as the reference image
