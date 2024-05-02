@@ -1,0 +1,19 @@
+{
+  "name": "runner",
+  "version": "1.0.0",
+  "description": "This repository contains all of the information that is necessary to run the test suite and create test images.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.8",
+    "fs": "^0.0.1-security"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "typescript": "^5.4.5"
+  }
+}
