@@ -22,6 +22,6 @@
     "sourceMap": true,
   },
   "files": [
-    "src/server.ts"
+    "src/main.ts"
   ]
 }

@@ -1,12 +1,8 @@
 {
   "port": 8000,
   "comparisonThreshold": 0.1,
-  "testResultStore": "results.json",
-  "paths": {
-    "reference": "images/reference",
-    "candidate": "images/candidate",
-    "difference": "images/difference"
-  },
+  "data": "data",
+  "adminToken": "foo",
   "runners": [
     "abc"
   ]

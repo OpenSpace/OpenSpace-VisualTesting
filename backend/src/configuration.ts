@@ -5,12 +5,8 @@ import { z } from "zod";
 const ConfigurationSchema = z.object({
   port: z.number().int().min(1000).max(65535),
   comparisonThreshold: z.number().min(0).max(1),
-  testResultStore: z.string().min(1),
-  paths: z.object({
-    reference: z.string().min(1),
-    candidate: z.string().min(1),
-    difference: z.string().min(1)
-  }),
+  adminToken: z.string().min(1),
+  data: z.string().min(1),
   runners: z.array(z.string().min(1))
 }).strict();
 
@@ -27,10 +23,8 @@ class Configuration {
     const config = res.data;
     this.port = config.port;
     this.comparisonThreshold = config.comparisonThreshold;
-    this.testResultStore = config.testResultStore;
-    this.referenceImagePath = config.paths.reference;
-    this.candidateImagePath = config.paths.candidate;
-    this.differenceImagePath = config.paths.difference;
+    this.adminToken = config.adminToken;
+    this.data = config.data;
     this.runners = config.runners;
   }
 
@@ -40,19 +34,11 @@ class Configuration {
   // The comparison threshold that the image comparison is using to detect changes
   comparisonThreshold: number;
 
-  // The path to the .json file that contains all of the test results
-  testResultStore: string;
+  // A token that has to be sent in the header to be able to invalidate references
+  adminToken: string;
 
-  // The path to the folder in which the reference image are stored. The folder specified
-  // should be only used for storing reference image as this service might add, remove, or
-  //overwrite files and folders within this folders.
-  referenceImagePath: string;
-
-  // The path to the folder where the test images are stored
-  candidateImagePath: string;
-
-  // The path to the folder where the comparison images are stored
-  differenceImagePath: string;
+  // The path to where the test result data and images are being stored
+  data: string;
 
   // The list of ids for runners that are allowed to submit tests
   runners: string[];

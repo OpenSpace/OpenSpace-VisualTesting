@@ -1,5 +1,4 @@
 ﻿backend/node_modules
-backend/results.json
-backend/images
 runner/node_modules
 runner/out
+backend/data

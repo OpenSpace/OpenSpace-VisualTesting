@@ -4,14 +4,14 @@ import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 
 
-export function generateComparison(os: "windows" | "linux", group: string, name: string): number
+export function generateComparison(referencePath: string, candidatePath: string,
+                                   differencePath: string): number
 {
-  const referencePath = `${Config.referenceImagePath}/${os}/${group}/${name}.png`;
-  const testPath = `${Config.candidateImagePath}/${os}/${group}/${name}.png`;
-  const comparisonPath = `${Config.differenceImagePath}/${os}/${group}/${name}.png`;
+  console.assert(fs.existsSync(referencePath), `No reference ${referencePath}`);
+  console.assert(fs.existsSync(candidatePath), `No candidate ${candidatePath}`);
 
   const refImg = PNG.sync.read(fs.readFileSync(referencePath));
-  const testImg = PNG.sync.read(fs.readFileSync(testPath));
+  const testImg = PNG.sync.read(fs.readFileSync(candidatePath));
   // @TODO: Ensure the images have the same size
   const { width, height } = refImg;
   let diffImg = new PNG({ width, height });
@@ -27,12 +27,7 @@ export function generateComparison(os: "windows" | "linux", group: string, name:
     }
   );
 
-  const destinationPath = `${Config.differenceImagePath}/${os}/${group}`;
-  if (!fs.existsSync(destinationPath)) {
-    fs.mkdirSync(destinationPath, { recursive: true })
-  }
-  fs.writeFileSync(comparisonPath, PNG.sync.write(diffImg));
-
+  fs.writeFileSync(differencePath, PNG.sync.write(diffImg));
   return nPixels;
 }
 

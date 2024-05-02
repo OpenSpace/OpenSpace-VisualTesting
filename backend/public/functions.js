@@ -1,7 +1,8 @@
 function maxPixelDifference(record) {
   let difference = 0;
-  for (let res of record.results) {
-    difference = Math.max(difference, res.pixelDifference);
+  for (let res of record.data) {
+    // res is an array and for the sorting we are only caring about the latest result
+    difference = Math.max(difference, res[res.legnth - 1].pixelDifference);
   }
   return difference;
 }
@@ -88,14 +89,17 @@ function createRow(record) {
 
 
   console.log(record);
-  for (let [key, value] of Object.entries(record.results)) {
+  for (let [key, value] of Object.entries(record.data)) {
+    console.log(key);
+    console.log(value);
+    console.log(value[value.length - 1]);
     li.appendChild(createOperatingSystemElement(key));
     li.appendChild(createReferenceElement(record, key));
     li.appendChild(createCandidateElement(record, key));
     li.appendChild(createDifferenceElement(record, key));
-    li.appendChild(createScoreElement(value.pixelDifference));
-    li.appendChild(createDateElement(value.timeStamp));
-    li.appendChild(createCommitElement(value.commitHash));
+    li.appendChild(createScoreElement(value[value.length - 1].pixelDifference));
+    li.appendChild(createDateElement(value[value.length - 1].timeStamp));
+    li.appendChild(createCommitElement(value[value.length - 1].commitHash));
   }
 
   return li;
