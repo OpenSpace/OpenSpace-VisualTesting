@@ -2,12 +2,6 @@ import { Config } from "./configuration";
 import fs from "fs";
 import path from "path";
 
-export const OperatingSystemList = [ "linux", "windows" ] as const;
-export type OperatingSystem = typeof OperatingSystemList[number];
-
-export function isOperatingSystem(value: string): value is OperatingSystem {
-  return OperatingSystemList.includes(value as OperatingSystem);
-}
 
 /**
  * Converts the provided @param date to a version in which it can be used as part of a
@@ -22,18 +16,18 @@ function toPath(date: Date): string {
 
 /**
  * Returns the base path to where the files for the latest test for the @param group,
- * @param name, and @param os are stored. If no test exists for that test, `null` is
+ * @param name, and @param hardware are stored. If no test exists for that test, `null` is
  * returned.
  *
  * @param group The name of the group for which the latest test should be returned
  * @param name The name of the test for which the latest run should be returned
- * @param os The operating system for which the latest test should be returned
+ * @param hardware The hardware for which the latest test should be returned
  * @returns The path where the test files for the latest test are stored
  */
 export function latestTestPath(group: string, name: string,
-                               os: OperatingSystem): string | null
+                               hardware: string): string | null
 {
-  const path = `${Config.data}/tests/${os}/${group}/${name}`;
+  const path = `${Config.data}/tests/${hardware}/${group}/${name}`;
   if (!fs.existsSync(path)) {
     return null;
   }
@@ -50,19 +44,19 @@ export function latestTestPath(group: string, name: string,
 
 /**
  * Returns the path to where the files for the test identified by the @param group,
- * @param name, @param os, and @param timestamp are located. Note that the returned folder
- * might not exist, if such a test is not available.
+ * @param name, @param hardware, and @param timestamp are located. Note that the returned
+ * folder might not exist, if such a test is not available.
  *
  * @param group The name of the group for which the path should be returned
  * @param name The name of the test for which the path should be returned
- * @param os The operating system for which the path should be returned
+ * @param hardware The hardware for which the path should be returned
  * @param timestamp The time stamp for which the path should be returned
  * @returns The path to the test files for the provided parameters
  */
-export function testPath(group: string, name: string, os: OperatingSystem,
+export function testPath(group: string, name: string, hardware: string,
                          timestamp: Date): string
 {
-  return `${Config.data}/tests/${os}/${group}/${name}/${toPath(timestamp)}`
+  return `${Config.data}/tests/${hardware}/${group}/${name}/${toPath(timestamp)}`
 }
 
 /**
@@ -75,135 +69,135 @@ export function testPath(group: string, name: string, os: OperatingSystem,
  *              name that is the currently active reference image
  * @param name The name of the test for which to return the file containing the file name
  *             that is the currently active reference image
- * @param os The operating system for which to return the file containing the file name
+ * @param hardware The hardware for which to return the file containing the file name
  *           that is the currently active reference image
  * @returns The path to the file that contains the name of the current reference file for
  *          the test
  */
-function referencePointer(group: string, name: string, os: OperatingSystem): string {
-  return `${Config.data}/reference/${os}/${group}/${name}/ref.txt`;
+function referencePointer(group: string, name: string, hardware: string): string {
+  return `${Config.data}/reference/${hardware}/${group}/${name}/ref.txt`;
 }
 
 /**
  * Invalidates the current reference image for the test identified by the @param group,
- * @param name, and @param os.
+ * @param name, and @param hardware.
  *
  * @param group The name of the group for which the current reference should be
  *              invalidated
  * @param name The name of the test for which the current reference should be invalidated
- * @param os The operating system for which the current reference should be invalidated
+ * @param hardware The hardware for which the current reference should be invalidated
  */
-export function clearReferencePointer(group: string, name: string, os: OperatingSystem) {
-  fs.unlinkSync(referencePointer(group, name, os));
+export function clearReferencePointer(group: string, name: string, hardware: string) {
+  fs.unlinkSync(referencePointer(group, name, hardware));
 }
 
 /**
  * Updates the current reference image for the test identified by @param group,
- * @param name, and @param os to point at the image identified by the @param timestamp.
- * This requires that `/api/image/reference/${group}/${name}/${os}/${timestamp}` must
- * resolve to a valid image.
+ * @param name, and @param hardware to point at the image identified by the
+ * @param timestamp.
  *
  * @param group The name of the group for which to update the current reference image
  * @param name The name of the test for which to update the current reference image
- * @param os The operating system for which to update the current reference image
+ * @param hardware The hardware for which to update the current reference image
  * @param timestamp The time stamp of the image that is used as the new reference image
  * @returns The path to the file that is used as the new reference image
  */
-export function updateReferencePointer(group: string, name: string, os: OperatingSystem,
+export function updateReferencePointer(group: string, name: string, hardware: string,
                                        timestamp: Date): string {
-  console.assert(!hasReferenceImage(group, name, os), "Reference pointer already exists");
+  console.assert(
+    !hasReferenceImage(group, name, hardware),
+    "Reference pointer already exists"
+  );
 
   const p = `${toPath(timestamp)}.png`;
-  console.assert(fs.existsSync(`${Config.data}/reference/${os}/${group}/${name}/${p}`));
-
-  const ref = referencePointer(group, name, os);
+  const ref = referencePointer(group, name, hardware);
   if (!fs.existsSync(path.dirname(ref))) {
     fs.mkdirSync(path.dirname(ref), { recursive: true });
   }
   fs.writeFileSync(ref, p);
 
-  return referenceImage(group, name, os);
+  return referenceImage(group, name, hardware);
 }
 
 /**
- * Returns whether the test identified by @param group, @param name, and @param os has a
- * current reference image.
+ * Returns whether the test identified by @param group, @param name, and @param hardware
+ * has a current reference image.
  *
  * @param group The name of the group for which to check the current reference image
  * @param name The name of the test for which to check the current reference image
- * @param os The operating system for which to check the current reference image
+ * @param hardware The hardware for which to check the current reference image
  * @returns Returns `true` if there is a current reference image, `false` otherwise
  */
 export function hasReferenceImage(group: string, name: string,
-                                  os: OperatingSystem): boolean
+                                  hardware: string): boolean
 {
-  return fs.existsSync(referencePointer(group, name, os));
+  return fs.existsSync(referencePointer(group, name, hardware));
 }
 
 /**
  * Returns the path to the current reference image for the test identified by
- * @param group, @param name, and @param os. This function assumes that this test has a
- * currently valid reference image.
+ * @param group, @param name, and @param hardware. This function assumes that this test
+ * has a currently valid reference image.
  *
  * @param group The name of the group for which to return the current reference image
  * @param name The name of the test for which to return the current reference image
- * @param os The operating system for which to return the current reference image
+ * @param hardware The hardware for which to return the current reference image
  * @returns The path to the current reference image for the requested test
  */
-export function referenceImage(group: string, name: string, os: OperatingSystem): string {
-  console.assert(hasReferenceImage(group, name, os), "No reference image found");
+export function referenceImage(group: string, name: string, hardware: string): string {
+  console.assert(hasReferenceImage(group, name, hardware), "No reference image found");
 
-  let path = fs.readFileSync(referencePointer(group, name, os)).toString();
-  return `${Config.data}/reference/${os}/${group}/${name}/${path}`;
+  let path = fs.readFileSync(referencePointer(group, name, hardware)).toString();
+  return `${Config.data}/reference/${hardware}/${group}/${name}/${path}`;
 }
 
 /**
  * Returns the path to the candidate image for the test identified by the @param group,
- * @param name, @param os, and @param timestamp. Note that this path might not exist if no
- * test has run for these test parameters.
+ * @param name, @param hardware, and @param timestamp. Note that this path might not exist
+ * if no test has run for these test parameters.
  *
  * @param group The name of the group for which to return the candidate image
  * @param name The name of the test for which to return the candidate image
- * @param os The operating system for which to return the candidate image
+ * @param hardware The hardware for which to return the candidate image
  * @param timestamp The time stamp for which to return the candidate image
  * @returns The path to the candidate image for the requested test
  */
-export function candidateImage(group: string, name: string, os: OperatingSystem,
+export function candidateImage(group: string, name: string, hardware: string,
                                timestamp: Date): string
 {
-  return `${testPath(group, name, os, timestamp)}/candidate.png`;
+  return `${testPath(group, name, hardware, timestamp)}/candidate.png`;
 }
 
 /**
  * Returns the path to the difference image for the test identified by the @param group,
- * @param name, @param os, and @param timestamp. Note that this path might not exist if no
- * test has run for these test parameters.
+ * @param name, @param hardware, and @param timestamp. Note that this path might not exist
+ * if no test has run for these test parameters.
  *
  * @param group The name of the group for which to return the difference image
  * @param name The name of the test for which to return the difference image
- * @param os The operating system for which to return the difference image
+ * @param hardware The hardware for which to return the difference image
  * @param timestamp The time stamp for which to return the difference image
  * @returns The path to the difference image for the requested test
  */
-export function differenceImage(group: string, name: string, os: OperatingSystem,
+export function differenceImage(group: string, name: string, hardware: string,
                                 timestamp: Date): string
 {
-return `${testPath(group, name, os, timestamp)}/difference.png`;
+return `${testPath(group, name, hardware, timestamp)}/difference.png`;
 }
 
 /**
  * Returns the path to the test data file for the test identified by the @param group,
- * @param name, @param os, and @param timestamp. Note that this path might not exist if no
- * test has run for these test parameters.
+ * @param name, @param hardware, and @param timestamp. Note that this path might not exist
+ * if no test has run for these test parameters.
  *
  * @param group The name of the group for which to return the test data file
  * @param name The name of the test for which to return the test data file
- * @param os The operating system for which to return the test data file
+ * @param hardware The hardware for which to return the test data file
  * @param timestamp The time stamp for which to return the test data file
  * @returns The path to the test data file for the requested test
  */
-export function testDataPath(group: string, name: string, os: OperatingSystem,
+export function testDataPath(group: string, name: string, hardware: string,
                              timestamp: Date): string
 {
-  return `${testPath(group, name, os, timestamp)}/data.json`;
+  return `${testPath(group, name, hardware, timestamp)}/data.json`;
 }

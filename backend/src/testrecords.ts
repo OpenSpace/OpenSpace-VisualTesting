@@ -1,6 +1,5 @@
 import { printAudit } from "./audit";
 import { Config } from "./configuration";
-import { OperatingSystem } from "./globals";
 import { generateComparison } from "./imagecomparison";
 import fs from "fs";
 
@@ -10,9 +9,9 @@ type TestRecord = {
   group: string; // @TODO Can only be filepath-valid names
   /// The name of the test record. This value contains URL safe characters
   name: string; // @TODO Can only be filepath-valid names
-  /// The individual test runs, grouped by the operating system
+  /// The individual test runs, grouped by the hardware string
   data: {
-    [K in OperatingSystem]?: [ TestData ]
+    [hardware: string]: [ TestData ]
   }
 };
 
@@ -49,33 +48,32 @@ export function saveTestData(data: TestData, path: string) {
 
 /**
  * Add a new test data to the internal list of records that are being kept. If the
- * @param group, @param name, or @param os did not exist before in the record, they will
- * be created inside this function. At the end of the function call, a record will exist
- * that contains at least the @param data passed into this function.
+ * @param group, @param name, or @param hardware did not exist before in the record, they
+ * will be created inside this function. At the end of the function call, a record will
+ * exist that contains at least the @param data passed into this function.
  *
  * @param group The name of the group to which the @param data belongs
  * @param name The name of the test to which the @param data belongs
- * @param os The operating system on which the test was run
+ * @param hardware The hardware on which the test was run
  * @param data The test data that should be added to the list of test records
  */
-export function addTestData(group: string, name: string, os: OperatingSystem,
-                              data: TestData)
+export function addTestData(group: string, name: string, hardware: string, data: TestData)
 {
-  printAudit(`Adding new record for (${group}/${name}/${os})`);
+  printAudit(`Adding new record for (${group}/${name}/${hardware})`);
 
   for (let record of TestRecords) {
     if (record.group != group || record.name != name)  continue;
 
-    if (os in record.data) {
+    if (hardware in record.data) {
       printAudit("  Adding to data existing record");
       // @TODO: Not sure why the '?' is necessary here. We are checking in the 'if'
       //        statement before that `os` exists in `record.data`
-      record.data[os]?.push(data);
-      record.data[os]?.sort((a, b) => a.timeStamp.getTime() - b.timeStamp.getTime())
+      record.data[hardware]?.push(data);
+      record.data[hardware]?.sort((a, b) => a.timeStamp.getTime() - b.timeStamp.getTime())
     }
     else {
       printAudit("  Creating new record list");
-      record.data[os] = [ data ];
+      record.data[hardware] = [ data ];
     }
     return;
   }
@@ -86,7 +84,7 @@ export function addTestData(group: string, name: string, os: OperatingSystem,
     group: group,
     name: name,
     data: {
-      [os]: [ data ]
+      [hardware]: [ data ]
     }
   });
 }
@@ -99,9 +97,9 @@ export function addTestData(group: string, name: string, os: OperatingSystem,
 export function loadTestResults() {
   printAudit("Loading test results");
 
-  let oss = fs.readdirSync(`${Config.data}/tests`);
-  for (let os of oss) {
-    const base = `${Config.data}/tests/${os}`;
+  let hardwares = fs.readdirSync(`${Config.data}/tests`);
+  for (let hardware of hardwares) {
+    const base = `${Config.data}/tests/${hardware}`;
 
     let groups = fs.readdirSync(base);
     for (let group of groups) {
@@ -118,7 +116,7 @@ export function loadTestResults() {
 
           let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
           data.timeStamp = new Date(data.timeStamp);
-          addTestData(group, name, os as OperatingSystem, data);
+          addTestData(group, name, hardware, data);
         }
       }
     }
@@ -134,9 +132,9 @@ export function loadTestResults() {
 export function regenerateTestResults() {
   printAudit("Regenerating all test results");
 
-  let oss = fs.readdirSync(`${Config.data}/tests`);
-  for (let os of oss) {
-    const base = `${Config.data}/tests/${os}`;
+  let hardwares = fs.readdirSync(`${Config.data}/tests`);
+  for (let hardware of hardwares) {
+    const base = `${Config.data}/tests/${hardware}`;
 
     let groups = fs.readdirSync(base);
     for (let group of groups) {

@@ -47,10 +47,10 @@ function createHeader(ul) {
   name.appendChild(document.createTextNode("Name"));
   div.appendChild(name);
 
-  let os = document.createElement("div");
-  os.className = "cell os heading";
-  os.appendChild(document.createTextNode("Operating System"));
-  div.appendChild(os);
+  let hw = document.createElement("div");
+  hw.className = "cell hardware heading";
+  hw.appendChild(document.createTextNode("Hardware"));
+  div.appendChild(hw);
 
   let diff = document.createElement("div");
   diff.className = "cell pixelError heading";
@@ -69,7 +69,7 @@ function createHeader(ul) {
 }
 
 function createRows(record, ul) {
-  function createHead(divHead, divBody, record, operatingSystem, data) {
+  function createHead(divHead, divBody, record, hardware, data) {
     divHead.className = "li-head toggle";
     divHead.onclick = () => divBody.classList.toggle("hidden");
 
@@ -88,10 +88,10 @@ function createRows(record, ul) {
     name.appendChild(document.createTextNode(record.name));
     divHead.appendChild(name);
 
-    let os = document.createElement("div");
-    os.className = "cell os";
-    os.appendChild(document.createTextNode(operatingSystem));
-    divHead.appendChild(os);
+    let hw = document.createElement("div");
+    hw.className = "cell hardware";
+    hw.appendChild(document.createTextNode(hardware));
+    divHead.appendChild(hw);
 
     let diff = document.createElement("div");
     diff.className = "cell diff";
@@ -113,7 +113,7 @@ function createRows(record, ul) {
     return divHead;
   }
 
-  function createBody(divBody, record, operatingSystem, testData) {
+  function createBody(divBody, record, hardware, testData) {
     divBody.className = "li-body hidden";
 
     let table = document.createElement("table");
@@ -138,7 +138,7 @@ function createRows(record, ul) {
       trCandidate.appendChild(td);
 
       let a = document.createElement("a");
-      a.href = `/api/image/candidate/${record.group}/${record.name}/${operatingSystem}/${data.timeStamp}`;
+      a.href = `/api/image/candidate/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
@@ -155,7 +155,7 @@ function createRows(record, ul) {
       trReference.appendChild(td);
 
       let a = document.createElement("a");
-      a.href = `/api/image/reference/${record.group}/${record.name}/${operatingSystem}/${data.timeStamp}`;
+      a.href = `/api/image/reference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
@@ -172,7 +172,7 @@ function createRows(record, ul) {
       trDifference.appendChild(td);
 
       let a = document.createElement("a");
-      a.href = `/api/image/difference/${record.group}/${record.name}/${operatingSystem}/${data.timeStamp}`;
+      a.href = `/api/image/difference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
@@ -210,7 +210,7 @@ function createRows(record, ul) {
     table.appendChild(trCommit);
   }
 
-  for (let [operatingSystem, testData] of Object.entries(record.data)) {
+  for (let [hardware, testData] of Object.entries(record.data)) {
     if (testData.length === 0)  continue;
     let data = testData[testData.length - 1];
 
@@ -222,10 +222,10 @@ function createRows(record, ul) {
     let divHead = document.createElement("div");
     let divBody = document.createElement("div");
 
-    createHead(divHead, divBody, record, operatingSystem, data);
+    createHead(divHead, divBody, record, hardware, data);
     li.appendChild(divHead);
 
-    createBody(divBody, record, operatingSystem, testData);
+    createBody(divBody, record, hardware, testData);
     li.appendChild(divBody);
   }
 }

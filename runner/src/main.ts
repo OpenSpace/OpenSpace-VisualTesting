@@ -1,14 +1,19 @@
 import axios from "axios";
 import fs from "fs";
 
+export function main2() {
+  axios.post(
+    "http://localhost:8000/api/update-diff-threshold",
+    { adminToken: "foo", threshold: 0.005 }
+  );
+}
+
 export async function main() {
   let files = fs.readdirSync("../old/OpenSpaceVisualTesting/testImages");
-  console.log(files);
-
   let headers = {
     "Content-Type": "image/png",
     "RunnerID": "abc",
-    "OperatingSystem": "linux",
+    "Hardware": "linux-nvidia",
     "Group": "",
     "Name": "",
     "TimeStamp": new Date().toISOString(),
