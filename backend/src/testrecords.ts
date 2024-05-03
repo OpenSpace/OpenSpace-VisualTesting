@@ -2,6 +2,7 @@ import { printAudit } from "./audit";
 import { Config } from "./configuration";
 import { OperatingSystem } from "./globals";
 import fs from "fs";
+import { generateComparison } from "./imagecomparison";
 
 
 type TestRecord = {
@@ -85,4 +86,34 @@ export function loadTestResults() {
       }
     }
   }
+}
+
+// Called when the test threshold has changed
+export function regenerateTestResults() {
+  let oss = fs.readdirSync(`${Config.data}/tests`);
+  for (let os of oss) {
+    const base = `${Config.data}/tests/${os}`;
+
+    let groups = fs.readdirSync(base);
+    for (let group of groups) {
+      let names = fs.readdirSync(`${base}/${group}`);
+      for (let name of names) {
+        let runs = fs.readdirSync(`${base}/${group}/${name}`);
+        for (let run of runs) {
+          const p = `${base}/${group}/${name}/${run}`;
+
+          fs.unlinkSync(`${p}/difference.png`);
+          let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
+          let diff = generateComparison(
+            data.referenceImage, `${p}/candidate.png`, `${p}/difference.png`
+          );
+          data.pixelDifference = diff;
+          saveTestData(data, `${p}/data.json`);
+        }
+      }
+    }
+  }
+
+  TestRecords = [];
+  loadTestResults();
 }

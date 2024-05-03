@@ -1,9 +1,10 @@
 {
   "port": 8000,
-  "comparisonThreshold": 0.1,
-  "data": "data",
+  "comparisonThreshold": 0.005,
   "adminToken": "foo",
+  "data": "data",
   "runners": [
     "abc"
-  ]
+  ],
+  "path": "config.json"
 }

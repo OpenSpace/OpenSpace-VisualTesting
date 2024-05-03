@@ -31,6 +31,8 @@ export function generateComparison(reference: string, candidate: string,
   );
 
   fs.writeFileSync(difference, PNG.sync.write(diffImg));
-  return nPixels;
+
+  let diff = nPixels / (width * height);
+  return diff;
 }
 

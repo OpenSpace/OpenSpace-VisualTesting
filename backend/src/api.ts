@@ -1,11 +1,12 @@
 import { printAudit } from "./audit";
-import { Config } from "./configuration";
+import { Config, saveConfiguration } from "./configuration";
 import {
   candidateImage, clearReferencePointer, differenceImage, hasReferenceImage,
   isOperatingSystem, latestTestPath, referenceImage, testDataPath, testPath,
   updateReferencePointer } from "./globals";
 import { generateComparison } from "./imagecomparison";
-import { addTestRecord, saveTestData, TestData, TestRecords } from "./testrecords";
+import { addTestRecord, regenerateTestResults, saveTestData, TestData,
+  TestRecords } from "./testrecords";
 import bodyParser from "body-parser";
 import express from "express";
 import fs from "fs";
@@ -17,6 +18,11 @@ export function registerRoute(app: express.Application) {
   // app.get("/api/groups", handleGroups);
   // app.get("/api/operatingsystems", handleOperatingSystems);
   app.get("/api/test-records", handleTestRecords);
+  app.post(
+    "/api/update-diff-threshold",
+    bodyParser.raw({ type: [ "application/json"] }),
+    handleChangeThreshold
+  );
   app.post(
     "/api/submit-test",
     bodyParser.raw({ type: [ "image/png" ], "limit": "10mb" }),
@@ -182,5 +188,27 @@ function handleRemoveReference(req: express.Request, res: express.Response) {
     return;
   }
 
+  printAudit(`Removing reference for (${group}, ${name}, ${os})`);
   clearReferencePointer(group, name, os);
+}
+
+function handleChangeThreshold(req: express.Request, res: express.Response) {
+  let body = JSON.parse(req.body);
+
+  if (body.adminToken != Config.adminToken) {
+    res.status(401).end();
+    return;
+  }
+
+  const threshold = body.threshold;
+  if (threshold == null || typeof threshold !== "number") {
+    res.status(400).end();
+    return;
+  }
+
+  printAudit(`Changing image comparison threshold to: ${threshold}`);
+
+  Config.comparisonThreshold = threshold;
+  saveConfiguration();
+  regenerateTestResults();
 }
