@@ -5,20 +5,44 @@ import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 
 
+/**
+ * Runs an image comparison to compare the @param reference image with the
+ * @param candidate image. The result is stored in the @param difference image. Both the
+ * @param reference and @param candidate parameters need to point towards PNG files that
+ * exist and that are readable. Any existing file at the path @param difference will be
+ * silently overwritten with the new image result.
+ * The @param reference and @param candidate images must have the same size
+ *
+ * @param reference The path to the reference image. This path must exist and be a valid
+ *                  PNG file
+ * @param candidate The path to the candidate image. This path must exist and be a valid
+ *                  PNG file
+ * @param difference The path to where the difference image is stored by this function
+ * @returns The percentage of pixels that are changed between the reference and the
+ *          candidate image
+ */
 export function generateComparison(reference: string, candidate: string,
                                    difference: string): number
 {
   console.assert(fs.existsSync(reference), `No reference ${reference}`);
   console.assert(fs.existsSync(candidate), `No candidate ${candidate}`);
 
-  printAudit(`Running comparison between "${reference}" & "${candidate}" -> "${difference}"`);
+  printAudit(`Creating comparison: "${reference}" & "${candidate}" -> "${difference}"`);
 
   const refImg = PNG.sync.read(fs.readFileSync(reference));
   const testImg = PNG.sync.read(fs.readFileSync(candidate));
-  // @TODO: Ensure the images have the same size
-  const { width, height } = refImg;
-  let diffImg = new PNG({ width, height });
 
+  const refWidth = refImg.width;
+  const refHeight = refImg.height;
+  const testWidth = testImg.width;
+  const testHeight = testImg.height;
+  console.assert(refWidth == testWidth, "Mismatched widths");
+  console.assert(refHeight == testHeight, "Mismatched heights");
+
+  const width = refWidth;
+  const height = refHeight;
+
+  let diffImg = new PNG({ width, height });
   let nPixels = pixelmatch(
     refImg.data,
     testImg.data,

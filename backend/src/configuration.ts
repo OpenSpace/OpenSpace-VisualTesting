@@ -1,7 +1,9 @@
 import fs from "fs";
 import { z } from "zod";
 
-
+/**
+ * The schema describing the structure of the main configuration file
+ */
 const ConfigurationSchema = z.object({
   port: z.number().int().min(1000).max(65535),
   comparisonThreshold: z.number().min(0).max(1),
@@ -49,12 +51,26 @@ class Configuration {
   path: string;
 }
 
+/**
+ * Loads the configuration file from the provided @param path and stores the results into
+ * the global configuration object.
+ *
+ * @param path The path from which to load the configuration
+ */
 export function loadConfiguration(path: string) {
   Config = new Configuration(path);
 }
 
+/**
+ * Updates the configuration file on disk that was used to originally load the global
+ * configuration.
+ */
 export function saveConfiguration() {
   fs.writeFileSync(Config.path, JSON.stringify(Config, null, 2));
 }
 
+/**
+ * The global configuration object that stores general configuration option that are used
+ * in various places throughout the server
+ */
 export let Config: Configuration;

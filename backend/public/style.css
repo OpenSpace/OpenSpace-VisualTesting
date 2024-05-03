@@ -3,24 +3,23 @@ body {
   color: #fdfdfd;
 
   font-family: "Roboto";
-  font-size: 14px;
-  font-style: normal;
+  font-size: 16px;
+  font-style: bold;
   font-variant: normal;
   font-weight: 100;
   line-height: 20px;
 }
 
 h1 {
-  font-family: "Montserrat";
+  text-align: center;
+  font-family: "Roboto";
   font-style: normal;
   font-variant: small-caps;
   font-weight: 1000;
   font-size: 36px;
 
   margin-left: 5px;
-  padding-left: 10px;
-  padding-top: 5pt;
-  padding-bottom: 5pt;
+  padding: 15px;
   background-color: #333333;
   color: #ffffff;
   width: 100%;
@@ -43,28 +42,28 @@ img {
   width: 200px;
 }
 
-.toggle {
+.li-head {
   cursor: pointer;
 }
 
-.toggle:hover {
-  background-color: #404040;
+.li-head:hover {
+  background-color: #353535;
 }
 
 .hidden {
   display: none;
 }
 
-.li_body {
+.li-body {
   padding-left: 50px;
   background-color: #303030;
 }
 
 .cell {
-  margin: 0px 5px 0px 5px;
+  margin: 2px 5px 3px 5px;
   display: inline-block;
   overflow: hidden;
-  vertical-align: top;
+  vertical-align: center;
 }
 
 .heading {
@@ -76,6 +75,11 @@ img {
 .status {
   width: 20px;
   height: 20px;
+}
+
+.status-small {
+  width: 20px;
+  height: 10px;
 }
 
 .group {
@@ -91,7 +95,7 @@ img {
 }
 
 .diff {
-  width: 100px;
+  width: 90px;
 }
 
 .commit {
@@ -99,9 +103,12 @@ img {
 }
 
 .timestamp {
-  width: 170px;
+  width: 240px;
 }
 
+/*
+ * Error colors used for status reporting
+ */
 .error-0 {
   background-color: #eeeeee;
 }
