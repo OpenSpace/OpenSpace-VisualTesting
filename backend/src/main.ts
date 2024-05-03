@@ -6,7 +6,6 @@ import cors from "cors";
 import express from "express";
 import fs from "fs";
 
-
 // @TODO: In the case of an error, send a Slack message (replacing asserts)
 // @TODO: Go through all images in the system and ensure they have the same size
 // @TODO: Include consistency check that all of the images are represented in the

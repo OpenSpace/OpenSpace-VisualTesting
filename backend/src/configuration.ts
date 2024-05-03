@@ -6,6 +6,10 @@ import { z } from "zod";
  */
 const ConfigurationSchema = z.object({
   port: z.number().int().min(1000).max(65535),
+  slack: z.object({
+    token: z.string(),
+    channel: z.string()
+  }),
   comparisonThreshold: z.number().min(0).max(1),
   adminToken: z.string().min(1),
   data: z.string().min(1),
@@ -25,6 +29,8 @@ class Configuration {
 
     const config = res.data;
     this.port = config.port;
+    this.slackToken = config.slack.token;
+    this.slackChannel = config.slack.channel;
     this.comparisonThreshold = config.comparisonThreshold;
     this.adminToken = config.adminToken;
     this.data = config.data;
@@ -34,6 +40,12 @@ class Configuration {
 
   /// The port at which the server is available
   port: number;
+
+  /// The token that is used to authenticate against Slack to be able to send messages
+  slackToken: string;
+
+  /// The channel ID to which messages are posted if a `slackToken` is provided
+  slackChannel: string;
 
   /// The comparison threshold that the image comparison is using to detect changes
   comparisonThreshold: number;

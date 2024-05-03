@@ -1,3 +1,4 @@
+import { assert } from "./assert";
 import { printAudit } from "./audit";
 import { Config } from "./configuration";
 import { generateComparison } from "./imagecomparison";
@@ -109,10 +110,10 @@ export function loadTestResults() {
         for (let run of runs) {
           const p = `${base}/${group}/${name}/${run}`;
           const files = fs.readdirSync(p);
-          console.assert(files.length == 3, `Wrong number of files in ${p}`);
-          console.assert(files.includes("candidate.png"), `'candidate.png' in ${p}`);
-          console.assert(files.includes("difference.png"), `'difference.png' in ${p}`);
-          console.assert(files.includes("data.json"), `'data.json' in ${p}`);
+          assert(files.length == 3, `Wrong number of files in ${p}`);
+          assert(files.includes("candidate.png"), `'candidate.png' in ${p}`);
+          assert(files.includes("difference.png"), `'difference.png' in ${p}`);
+          assert(files.includes("data.json"), `'data.json' in ${p}`);
 
           let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
           data.timeStamp = new Date(data.timeStamp);

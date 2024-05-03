@@ -1,3 +1,4 @@
+import { assert } from "./assert";
 import { Config } from "./configuration";
 import fs from "fs";
 import path from "path";
@@ -104,7 +105,7 @@ export function clearReferencePointer(group: string, name: string, hardware: str
  */
 export function updateReferencePointer(group: string, name: string, hardware: string,
                                        timestamp: Date): string {
-  console.assert(
+  assert(
     !hasReferenceImage(group, name, hardware),
     "Reference pointer already exists"
   );
@@ -145,7 +146,7 @@ export function hasReferenceImage(group: string, name: string,
  * @returns The path to the current reference image for the requested test
  */
 export function referenceImage(group: string, name: string, hardware: string): string {
-  console.assert(hasReferenceImage(group, name, hardware), "No reference image found");
+  assert(hasReferenceImage(group, name, hardware), "No reference image found");
 
   let path = fs.readFileSync(referencePointer(group, name, hardware)).toString();
   return `${Config.data}/reference/${hardware}/${group}/${name}/${path}`;

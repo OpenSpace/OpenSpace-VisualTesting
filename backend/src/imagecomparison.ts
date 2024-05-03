@@ -1,3 +1,4 @@
+import { assert } from "./assert";
 import { printAudit } from "./audit";
 import { Config } from "./configuration";
 import fs from "fs";
@@ -24,8 +25,8 @@ import { PNG } from "pngjs";
 export function generateComparison(reference: string, candidate: string,
                                    difference: string): number
 {
-  console.assert(fs.existsSync(reference), `No reference ${reference}`);
-  console.assert(fs.existsSync(candidate), `No candidate ${candidate}`);
+  assert(fs.existsSync(reference), `No reference ${reference}`);
+  assert(fs.existsSync(candidate), `No candidate ${candidate}`);
 
   printAudit(`Creating comparison: "${reference}" & "${candidate}" -> "${difference}"`);
 
@@ -36,8 +37,8 @@ export function generateComparison(reference: string, candidate: string,
   const refHeight = refImg.height;
   const testWidth = testImg.width;
   const testHeight = testImg.height;
-  console.assert(refWidth == testWidth, "Mismatched widths");
-  console.assert(refHeight == testHeight, "Mismatched heights");
+  assert(refWidth == testWidth, "Mismatched widths");
+]assert(refHeight == testHeight, "Mismatched heights");
 
   const width = refWidth;
   const height = refHeight;
