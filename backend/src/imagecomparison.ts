@@ -38,7 +38,7 @@ export function generateComparison(reference: string, candidate: string,
   const testWidth = testImg.width;
   const testHeight = testImg.height;
   assert(refWidth == testWidth, "Mismatched widths");
-]assert(refHeight == testHeight, "Mismatched heights");
+  assert(refHeight == testHeight, "Mismatched heights");
 
   const width = refWidth;
   const height = refHeight;
