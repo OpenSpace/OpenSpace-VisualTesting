@@ -2,7 +2,7 @@
   "port": 8000,
   "slack": {
     "token": "",
-    "channel": "C071J3EQYLX"
+    "channel": ""
   },
   "comparisonThreshold": 0.1,
   "data": "data",
