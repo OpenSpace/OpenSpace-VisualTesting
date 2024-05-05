@@ -3,3 +3,5 @@ runner/node_modules
 runner/out
 backend/data
 backend/config.json
+runner/__pycache__
+runner/config.json
