@@ -183,7 +183,7 @@ if __name__ == "__main__":
           f"{config["url"]}/api/submit-test"
         )
   else:
-    path = f"{args.dir}/{test_base_dir}/${args.test}.ostest"
+    path = f"{args.dir}/{test_base_dir}/{args.test}.ostest"
     if not os.path.isfile(path):
       raise Exception(f"Could not find test {path}")
 
