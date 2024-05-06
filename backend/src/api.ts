@@ -32,9 +32,10 @@ import { generateComparison } from "./imagecomparison";
 import { addTestData, regenerateTestResults, saveTestData, TestData,
   TestRecords } from "./testrecords";
 import bodyParser from "body-parser";
-import multer from "multer";
 import express from "express";
 import fs from "fs";
+import multer from "multer";
+import { PNG } from "pngjs";
 
 /**
  * Registers the routes for the available API calls.
@@ -42,6 +43,7 @@ import fs from "fs";
  * @param app The express application to which the routes should be registered
  */
 export function registerRoutes(app: express.Application) {
+  app.get("/api", handleApi);
   app.get("/api/image/:type/:group/:name/:hardware/:timestamp?", handleImage);
   // app.get("/api/references", handleReferenceImages);
   // app.get("/api/groups", handleGroups);
@@ -52,13 +54,19 @@ export function registerRoutes(app: express.Application) {
     bodyParser.raw({ type: [ "application/json"] }),
     handleChangeThreshold
   );
-  app.post(
-    "/api/submit-test",
-    multer().single("file"),
-    // bodyParser.raw({ type: [ "image/png" ], "limit": "10mb" }),
-    handleSubmitTest
-  );
+  app.post("/api/submit-test", multer().single("file"), handleSubmitTest);
   app.post("/api/remove-reference", handleRemoveReference);
+}
+
+/**
+ * Returns a list of all available API endpoints
+ */
+function handleApi(req: express.Request, res: express.Response) {
+  res.status(200).json([
+    { path: "/api", description: "This page describing all available API calls" },
+    { path: "/api/image/:type/:group/:name/:hardware/:timestamp?", description: "This page describing all available API calls" },
+
+  ]);
 }
 
 /**
@@ -81,10 +89,8 @@ function handleImage(req: express.Request, res: express.Response) {
   const hardware = p.hardware;
   const timestamp = p.timestamp;
 
-  if (type == null || group == null || name == null || hardware == null ||
-      !types.includes(type))
-  {
-    res.status(400).end();
+  if (!types.includes(type)) {
+    res.status(400).json({ error: `Invalid type ${type} provided` });
     return;
   }
 
@@ -136,8 +142,37 @@ function handleImage(req: express.Request, res: express.Response) {
  * parameters.
  */
 function handleTestRecords(req: express.Request, res: express.Response) {
-  res.type("application/json");
-  res.send(JSON.stringify(TestRecords)).status(200).end();
+  res.status(200).json(TestRecords);
+}
+
+/**
+ * This API call updates the threshold value used to determine which pixels of a candidate
+ * image have changed. Setting this value will cause all difference images and test
+ * results to be recalculated immediately. The changed threshold value is then also used
+ * for all upcoming tests. This API call requires elevated priviledges. The payload of
+ * this call must be a JSON object with the following values:
+ *   - `adminToken`: The admin token that was provided in the configuration file
+ */
+function handleChangeThreshold(req: express.Request, res: express.Response) {
+  let body = JSON.parse(req.body);
+
+  if (body.adminToken != Config.adminToken) {
+    res.status(401).end();
+    return;
+  }
+
+  const threshold = body.threshold;
+  if (threshold == null || typeof threshold !== "number") {
+    res.status(400).end();
+    return;
+  }
+
+  printAudit(`Changing image comparison threshold to: ${threshold}`);
+
+  Config.comparisonThreshold = threshold;
+  saveConfiguration();
+  regenerateTestResults();
+  res.status(200).end();
 }
 
 /**
@@ -158,20 +193,65 @@ function handleTestRecords(req: express.Request, res: express.Response) {
  */
 function handleSubmitTest(req: express.Request, res: express.Response) {
   const runner = req.body.runnerID;
-  const hardware = req.body.hardware;
-  const group = req.body.group;
-  const name = req.body.name;
-  const timeStamp = req.body.timestamp;
-  const commitHash = req.body.commitHash;
-
-  // the "RunnerID" has to be one of the accepted runners
-  if (runner == null || group == null || name == null || hardware == null ||
-      timeStamp == null || commitHash == null || !Config.runners.includes(runner) ||
-      req.file == null)
-  {
-    res.status(400).end();
+  if (runner == null) {
+    res.status(400).json({ error: "Missing field 'runnerID'" });
     return;
   }
+  // the "RunnerID" has to be one of the accepted runners
+  if (!Config.runners.includes(runner)) {
+    res.status(401).end();
+    return;
+  }
+
+  const hardware = req.body.hardware;
+  if (hardware == null) {
+    res.status(400).json({ error: "Missing field 'hardware'" });
+    return;
+  }
+
+  const group = req.body.group;
+  if (group == null) {
+    res.status(400).json({ error: "Missing field 'group'" });
+    return;
+  }
+
+  const name = req.body.name;
+  if (name == null) {
+    res.status(400).json({ error: "Missing field 'name'" });
+    return;
+  }
+
+  const timeStamp = req.body.timestamp;
+  if (timeStamp == null) {
+    res.status(400).json({ error: "Missing field 'timeStamp'" });
+    return;
+  }
+
+  const commitHash = req.body.commitHash;
+  if (commitHash == null) {
+    res.status(400).json({ error: "Missing field 'commitHash'" });
+    return;
+  }
+
+  if (req.file == null) {
+    res.status(400).json({ error: "Missing field 'file'" });
+    return;
+  }
+
+  try {
+    const png = PNG.sync.read(req.file.buffer);
+    if (png.width != Config.size.width || png.height != Config.size.height) {
+      let w = Config.size.width
+      let h = Config.size.height
+      res.status(400).json({ error: `Image has the wrong size. Expected (${w}, ${h})`});
+      return;
+    }
+  }
+  catch (e: any) {
+    res.status(400).json({ error: `Error loading image: ${e}`});
+    return;
+  }
+
 
   const ts = new Date(timeStamp);
 
@@ -181,8 +261,6 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
   if (!fs.existsSync(path)) {
     fs.mkdirSync(path, { recursive: true });
   }
-
-  // @TODO: Check size size of the image
 
   if (!hasReferenceImage(group, name, hardware)) {
     printAudit("  No reference image found");
@@ -197,7 +275,16 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
   const difference = differenceImage(group, name, hardware, ts);
 
   fs.writeFileSync(candidate, req.file.buffer);
+
+
   let nPixels = generateComparison(reference, candidate, difference);
+  if (nPixels == null) {
+    // The image comparison has failed, which means that the candidate image had the wrong
+    // size
+    res.status(400).end();
+    return;
+  }
+
   let testData: TestData = {
     pixelError: nPixels,
     timeStamp: ts,
@@ -238,34 +325,4 @@ function handleRemoveReference(req: express.Request, res: express.Response) {
 
   printAudit(`Removing reference for (${group}, ${name}, ${hardware})`);
   clearReferencePointer(group, name, hardware);
-}
-
-/**
- * This API call updates the threshold value used to determine which pixels of a candidate
- * image have changed. Setting this value will cause all difference images and test
- * results to be recalculated immediately. The changed threshold value is then also used
- * for all upcoming tests. This API call requires elevated priviledges. The payload of
- * this call must be a JSON object with the following values:
- *   - `adminToken`: The admin token that was provided in the configuration file
- */
-function handleChangeThreshold(req: express.Request, res: express.Response) {
-  let body = JSON.parse(req.body);
-
-  if (body.adminToken != Config.adminToken) {
-    res.status(401).end();
-    return;
-  }
-
-  const threshold = body.threshold;
-  if (threshold == null || typeof threshold !== "number") {
-    res.status(400).end();
-    return;
-  }
-
-  printAudit(`Changing image comparison threshold to: ${threshold}`);
-
-  Config.comparisonThreshold = threshold;
-  saveConfiguration();
-  regenerateTestResults();
-  res.status(200).end();
 }

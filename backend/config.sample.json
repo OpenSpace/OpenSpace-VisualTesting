@@ -5,6 +5,7 @@
     "channel": ""
   },
   "comparisonThreshold": 0.1,
+  "imageSize": [ 1920, 1080 ],
   "data": "data",
   "adminToken": "",
   "runners": [

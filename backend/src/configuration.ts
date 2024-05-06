@@ -35,6 +35,7 @@ const ConfigurationSchema = z.object({
     channel: z.string()
   }),
   comparisonThreshold: z.number().min(0).max(1),
+  imageSize: z.tuple([ z.number().min(1), z.number().min(1) ]),
   adminToken: z.string().min(1),
   data: z.string().min(1),
   runners: z.array(z.string().min(1)),
@@ -56,6 +57,7 @@ class Configuration {
     this.slackToken = config.slack.token;
     this.slackChannel = config.slack.channel;
     this.comparisonThreshold = config.comparisonThreshold;
+    this.size = { width: config.imageSize[0], height: config.imageSize[1] };
     this.adminToken = config.adminToken;
     this.data = config.data;
     this.runners = config.runners;
@@ -73,6 +75,12 @@ class Configuration {
 
   /// The comparison threshold that the image comparison is using to detect changes
   comparisonThreshold: number;
+
+  /// The image size that all of the images must have
+  size: {
+    width: number,
+    height: number
+  };
 
   /// A token that has to be sent in the header to be able to invalidate references
   adminToken: string;

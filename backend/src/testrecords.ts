@@ -171,9 +171,11 @@ export function regenerateTestResults() {
 
           let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
           let diff = generateComparison(
-            data.referenceImage, `${p}/candidate.png`, `${p}/difference.png`
+            data.referenceImage,
+            `${p}/candidate.png`,
+            `${p}/difference.png`
           );
-          data.pixelError = diff;
+          data.pixelError = diff!;
           saveTestData(data, `${p}/data.json`);
         }
       }

@@ -35,8 +35,6 @@ import fs from "fs";
 //        test results and vice versa
 // @TODO: When invalidating a reference image, use the last candidate image as the new
 //        reference instead
-// @TODO: Submitting a test should be a zip file that can contain other files in addition
-//        to the candidate image
 
 export function main() {
   loadConfiguration("config.json");

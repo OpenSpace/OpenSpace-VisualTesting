@@ -44,10 +44,10 @@ import { PNG } from "pngjs";
  *                  PNG file
  * @param difference The path to where the difference image is stored by this function
  * @returns The percentage of pixels that are changed between the reference and the
- *          candidate image
+ *          candidate image or `null` if the images had the wrong size
  */
 export function generateComparison(reference: string, candidate: string,
-                                   difference: string): number
+                                   difference: string): number | null
 {
   assert(fs.existsSync(reference), `No reference ${reference}`);
   assert(fs.existsSync(candidate), `No candidate ${candidate}`);
@@ -55,18 +55,17 @@ export function generateComparison(reference: string, candidate: string,
   printAudit(`Creating comparison: "${reference}" & "${candidate}" -> "${difference}"`);
 
   const refImg = PNG.sync.read(fs.readFileSync(reference));
+  if (refImg.width != Config.size.width || refImg.height != Config.size.height) {
+    return null;
+  }
+
   const testImg = PNG.sync.read(fs.readFileSync(candidate));
+  if (testImg.width != Config.size.width || testImg.height != Config.size.height) {
+    return null;
+  }
 
-  const refWidth = refImg.width;
-  const refHeight = refImg.height;
-  const testWidth = testImg.width;
-  const testHeight = testImg.height;
-  assert(refWidth == testWidth, "Mismatched widths");
-  assert(refHeight == testHeight, "Mismatched heights");
-
-  const width = refWidth;
-  const height = refHeight;
-
+  let width = Config.size.width;
+  let height = Config.size.height
   let diffImg = new PNG({ width, height });
   let nPixels = pixelmatch(
     refImg.data,
@@ -74,9 +73,7 @@ export function generateComparison(reference: string, candidate: string,
     diffImg.data,
     width,
     height,
-    {
-      threshold: Config.comparisonThreshold
-    }
+    { threshold: Config.comparisonThreshold }
   );
 
   fs.writeFileSync(difference, PNG.sync.write(diffImg));
