@@ -5,7 +5,6 @@ from instruction import Instruction
 
 test_base_dir = "tests/visual"
 
-
 class Test:
   def __init__(self, path):
     assert(os.path.isfile(path))

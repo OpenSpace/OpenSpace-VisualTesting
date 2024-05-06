@@ -64,10 +64,11 @@ def run_single_test(testPath, executable):
   process = subprocess.Popen(
     [
       executable,
-      "--config 1920-1080.json",
-      f"--profile {test.profile}",
+      "--config", f"{os.getcwd()}/1920-1080.json",
+      "--profile", test.profile,
       "--bypassLauncher"
-    ]
+    ],
+    cwd=os.path.dirname(executable)
   )
 
   osApi = openspace.Api("localhost", 4681)
@@ -147,8 +148,6 @@ if __name__ == "__main__":
     required=False
   )
   args = parser.parse_args()
-
-  os.chdir(args.dir)
 
   # Find the executable location
   if os.name == "nt":
