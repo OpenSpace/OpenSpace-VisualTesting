@@ -35,6 +35,25 @@ import time
 from test import *
 import openspace
 
+# Settings common to all test runs
+async def setup_test_run(openspace):
+  # We always want to start paused to prevent some timing-related inconsistencies
+  await openspace.time.setPause(True)
+
+  # Unless explicitly added, we don't want display elements that show variable content
+  #  WebUI: Date and time
+  #  Dashboard: Framerate
+  #  ScreenLog: Log message retention
+  #  Version: Contains the commit hash
+  #  Camera: Not technically needed, but results in a cleaner time
+  await openspace.setPropertyValueSingle("Modules.CefWebGui.Visible", False)
+  await openspace.setPropertyValueSingle("Dashboard.IsEnabled", False)
+  await openspace.setPropertyValueSingle("RenderEngine.ShowLog", False)
+  await openspace.setPropertyValueSingle("RenderEngine.ShowVersion", False)
+  await openspace.setPropertyValueSingle("RenderEngine.ShowCamera", False)
+
+
+
 # testPath: The path to the ostest file that should be run
 def run_single_test(testPath, executable):
   # group, name = get_group_and_name(testPath)
@@ -55,40 +74,31 @@ def run_single_test(testPath, executable):
 
   async def internal_test_run(openspace):
     print(f"Running test {testPath}")
-    await openspace.setPropertyValueSingle("RenderEngine.ScreenshotUseDate", False)
-    global count_screenshots
-    count_screenshots = await test.run(openspace)
+    await setup_test_run(openspace)
+    await test.run(openspace)
     print("Finished running")
 
     # Give the screenshot writing some time to finish
-    time.sleep(2)
+    time.sleep(1)
 
     global screenshot_folder
     screenshot_folder = await openspace.absPath("${SCREENSHOTS}")
 
     await openspace.toggleShutdown()
     osApi.disconnect()
-    disconnect.set()
+    disconnected.set()
 
   async def onConnect():
     await osApi.authenticate("")
     openspace = await osApi.singleReturnLibrary()
     asyncio.create_task(internal_test_run(openspace), name=f"Test {group}/{name}")
 
-#   async def onDisconnect():
-#     if asyncio.get_event_loop().is_running():
-#         asyncio.get_event_loop().stop()
-# 
-#     disconnect.set()
-
   osApi.onConnect(onConnect)
-  # osApi.onDisconnect(onDisconnect)
-  disconnect = asyncio.Event()
+  disconnected = asyncio.Event()
 
   async def mainLoop():
     osApi.connect()
-    await disconnect.wait()
-    osApi.disconnect()
+    await disconnected.wait()
 
   loop = asyncio.new_event_loop()
   loop.run_until_complete(mainLoop())
@@ -98,21 +108,18 @@ def run_single_test(testPath, executable):
   print(f"Folder: {screenshot_folder}")
 
   # We now have a list of screenshots in the `screenshot_folder` and can return them
-  files = glob.glob(f"{screenshot_folder}/*.png")
-  # files = [f for f in os.listdir(screenshot_folder) if os.path.isfile(f) ]
-  # Return the last `count_screenshots` images
-  return [ group, name, files[-count_screenshots:] ]
+  return [ group, name, glob.glob(f"{screenshot_folder}/*.png") ]
 
 def submit_candidate_image(group, name, hardware, timestamp, hash, file, runner_id, url):
   res = requests.post(
     url,
-    headers = {
-      "Group": group,
-      "Name": name,
-      "Hardware": hardware,
-      "RunnerID": runner_id,
-      "TimeStamp": timestamp,
-      "CommitHash": hash
+    data = {
+      "group": group,
+      "name": name,
+      "hardware": hardware,
+      "runnerID": runner_id,
+      "timestamp": timestamp,
+      "commitHash": hash
     },
     files = { "file": open(file, "rb") }
   )
@@ -170,15 +177,19 @@ if __name__ == "__main__":
       group, name, candidates = run_single_test(file, executable)
       timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
       for candidate in candidates:
+        hardware = config["hardware"]
+        commit_hash = "abc"
+        runner_id = config["id"]
+        url = config["url"]
         submit_candidate_image(
           group,
           name,
-          config["hardware"],
+          hardware,
           timestamp,
-          "abc",
+          commit_hash,
           candidate,
-          config["id"],
-          f"{config["url"]}/api/submit-test"
+          runner_id,
+          f"{url}/api/submit-test"
         )
   else:
     path = f"{args.dir}/{test_base_dir}/{args.test}.ostest"
@@ -188,13 +199,17 @@ if __name__ == "__main__":
     timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
     group, name, candidates = run_single_test(path, executable)
     for candidate in candidates:
+      hardware = config["hardware"]
+      commit_hash = "abc"
+      runner_id = config["id"]
+      url = config["url"]
       submit_candidate_image(
         group,
         name,
-        config["hardware"],
+        hardware,
         timestamp,
-        "abc",
+        commit_hash,
         candidate,
-        config["id"],
-        f"{config["url"]}/api/submit-test"
+        runner_id,
+        f"{url}/api/submit-test"
       )

@@ -141,9 +141,11 @@ function handleTestRecords(req: express.Request, res: express.Response) {
 }
 
 /**
- * This API call is made when a new test result is submitted. Necessary additional
- * information about the test must be provided in the post request header. The required
- * fields are:
+ * This API call is made when a new test result is submitted. The necessary test
+ * information is passed along as a JSON-encoded body, and test-related files are included
+ * as multipart-encoded files.
+ *
+ * For the body, the required fields are:
  *   - `RunnerID`: One of the allowed runners that are provided in the configuration file
  *   - `Hardware`: The hardware on which the test was run
  *   - `Group`: The name for the test's group for which a candidate is submitted
@@ -151,16 +153,16 @@ function handleTestRecords(req: express.Request, res: express.Response) {
  *   - `TimeStamp`: The time stamp of the test run for which a candidate is submitted
  *   - `CommitHash`: The commit hash of the code that was used to generated the candidate
  *
- * The body of the request is a multipart-encoded file with the following fields:
- *   - candidate: The generated candidate file
+ * For the files, the following are needed:
+ *   - file: The generated candidate file
  */
 function handleSubmitTest(req: express.Request, res: express.Response) {
-  const runner = req.header("RunnerID");
-  const hardware = req.header("Hardware");
-  const group = req.header("Group");
-  const name = req.header("Name");
-  const timeStamp = req.header("TimeStamp");
-  const commitHash = req.header("CommitHash");
+  const runner = req.body.runnerID;
+  const hardware = req.body.hardware;
+  const group = req.body.group;
+  const name = req.body.name;
+  const timeStamp = req.body.timestamp;
+  const commitHash = req.body.commitHash;
 
   // the "RunnerID" has to be one of the accepted runners
   if (runner == null || group == null || name == null || hardware == null ||
