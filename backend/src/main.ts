@@ -35,6 +35,10 @@ import fs from "fs";
 //        test results and vice versa
 // @TODO: When invalidating a reference image, use the last candidate image as the new
 //        reference instead
+// @TODO: Extract commit hash from OpenSpace
+// @TODO: Error percentage to the left (maybe into color status)
+// @TODO: Show last images in the table overview
+// @TODO: Display timing information
 
 export function main() {
   loadConfiguration("config.json");
