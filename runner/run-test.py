@@ -120,7 +120,6 @@ def submit_candidate_image(group, name, hardware, timestamp, hash, file, runner_
 
 
 if __name__ == "__main__":
-  os.chdir("A:/openspace/OpenSpaceVisualTesting/runner")
   with open("config.json") as f:
     config = json.load(f)
 
@@ -141,7 +140,6 @@ if __name__ == "__main__":
     required=False
   )
   args = parser.parse_args()
-  args.dir = "A:/openspace/OpenSpace"
 
   os.chdir(args.dir)
 
