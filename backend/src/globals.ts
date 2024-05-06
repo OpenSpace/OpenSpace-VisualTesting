@@ -226,3 +226,10 @@ export function testDataPath(group: string, name: string, hardware: string,
 {
   return `${testPath(group, name, hardware, timestamp)}/data.json`;
 }
+
+/**
+ * Returns a path to a temporary file in which files can be stored for a short time
+ */
+export function temporaryPath(): string {
+  return `${Config.data}/temporary/`;
+}

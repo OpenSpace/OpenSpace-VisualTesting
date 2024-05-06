@@ -44,6 +44,7 @@ export function main() {
     fs.mkdirSync(Config.data, { recursive: true });
     fs.mkdirSync(`${Config.data}/tests`);
     fs.mkdirSync(`${Config.data}/reference`);
+    fs.mkdirSync(`${Config.data}/temporary`);
   }
 
   initializeAudit();
