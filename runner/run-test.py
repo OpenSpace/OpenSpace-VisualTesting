@@ -61,6 +61,7 @@ def run_single_test(testPath, executable):
   test = Test(testPath)
   group, name = test.get_group_and_name()
 
+  start = time.perf_counter()
   process = subprocess.Popen(
     [
       executable,
@@ -105,13 +106,20 @@ def run_single_test(testPath, executable):
   loop.run_until_complete(mainLoop())
 
   process.kill()
+  end = time.perf_counter()
+  runtime = end - start
 
   print(f"Folder: {screenshot_folder}")
 
   # We now have a list of screenshots in the `screenshot_folder` and can return them
-  return [ group, name, glob.glob(f"{screenshot_folder}/*.png") ]
+  return {
+    "group": group,
+    "name": name,
+    "files": glob.glob(f"{screenshot_folder}/*.png"),
+    "timing": runtime
+  }
 
-def submit_candidate_image(group, name, hardware, timestamp, hash, file, runner_id, url):
+def submit_candidate_image(group, name, hardware, timestamp, timing, hash, file, runner_id, url):
   res = requests.post(
     url,
     data = {
@@ -120,6 +128,7 @@ def submit_candidate_image(group, name, hardware, timestamp, hash, file, runner_
       "hardware": hardware,
       "runnerID": runner_id,
       "timestamp": timestamp,
+      "timing": timing,
       "commitHash": hash
     },
     files = { "file": open(file, "rb") }
@@ -128,6 +137,7 @@ def submit_candidate_image(group, name, hardware, timestamp, hash, file, runner_
 
 
 if __name__ == "__main__":
+  global_start = time.perf_counter()
   with open("config.json") as f:
     config = json.load(f)
 
@@ -173,18 +183,19 @@ if __name__ == "__main__":
     for file in files:
       # Normalize the path endings to always do forward slashes
       file = file.replace(os.sep, "/")
-      group, name, candidates = run_single_test(file, executable)
+      res = run_single_test(file, executable)
       timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-      for candidate in candidates:
+      for candidate in res["files"]:
         hardware = config["hardware"]
         commit_hash = "abc"
         runner_id = config["id"]
         url = config["url"]
         submit_candidate_image(
-          group,
-          name,
+          res["group"],
+          res["name"],
           hardware,
           timestamp,
+          res["timing"],
           commit_hash,
           candidate,
           runner_id,
@@ -196,19 +207,23 @@ if __name__ == "__main__":
       raise Exception(f"Could not find test {path}")
 
     timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    group, name, candidates = run_single_test(path, executable)
-    for candidate in candidates:
+    res = run_single_test(path, executable)
+    for candidate in res["files"]:
       hardware = config["hardware"]
       commit_hash = "abc"
       runner_id = config["id"]
       url = config["url"]
       submit_candidate_image(
-        group,
-        name,
+        res["group"],
+        res["name"],
         hardware,
         timestamp,
+        res["timing"],
         commit_hash,
         candidate,
         runner_id,
         f"{url}/api/submit-test"
       )
+  global_end = time.perf_counter()
+  print(f"Total time: {global_end - global_start}")
+

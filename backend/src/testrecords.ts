@@ -48,6 +48,9 @@ export type TestData = {
   /// The timestamp at which this test data was generated
   timeStamp: Date;
 
+  /// The number of seconds it took to run this test
+  timing: number;
+
   /// The commit hash of the OpenSpace repository that was used to generate this image
   commitHash: string;
 

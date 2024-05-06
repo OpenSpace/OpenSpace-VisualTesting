@@ -92,9 +92,9 @@ function handleApi(req: express.Request, res: express.Response) {
       description: `
         (Requires runner) This will submit a new test to the image testing server. The
         body of message must contain a 'runnerID', 'hardware', 'group', 'name',
-        'timestamp', and 'commitHash'. The 'runnerID' must be one of the allowed runners
-        setup for this server. Furthermore, there needs to be the candidate file as a
-        multipart encoded file
+        'timestamp', 'timing', and 'commitHash'. The 'runnerID' must be one of the allowed
+        runners setup for this server. Furthermore, there needs to be the candidate file
+        as a multipart encoded file
       `
     },
     {
@@ -235,6 +235,7 @@ function handleChangeThreshold(req: express.Request, res: express.Response) {
  *   - `group`: The name for the test's group for which a candidate is submitted
  *   - `name`: The name of the test for which a candidate is submitted
  *   - `timestamp`: The time stamp of the test run for which a candidate is submitted
+ *   - `timing`: The number of seconds that it took to run the test
  *   - `commitHash`: The commit hash of the code that was used to generated the candidate
  *
  * For the files, the following are needed:
@@ -273,6 +274,12 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
   const timeStamp = req.body.timestamp;
   if (timeStamp == null) {
     res.status(400).json({ error: "Missing field 'timeStamp'" });
+    return;
+  }
+
+  const timing = req.body.timing;
+  if (timing == null) {
+    res.status(400).json({ error: "Missing field 'timing'" });
     return;
   }
 
@@ -337,6 +344,7 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
   let testData: TestData = {
     pixelError: nPixels,
     timeStamp: ts,
+    timing: timing,
     commitHash: commitHash,
     referenceImage: reference
   };
