@@ -1,14 +1,16 @@
 import json
 import os
+import time
 
 test_base_dir = "tests/visual"
 Allowed_Types = [
   "action",
   "navigationstate",
   "pause",
+  "property",
   "recording",
   "screenshot",
-  "script",
+  # "script",
   "time",
   "wait"
 ]
@@ -29,14 +31,61 @@ class Instruction:
 
     self.value = obj["value"]
 
-
   def __repr__(self):
     if self.value == {}:
       return f"({self.type})"
     else:
       return f"({self.type}: {self.value})"
 
+  def is_screenshot(self):
+    return self.type == "screenshot"
 
+  async def run(self, openspace):
+    match self.type:
+      case "action":
+        print(f"  Action: {self.value}")
+        await openspace.action.triggerAction(self.value)
+      case "navigationstate":
+        v = {
+          "Anchor": self.value["anchor"],
+          "Position": self.value["position"]
+        }
+        if self.value["aim"]:
+          v["Aim"] = self.value["aim"]
+        if self.value["referenceFrame"]:
+          v["ReferenceFrame"] = self.value["referenceFrame"]
+        if self.value["up"]:
+          v["Up"] = self.value["up"]
+        if self.value["yaw"]:
+          v["Yaw"] = self.value["yaw"]
+        if self.value["pitch"]:
+          v["Pitch"] = self.value["pitch"]
+        if self.value["timestamp"]:
+          v["Timestamp"] = self.value["timestamp"]
+
+        print(f"  NavigationState: {v}")
+        await openspace.navigation.setNavigationState(v, "timestamp" in self.value)
+      case "pause":
+        print(f"  Set Pause: {self.value}")
+        await openspace.time.setPause(self.value)
+      case "property":
+        print(f"  Set Property: {self.value["property"]} -> {self.value["value"]}")
+        await openspace.setPropertyValue(self.value["property"], self.value["value"])
+      case "recording":
+        print(f"  Start Playback: {self.value}")
+        await openspace.recording.startPlayback(self.value)
+      case "screenshot":
+        print("  Take Screenshot")
+        await openspace.takeScreenshot()
+      case "time":
+        print(f"  Set Time: {self.value}")
+        await openspace.time.setTime(self.value)
+      case "wait":
+        print(f"  Wait: {self.value}")
+        time.sleep(int(self.value))
+
+
+# @TODO: Check that at least one instruction is to take a screenshot
 class Test:
   def __init__(self, path):
     assert(os.path.isfile(path))
@@ -59,8 +108,15 @@ class Test:
       except Exception as error:
         raise Exception(f"Error loading test {path}: {error}")
 
-    print(self.instructions)
+  async def run(self, openspace) -> float:
+    count_screenshots = 0
+    for instruction in self.instructions:
+      await instruction.run(openspace)
 
+      if instruction.is_screenshot():
+        count_screenshots = count_screenshots + 1
+
+    return count_screenshots
 
   def get_group_and_name(self):
     # Get the testname by removing everything before (and including) "test/visual" and also
