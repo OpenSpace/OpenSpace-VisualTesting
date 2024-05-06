@@ -30,6 +30,7 @@ import json
 import os
 import requests
 import subprocess
+import time
 
 from test import *
 import openspace
@@ -58,6 +59,9 @@ def run_single_test(testPath, executable):
     global count_screenshots
     count_screenshots = await test.run(openspace)
     print("Finished running")
+
+    # Give the screenshot writing some time to finish
+    time.sleep(2)
 
     global screenshot_folder
     screenshot_folder = await openspace.absPath("${SCREENSHOTS}")
@@ -100,8 +104,6 @@ def run_single_test(testPath, executable):
   return [ group, name, files[-count_screenshots:] ]
 
 def submit_candidate_image(group, name, hardware, timestamp, hash, file, runner_id, url):
-  with open(file, "rb") as f:
-    file_content = f.read()
   res = requests.post(
     url,
     headers = {
@@ -112,9 +114,8 @@ def submit_candidate_image(group, name, hardware, timestamp, hash, file, runner_
       "TimeStamp": timestamp,
       "CommitHash": hash
     },
-    files = { "image": (file, file_content, "image/png") }
+    files = { "file": open(file, "rb") }
   )
-
   print(res)
 
 

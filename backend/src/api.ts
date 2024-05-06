@@ -32,6 +32,7 @@ import { generateComparison } from "./imagecomparison";
 import { addTestData, regenerateTestResults, saveTestData, TestData,
   TestRecords } from "./testrecords";
 import bodyParser from "body-parser";
+import multer from "multer";
 import express from "express";
 import fs from "fs";
 
@@ -53,7 +54,8 @@ export function registerRoutes(app: express.Application) {
   );
   app.post(
     "/api/submit-test",
-    bodyParser.raw({ type: [ "image/png" ], "limit": "10mb" }),
+    multer().single("file"),
+    // bodyParser.raw({ type: [ "image/png" ], "limit": "10mb" }),
     handleSubmitTest
   );
   app.post("/api/remove-reference", handleRemoveReference);
@@ -148,6 +150,9 @@ function handleTestRecords(req: express.Request, res: express.Response) {
  *   - `Name`: The name of the test for which a candidate is submitted
  *   - `TimeStamp`: The time stamp of the test run for which a candidate is submitted
  *   - `CommitHash`: The commit hash of the code that was used to generated the candidate
+ *
+ * The body of the request is a multipart-encoded file with the following fields:
+ *   - candidate: The generated candidate file
  */
 function handleSubmitTest(req: express.Request, res: express.Response) {
   const runner = req.header("RunnerID");
@@ -159,7 +164,8 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
 
   // the "RunnerID" has to be one of the accepted runners
   if (runner == null || group == null || name == null || hardware == null ||
-      timeStamp == null || commitHash == null || !Config.runners.includes(runner))
+      timeStamp == null || commitHash == null || !Config.runners.includes(runner) ||
+      req.file == null)
   {
     res.status(400).end();
     return;
@@ -181,14 +187,14 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
     // We are either the first, or someone has marked the previous reference as not valid
     let path = updateReferencePointer(group, name, hardware, ts);
     // Write the current candidate image as the reference image
-    fs.writeFileSync(path, req.body);
+    fs.writeFileSync(path, req.file.buffer);
   }
 
   const reference = referenceImage(group, name, hardware);
   const candidate = candidateImage(group, name, hardware, ts);
   const difference = differenceImage(group, name, hardware, ts);
 
-  fs.writeFileSync(candidate, req.body);
+  fs.writeFileSync(candidate, req.file.buffer);
   let nPixels = generateComparison(reference, candidate, difference);
   let testData: TestData = {
     pixelError: nPixels,
