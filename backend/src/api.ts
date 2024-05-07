@@ -26,7 +26,7 @@ import { printAudit } from "./audit";
 import { Config, saveConfiguration } from "./configuration";
 import {
   candidateImage, clearReferencePointer, dateToPath, differenceImage, hasReferenceImage,
-  latestTestDataPath, latestTestPath, referenceImage, temporaryPath, testDataPath,
+  latestTestDataPath, latestTestPath, referenceImage, referenceImagePath, temporaryPath, testDataPath,
   testPath, updateReferencePointer } from "./globals";
 import { generateComparison } from "./imagecomparison";
 import { addTestData, regenerateTestResults, reloadTestResults, saveTestData, TestData,
@@ -169,7 +169,8 @@ function handleImage(req: express.Request, res: express.Response) {
   switch (type) {
     case "reference":
       let data = JSON.parse(fs.readFileSync(`${basePath}/data.json`).toString());
-      path = data.referenceImage;
+      let folder = referenceImagePath(group, name, hardware);
+      path = `${folder}/${data.referenceImage}`;
       break;
     case "candidate":
       path = `${basePath}/candidate.png`;
@@ -314,17 +315,17 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
 
   printAudit(`Submitting result for (${group}/${name}/${hardware}/${ts.toISOString()})`);
 
-  const path = testPath(group, name, hardware, ts);
-  if (!fs.existsSync(path)) {
-    fs.mkdirSync(path, { recursive: true });
+  const p = testPath(group, name, hardware, ts);
+  if (!fs.existsSync(p)) {
+    fs.mkdirSync(p, { recursive: true });
   }
 
   if (!hasReferenceImage(group, name, hardware)) {
     printAudit("  No reference image found");
     // We are either the first, or someone has marked the previous reference as not valid
-    let path = updateReferencePointer(group, name, hardware, ts);
+    let p = updateReferencePointer(group, name, hardware, ts);
     // Write the current candidate image as the reference image
-    fs.writeFileSync(path, req.file.buffer);
+    fs.writeFileSync(p, req.file.buffer);
   }
 
   const reference = referenceImage(group, name, hardware);
@@ -347,7 +348,7 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
     timeStamp: ts,
     timing: timing,
     commitHash: commitHash,
-    referenceImage: reference
+    referenceImage: path.basename(reference)
   };
 
   saveTestData(testData, testDataPath(group, name, hardware, ts));
@@ -500,7 +501,7 @@ function handleUpdateReference(req: express.Request, res: express.Response) {
 
   // The diff cannot be `null` as `newReference` and `candidate` are the same image
   data.pixelError = diff!;
-  data.referenceImage = newReference;
+  data.referenceImage = path.basename(newReference);
   saveTestData(data, testDataPath(group, name, hardware, new Date(data.timeStamp)));
   reloadTestResults();
 }

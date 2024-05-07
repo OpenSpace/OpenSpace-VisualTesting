@@ -38,6 +38,7 @@ let AuditPath: string;
  * @param text The line that should be added to the audit log
  */
 export function printAudit(text: string) {
+  console.log(text);
   fs.appendFileSync(AuditPath, `${new Date().toISOString()}  ${text}\n`);
 }
 

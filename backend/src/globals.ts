@@ -243,6 +243,20 @@ export function latestTestDataPath(group: string, name: string, hardware: string
 }
 
 /**
+ * Returns a path the folder that contains all references images for the provided
+ * @param group, @param name, and @param hardware.
+ *
+ * @param group The name of the group for which to return the reference folder path
+ * @param name The name of the test for which to return the reference folder path
+ * @param hardware The hardware for which to return the reference folder path
+ * @returns The path to  reference folder path for the requested test
+ */
+export function referenceImagePath(group: string, name: string, hardware: string): string
+{
+  return `${Config.data}/reference/${hardware}/${group}/${name}`;
+}
+
+/**
  * Returns a path to a temporary file in which files can be stored for a short time
  */
 export function temporaryPath(): string {

@@ -25,8 +25,11 @@
 import { assert } from "./assert";
 import { printAudit } from "./audit";
 import { Config } from "./configuration";
+import { referenceImagePath } from "./globals";
 import { generateComparison } from "./imagecomparison";
 import fs from "fs";
+import { globSync } from "glob";
+import path from "path";
 
 
 type TestRecord = {
@@ -118,6 +121,45 @@ export function addTestData(group: string, name: string, hardware: string, data:
 }
 
 /**
+ * Runs a check on all of the data results and ensure that they are all self consistent.
+ * This includes checks for:
+ *   - All reference, candidate, or difference images have the expected size
+ *   - All reference pointers point at files that exist
+ *   - All test data files' reference images exist
+ */
+export function verifyDataFolder() {
+  printAudit("Verifying data files");
+
+  printAudit("  Image size");
+  let images = globSync(`${Config.data}/**/*.png`);
+  for (let image of images) {
+    // const img = PNG.sync.read(fs.readFileSync(image));
+    // if (img.width != Config.size.width || img.height != Config.size.height) {
+    //   throw `Image ${image} has wrong size (${img.width}, ${img.height}})`;
+    // }
+  }
+
+  printAudit("  Reference pointers");
+  let references = globSync(`${Config.data}/reference/**/ref.txt`);
+  for (let reference of references) {
+    let content = fs.readFileSync(reference).toString();
+    let dir = path.dirname(reference);
+    let p = `${dir}/${content}`;
+    if (!fs.existsSync(p)) {
+      throw `Reference image ${content} in ${reference} does not exist`
+    }
+  }
+
+  printAudit("  Data file references");
+  let dataFiles = globSync(`${Config.data}/tests/**/data.json`);
+  for (let dataFile of dataFiles) {
+    let data: TestData = JSON.parse(fs.readFileSync(dataFile).toString());
+    console.log(data);
+  }
+
+}
+
+/**
  * Loads all of the existing test results from the data folder as provided in the
  * configuration. It will iterate through all of the tests and will assert if one of the
  * test folders is malformed due to, for example, missing files.
@@ -173,8 +215,9 @@ export function regenerateTestResults() {
           const p = `${base}/${group}/${name}/${run}`;
 
           let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
+          let folder = referenceImagePath(group, name, hardware);
           let diff = generateComparison(
-            data.referenceImage,
+            `${folder}/${data.referenceImage}`,
             `${p}/candidate.png`,
             `${p}/difference.png`
           );

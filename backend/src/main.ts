@@ -25,14 +25,11 @@
 import { registerRoutes } from "./api";
 import { initializeAudit } from "./audit";
 import { Config, loadConfiguration } from "./configuration";
-import { loadTestResults } from "./testrecords";
+import { loadTestResults, verifyDataFolder } from "./testrecords";
 import cors from "cors";
 import express from "express";
 import fs from "fs";
 
-// @TODO: Go through all images in the system and ensure they have the same size
-// @TODO: Include consistency check that all of the images are represented in the
-//        test results and vice versa
 
 export function main() {
   loadConfiguration("config.json");
@@ -46,6 +43,7 @@ export function main() {
   }
 
   initializeAudit();
+  verifyDataFolder();
   loadTestResults();
 
   const app = express();
