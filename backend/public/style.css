@@ -4,24 +4,21 @@ body {
 
   font-family: "Roboto";
   font-size: 16px;
-  font-style: bold;
-  font-variant: normal;
-  font-weight: 100;
-  line-height: 20px;
 }
 
 h1 {
   text-align: center;
-  font-style: normal;
   font-variant: small-caps;
-  font-weight: 1000;
   font-size: 36px;
 
-  margin-left: 5px;
+  line-height: 30px;
+
   padding: 15px;
   background-color: #333333;
   color: #ffffff;
   width: 100%;
+
+  text-shadow: 0px 4px 5px #000000;
 }
 
 a {
@@ -50,8 +47,7 @@ img.overview {
 }
 
 table {
-  border-collapse: separate;
-  border-spacing: 50px 10px;
+  border-spacing: 20px 0px;
 }
 
 .li-head {
@@ -74,8 +70,6 @@ table {
 .cell {
   margin: 2px 5px 3px 5px;
   display: inline-block;
-  overflow: hidden;
-  vertical-align: center;
 }
 
 .heading {
@@ -84,15 +78,22 @@ table {
   font-weight: 1000;
 }
 
-.status {
+.status:not(.heading) {
   width: 90px;
   height: 20px;
   text-align: center;
+  vertical-align: center;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 .status-small {
   width: 20px;
   height: 15px;
+}
+
+.status {
+  width: 90px;
 }
 
 .group {
@@ -133,42 +134,43 @@ table {
 }
 
 .error-1 {
-  background-color: hsl(100, 100%, 45%);
+  background-color: #4ce600;
   color: #111111;
 }
 
 .error-2 {
-  background-color: hsl(95, 100%, 40%);
+  background-color: #55cc00;
   color: #111111;
 }
 
 .error-3 {
-  background-color: hsl(90, 100%, 40%);
+  background-color: #66cc00;
   color: #111111;
 }
 
 .error-4 {
-  background-color: hsl(58, 85%, 53%);
+  background-color: #ede621;
   color: #111111;
 }
 
 .error-5 {
-  background-color: hsl(48, 85%, 53%);
+  background-color: #edc421;
   color: #111111;
 }
 
 .error-6 {
-  background-color: hsl(30, 100%, 40%);
+  background-color: #cc5000;
+  color: #050505;
 }
 
 .error-7 {
-  background-color: hsl(20, 100%, 40%);
+  background-color: #cc4400;
 }
 
 .error-8 {
-  background-color: hsl(10, 100%, 40%);
+  background-color: #cc2200;
 }
 
 .error-9 {
-  background-color: hsl(0, 100%, 40%);
+  background-color: #cc0000;
 }
