@@ -136,9 +136,7 @@ export function verifyDataFolder() {
     let content = fs.readFileSync(reference).toString();
     let dir = path.dirname(reference);
     let p = `${dir}/${content}`;
-    if (!fs.existsSync(p)) {
-      throw `Reference image ${content} in ${reference} does not exist`
-    }
+    assert(fs.existsSync(p), `Reference image ${content} in ${reference} does not exist`);
   }
 
   printAudit("  Data file references");
@@ -153,17 +151,13 @@ export function verifyDataFolder() {
         let runs = fs.readdirSync(`${base}/${group}/${name}`);
         for (let run of runs) {
           const p = `${base}/${group}/${name}/${run}`;
-          if (!fs.existsSync(`${p}/data.json`)) {
-            throw `Missing 'data.json' in ${p}`;
-          }
+          assert(fs.existsSync(`${p}/data.json`), `Missing 'data.json' in ${p}`);
 
           let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
           let reference = data.referenceImage;
           let folder = referenceImagePath(group, name, hardware);
           let fullReference = `${folder}/${reference}`;
-          if (!fs.existsSync(fullReference)) {
-            throw `Missing reference file ${fullReference}`;
-          }
+          assert(fs.existsSync(fullReference), `Missing reference file ${fullReference}`);
         }
       }
     }
