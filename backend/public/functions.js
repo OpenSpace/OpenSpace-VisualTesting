@@ -5,12 +5,17 @@ function maxPixelError(record) {
     difference = Math.max(difference, value[value.length - 1].pixelError);
   }
   return difference;
-}
+} // function maxPixelError(record)
 
 function diffDisplay(diff) {
   // Round the error to 3 digits past the decimal
   return `${Math.round(diff * 100000) / 1000}%`;
-}
+} // function diffDisplay(diff)
+
+function timingDisplay(timing) {
+  // Round the riming to 3 digits past the decimal
+  return `${Math.round(timing * 1000) / 1000}s`;
+} // function timingDisplay(timing)
 
 function classForDiff(diff) {
   // Diff is in [0, 1] and represents % of changed pixels
@@ -24,7 +29,7 @@ function classForDiff(diff) {
   else if (diff < 0.75)  { return "error-7"; }
   else if (diff < 1.0)   { return "error-8"; }
   else                   { return "error-9"; }
-}
+} // function classForDiff(diff)
 
 function createHeader(ul) {
   let li = document.createElement("li");
@@ -35,6 +40,7 @@ function createHeader(ul) {
 
   let status = document.createElement("div");
   status.className = "cell status heading";
+  status.appendChild(document.createTextNode("Error"));
   div.appendChild(status);
 
   let group = document.createElement("div");
@@ -52,21 +58,21 @@ function createHeader(ul) {
   hw.appendChild(document.createTextNode("Hardware"));
   div.appendChild(hw);
 
-  let diff = document.createElement("div");
-  diff.className = "cell pixelError heading";
-  diff.appendChild(document.createTextNode("Error (%)"));
-  div.appendChild(diff);
+  let timing = document.createElement("div");
+  timing.className = "cell timing heading";
+  timing.appendChild(document.createTextNode("Timing"));
+  div.appendChild(timing);
 
   let commit = document.createElement("div");
   commit.className = "cell commit heading";
-  commit.appendChild(document.createTextNode("Commit Hash"));
+  commit.appendChild(document.createTextNode("Commit"));
   div.appendChild(commit);
 
   let timestamp = document.createElement("div");
   timestamp.className = "cell timestamp heading";
   timestamp.appendChild(document.createTextNode("Timestamp"));
   div.appendChild(timestamp);
-}
+} // function createHeader(ul)
 
 function createRows(record, ul) {
   function createHead(divHead, divBody, record, hardware, data) {
@@ -76,6 +82,7 @@ function createRows(record, ul) {
     let status = document.createElement("div");
     let errorClass = classForDiff(data.pixelError);
     status.className = `cell status ${errorClass}`;
+    status.appendChild(document.createTextNode(diffDisplay(data.pixelError)));
     divHead.appendChild(status);
 
     let group = document.createElement("div");
@@ -93,14 +100,18 @@ function createRows(record, ul) {
     hw.appendChild(document.createTextNode(hardware));
     divHead.appendChild(hw);
 
-    let diff = document.createElement("div");
-    diff.className = "cell diff";
-    diff.appendChild(document.createTextNode(diffDisplay(data.pixelError)));
-    divHead.appendChild(diff);
+    let timing = document.createElement("div");
+    timing.className = "cell timing";
+    timing.appendChild(document.createTextNode(timingDisplay(data.timing)));
+    divHead.appendChild(timing);
 
     let commit = document.createElement("div");
     commit.className = "cell commit";
-    commit.appendChild(document.createTextNode(data.commitHash));
+    let a = document.createElement("a");
+    a.href = `https://github.com/OpenSpace/OpenSpace/commit/${data.commitHash}`;
+    a.target = "_blank";
+    a.appendChild(document.createTextNode(data.commitHash));
+    commit.appendChild(a);
     divHead.appendChild(commit);
 
     let timestamp = document.createElement("div");
@@ -110,8 +121,59 @@ function createRows(record, ul) {
     );
     divHead.appendChild(timestamp);
 
+    {
+      let div = document.createElement("div");
+      div.className = "cell candidate";
+
+      let a = document.createElement("a");
+      a.href = `/api/image/candidate/${record.group}/${record.name}/${hardware}`;
+      a.target = "_blank";
+      div.appendChild(a);
+
+      let img = document.createElement("img");
+      img.src = a.href;
+      img.className = "overview";
+      img.loading = "lazy";
+      a.appendChild(img);
+      divHead.appendChild(div);
+    }
+
+    {
+      let div = document.createElement("div");
+      div.className = "cell reference";
+
+      let a = document.createElement("a");
+      a.href = `/api/image/reference/${record.group}/${record.name}/${hardware}`;
+      a.target = "_blank";
+      div.appendChild(a);
+
+      let img = document.createElement("img");
+      img.src = a.href;
+      img.className = "overview";
+      img.loading = "lazy";
+      a.appendChild(img);
+      divHead.appendChild(div);
+    }
+
+    {
+      let div = document.createElement("div");
+      div.className = "cell difference";
+
+      let a = document.createElement("a");
+      a.href = `/api/image/difference/${record.group}/${record.name}/${hardware}`;
+      a.target = "_blank";
+      div.appendChild(a);
+
+      let img = document.createElement("img");
+      img.src = a.href;
+      img.className = "overview";
+      img.loading = "lazy";
+      a.appendChild(img);
+      divHead.appendChild(div);
+    }
+
     return divHead;
-  }
+  } // function createHead(divHead, divBody, record, hardware, data)
 
   function createBody(divBody, record, hardware, testData) {
     divBody.className = "li-body hidden";
@@ -130,57 +192,6 @@ function createRows(record, ul) {
       trStatus.appendChild(td);
     }
     table.appendChild(trStatus);
-
-    let trCandidate = document.createElement("tr");
-    for (let data of testData) {
-      let td = document.createElement("td");
-      td.className = "candidate";
-      trCandidate.appendChild(td);
-
-      let a = document.createElement("a");
-      a.href = `/api/image/candidate/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
-      a.target = "_blank";
-      td.appendChild(a);
-
-      let img = document.createElement("img");
-      img.src = a.href;
-      a.appendChild(img);
-    }
-    table.appendChild(trCandidate);
-
-    let trReference = document.createElement("tr");
-    for (let data of testData) {
-      let td = document.createElement("td");
-      td.className = "reference";
-      trReference.appendChild(td);
-
-      let a = document.createElement("a");
-      a.href = `/api/image/reference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
-      a.target = "_blank";
-      td.appendChild(a);
-
-      let img = document.createElement("img");
-      img.src = a.href;
-      a.appendChild(img);
-    }
-    table.appendChild(trReference);
-
-    let trDifference = document.createElement("tr");
-    for (let data of testData) {
-      let td = document.createElement("td");
-      td.className = "difference";
-      trDifference.appendChild(td);
-
-      let a = document.createElement("a");
-      a.href = `/api/image/difference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
-      a.target = "_blank";
-      td.appendChild(a);
-
-      let img = document.createElement("img");
-      img.src = a.href;
-      a.appendChild(img);
-    }
-    table.appendChild(trDifference);
 
     let trTimeStamp = document.createElement("tr");
     for (let data of testData) {
@@ -204,11 +215,78 @@ function createRows(record, ul) {
     for (let data of testData) {
       let td = document.createElement("td");
       td.className = "commit";
-      td.appendChild(document.createTextNode(data.commitHash));
+      let a = document.createElement("a");
+      a.href = `https://github.com/OpenSpace/OpenSpace/commit/${data.commitHash}`;
+      a.target = "_blank";
+      td.appendChild(a);
+      a.appendChild(document.createTextNode(data.commitHash));
       trCommit.appendChild(td);
     }
     table.appendChild(trCommit);
-  }
+
+    let trTiming = document.createElement("tr");
+    for (let data of testData) {
+      let td = document.createElement("td");
+      td.className = "timing";
+      td.appendChild(document.createTextNode(timingDisplay(data.timing)));
+      trTiming.appendChild(td);
+    }
+    table.appendChild(trTiming);
+
+    let trCandidate = document.createElement("tr");
+    for (let data of testData) {
+      let td = document.createElement("td");
+      td.className = "candidate";
+      trCandidate.appendChild(td);
+
+      let a = document.createElement("a");
+      a.href = `/api/image/candidate/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      a.target = "_blank";
+      td.appendChild(a);
+
+      let img = document.createElement("img");
+      img.src = a.href;
+      img.loading = "lazy";
+      a.appendChild(img);
+    }
+    table.appendChild(trCandidate);
+
+    let trReference = document.createElement("tr");
+    for (let data of testData) {
+      let td = document.createElement("td");
+      td.className = "reference";
+      trReference.appendChild(td);
+
+      let a = document.createElement("a");
+      a.href = `/api/image/reference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      a.target = "_blank";
+      td.appendChild(a);
+
+      let img = document.createElement("img");
+      img.src = a.href;
+      img.loading = "lazy";
+      a.appendChild(img);
+    }
+    table.appendChild(trReference);
+
+    let trDifference = document.createElement("tr");
+    for (let data of testData) {
+      let td = document.createElement("td");
+      td.className = "difference";
+      trDifference.appendChild(td);
+
+      let a = document.createElement("a");
+      a.href = `/api/image/difference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      a.target = "_blank";
+      td.appendChild(a);
+
+      let img = document.createElement("img");
+      img.src = a.href;
+      img.loading = "lazy";
+      a.appendChild(img);
+    }
+    table.appendChild(trDifference);
+  } // function createBody(divBody, record, hardware, testData)
 
   for (let [hardware, testData] of Object.entries(record.data)) {
     if (testData.length === 0)  continue;
@@ -228,7 +306,7 @@ function createRows(record, ul) {
     createBody(divBody, record, hardware, testData);
     li.appendChild(divBody);
   }
-}
+} // function createRows(record, ul)
 
 async function main() {
   let records = await fetch("/api/test-records").then(res => res.json());
@@ -237,7 +315,6 @@ async function main() {
   records.sort((a, b) => maxPixelError(a) < maxPixelError(b));
 
   let list = document.getElementById("list");
-
   createHeader(list);
   for (let record of records) {
     createRows(record, list);

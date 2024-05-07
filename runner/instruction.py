@@ -77,7 +77,7 @@ class Instruction:
         await openspace.setPropertyValue(prop, val)
       case "recording":
         print(f"  Start Playback: {self.value}")
-        await openspace.recording.startPlayback(self.value)
+        await openspace.sessionRecording.startPlayback(self.value)
       case "screenshot":
         print("  Take Screenshot")
         await openspace.takeScreenshot()

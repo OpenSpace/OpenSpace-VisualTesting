@@ -25,16 +25,17 @@
 import { printAudit } from "./audit";
 import { Config, saveConfiguration } from "./configuration";
 import {
-  candidateImage, clearReferencePointer, differenceImage, hasReferenceImage,
-  latestTestPath, referenceImage, temporaryPath, testDataPath, testPath,
-  updateReferencePointer } from "./globals";
+  candidateImage, clearReferencePointer, dateToPath, differenceImage, hasReferenceImage,
+  latestTestDataPath, latestTestPath, referenceImage, temporaryPath, testDataPath,
+  testPath, updateReferencePointer } from "./globals";
 import { generateComparison } from "./imagecomparison";
-import { addTestData, regenerateTestResults, saveTestData, TestData,
+import { addTestData, regenerateTestResults, reloadTestResults, saveTestData, TestData,
   TestRecords } from "./testrecords";
 import bodyParser from "body-parser";
 import express from "express";
 import fs from "fs";
 import multer from "multer";
+import path from "path";
 import { PNG } from "pngjs";
 
 /**
@@ -54,9 +55,9 @@ export function registerRoutes(app: express.Application) {
   app.post("/api/submit-test", multer().single("file"), handleSubmitTest);
   app.post("/api/run-test", multer().single("file"), handleRunTest);
   app.post(
-    "/api/remove-reference",
+    "/api/update-reference",
     bodyParser.raw({ type: [ "application/json"] }),
-    handleRemoveReference
+    handleUpdateReference
   );
 }
 
@@ -107,12 +108,12 @@ function handleApi(req: express.Request, res: express.Response) {
       `
     },
     {
-      path: "/api/remove-reference",
+      path: "/api/update-reference",
       description: `
         (Requires admin) Marks the current reference image for a specific test as invalid
         and instead use the latest test as a reference instead. In addition to the
-        admin token. The JSON object contained in the body must provide the 'hardware',
-        'group', and 'name' for test whose reference should be invalidated
+        admin token, the JSON object contained in the body must provide the 'hardware',
+        'group', and 'name' for test whose reference should be invalidated.
       `
     }
   ]);
@@ -429,31 +430,77 @@ function handleRunTest(req: express.Request, res: express.Response) {
 }
 
 /**
- * Removes the current reference for a specific test. This API call can only be performed
- * with elevated priviledges. The payload of this call must be a JSON object with the
- * following values:
+ * Updates the current reference for a specific test. The latest candidate image will be
+ * upgraded to a reference image and the latest test will be updated to reflect this. This
+ * API call can only be performed with elevated priviledges. The payload of this call must
+ * be a JSON object with the following values:
  *   - `adminToken`: The admin token that was provided in the configuration file
  *   - `hardware`: The hardware on which to remove the reference image
  *   - `group`: The name of the test's group for which to remove the reference image
  *   - `name`: The name of the test for which to remove the refernce image
  */
-function handleRemoveReference(req: express.Request, res: express.Response) {
-  // @TODO: Use the latest reference image instead
-  const adminToken = req.body.adminToken;
-  const hardware = req.body.hardware;
-  const group = req.body.group;
-  const name = req.body.name;
-
-  if (adminToken == null || group == null || name == null || hardware == null) {
-    res.status(400).end();
-    return;
-  }
-
-  if (adminToken != Config.adminToken) {
+function handleUpdateReference(req: express.Request, res: express.Response) {
+  let body = JSON.parse(req.body);
+  const adminToken = body.adminToken;
+  if (adminToken == null || adminToken != Config.adminToken) {
     res.status(401).end();
     return;
   }
 
-  printAudit(`Removing reference for (${group}, ${name}, ${hardware})`);
+  const hardware = body.hardware;
+  if (hardware == null) {
+    res.status(400).json({ error: "Missing key 'hardware'" });
+    return;
+  }
+
+  const group = body.group;
+  if (group == null) {
+    res.status(400).json({ error: "Missing key 'group'" });
+    return;
+  }
+
+  const name = body.name;
+  if (name == null) {
+    res.status(400).json({ error: "Missing key 'name'" });
+    return;
+  }
+
+  // If we remove the reference, we want to take the latest candidate image available for
+  // the test instead. We'll copy it over to the reference folder and then rewrite the
+  // reference pointer to point at the most recent image instead
+  let testPath = latestTestPath(group, name, hardware);
+  if (testPath == null) {
+    // There was no test for this, so why are we trying to update the reference?
+    res.status(400).json({ error: `No test found for (${group}, ${name}, ${hardware})`});
+    return;
+  }
+
+  printAudit(`Updating reference for (${group}, ${name}, ${hardware})`);
+
+  let dataPath = latestTestDataPath(group, name, hardware);
+  let data: TestData = JSON.parse(fs.readFileSync(dataPath).toString());
+
+  // Get the new file name for the reference image. First get the old reference image,
+  // extract the folder name from it, and create a new file name based on the timestamp
+  let currentReference = referenceImage(group, name, hardware);
+  let time = dateToPath(new Date(data.timeStamp));
+  let newReference = `${path.dirname(currentReference)}/${time}.png`;
+
+  // Make the last candidate image the new reference image by copying it over
+  let candidate = candidateImage(group, name, hardware, new Date(data.timeStamp));
+  fs.copyFileSync(candidate, newReference)
+  // And updating the reference pointer
   clearReferencePointer(group, name, hardware);
+  updateReferencePointer(group, name, hardware, new Date(data.timeStamp));
+
+  // Then we need to rerun the comparison image for the candidate image as it is now
+  // out of date
+  let difference = differenceImage(group, name, hardware, new Date(data.timeStamp));
+  let diff = generateComparison(newReference, candidate, difference);
+
+  // The diff cannot be `null` as `newReference` and `candidate` are the same image
+  data.pixelError = diff!;
+  data.referenceImage = newReference;
+  saveTestData(data, testDataPath(group, name, hardware, new Date(data.timeStamp)));
+  reloadTestResults();
 }

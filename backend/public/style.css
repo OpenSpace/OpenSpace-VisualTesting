@@ -24,6 +24,10 @@ h1 {
   width: 100%;
 }
 
+a {
+  color: #fdfdfd;
+}
+
 ul {
   list-style: none;
   width: 100%;
@@ -39,6 +43,15 @@ ul {
 
 img {
   width: 250px;
+}
+
+img.overview {
+  width: 90px;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 50px 10px;
 }
 
 .li-head {
@@ -72,13 +85,14 @@ img {
 }
 
 .status {
-  width: 20px;
+  width: 90px;
   height: 20px;
+  text-align: center;
 }
 
 .status-small {
   width: 20px;
-  height: 10px;
+  height: 15px;
 }
 
 .group {
@@ -86,62 +100,73 @@ img {
 }
 
 .name {
-  width: 140px;
+  width: 175px;
 }
 
-.os {
+.hardware {
   width: 150px;
 }
 
-.diff {
+.timing {
   width: 90px;
 }
 
 .commit {
-  width: 125px;
+  width: 90px;
 }
 
 .timestamp {
   width: 240px;
 }
 
+.heading {
+  text-align: left;
+}
+
+
 /*
  * Error colors used for status reporting
  */
 .error-0 {
   background-color: #eeeeee;
+  color: #111111;
 }
 
 .error-1 {
-  background-color: hsl(100, 100%, 40%);
+  background-color: hsl(100, 100%, 45%);
+  color: #111111;
 }
 
 .error-2 {
   background-color: hsl(95, 100%, 40%);
+  color: #111111;
 }
 
 .error-3 {
   background-color: hsl(90, 100%, 40%);
+  color: #111111;
 }
 
 .error-4 {
-  background-color: hsl(70, 100%, 40%);
+  background-color: hsl(58, 85%, 53%);
+  color: #111111;
 }
 
 .error-5 {
-  background-color: hsl(30, 100%, 40%);
+  background-color: hsl(48, 85%, 53%);
+  color: #111111;
 }
 
 .error-6 {
-  background-color: hsl(20, 100%, 40%);
+  background-color: hsl(30, 100%, 40%);
 }
 
 .error-7 {
-  background-color: hsl(10, 100%, 40%);
+  background-color: hsl(20, 100%, 40%);
 }
 
 .error-8 {
-  background-color: hsl(5, 100%, 40%);
+  background-color: hsl(10, 100%, 40%);
 }
 
 .error-9 {

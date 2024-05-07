@@ -186,6 +186,14 @@ export function regenerateTestResults() {
   }
 
   // Reset the local records and load a fresh version from disk
+  reloadTestResults();
+}
+
+/**
+ * Reloads all of the test results from disk. This should be called whenever any testdata
+ * file has been rewritten
+ */
+export function reloadTestResults() {
   TestRecords = [];
   loadTestResults();
 }

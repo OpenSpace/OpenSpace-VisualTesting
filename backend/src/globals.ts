@@ -35,7 +35,7 @@ import path from "path";
  * @param date The Date object that should be converted
  * @returns A string that is safe to be used as a filesystem path or a URL
  */
-function toPath(date: Date): string {
+export function dateToPath(date: Date): string {
   return date.toISOString().split("-").join("").split(":").join("").split(".").join("");
 }
 
@@ -81,7 +81,7 @@ export function latestTestPath(group: string, name: string,
 export function testPath(group: string, name: string, hardware: string,
                          timestamp: Date): string
 {
-  return `${Config.data}/tests/${hardware}/${group}/${name}/${toPath(timestamp)}`
+  return `${Config.data}/tests/${hardware}/${group}/${name}/${dateToPath(timestamp)}`
 }
 
 /**
@@ -134,7 +134,7 @@ export function updateReferencePointer(group: string, name: string, hardware: st
     "Reference pointer already exists"
   );
 
-  const p = `${toPath(timestamp)}.png`;
+  const p = `${dateToPath(timestamp)}.png`;
   const ref = referencePointer(group, name, hardware);
   if (!fs.existsSync(path.dirname(ref))) {
     fs.mkdirSync(path.dirname(ref), { recursive: true });
@@ -225,6 +225,21 @@ export function testDataPath(group: string, name: string, hardware: string,
                              timestamp: Date): string
 {
   return `${testPath(group, name, hardware, timestamp)}/data.json`;
+}
+
+/**
+ * Returns the path to the test data file for the latest test identified by the
+ * @param group, @param name, and @param hardware. Note that this path might not exist if
+ * no test has run for these test parameters.
+ *
+ * @param group The name of the group for which to return the test data file
+ * @param name The name of the test for which to return the test data file
+ * @param hardware The hardware for which to return the test data file
+ * @returns The path to the latest test data file for the requested test
+ */
+export function latestTestDataPath(group: string, name: string, hardware: string): string
+{
+  return `${latestTestPath(group, name, hardware)}/data.json`;
 }
 
 /**

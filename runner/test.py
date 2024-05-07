@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 from instruction import Instruction
 
@@ -40,6 +41,7 @@ class Test:
   async def run(self, openspace):
     for instruction in self.instructions:
       await instruction.run(openspace)
+      time.sleep(0.5)
 
   def get_group_and_name(self):
     # Get the testname by removing everything before (and including) "test/visual" and also

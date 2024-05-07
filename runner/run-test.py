@@ -31,9 +31,14 @@ import os
 import requests
 import subprocess
 import time
-
-from test import *
+from test import Test
 import openspace
+
+# TODO: Retry openspace api connection until it works
+# TODO: Redirect stderr to a file and send along with image test
+# TODO: openspace.cfg enabling MRF caching (and some more things?)
+
+test_base_dir = "tests/visual"
 
 # Settings common to all test runs
 async def setup_test_run(openspace):
@@ -56,8 +61,8 @@ async def setup_test_run(openspace):
 
 # testPath: The path to the ostest file that should be run
 def run_single_test(testPath, executable):
-  # group, name = get_group_and_name(testPath)
-  # print(f"Running test {testPath} ({group}, {name})")
+  print(f"Running test: {testPath}")
+
   test = Test(testPath)
   group, name = test.get_group_and_name()
 
@@ -69,7 +74,8 @@ def run_single_test(testPath, executable):
       "--profile", test.profile,
       "--bypassLauncher"
     ],
-    cwd=os.path.dirname(executable)
+    cwd=os.path.dirname(executable),
+    stdout=subprocess.DEVNULL
   )
 
   osApi = openspace.Api("localhost", 4681)
@@ -86,6 +92,11 @@ def run_single_test(testPath, executable):
     global screenshot_folder
     screenshot_folder = await openspace.absPath("${SCREENSHOTS}")
 
+    global commit
+    version = await openspace.version()
+    print(version)
+    commit = version["Commit"]
+
     await openspace.toggleShutdown()
     osApi.disconnect()
     disconnected.set()
@@ -94,6 +105,8 @@ def run_single_test(testPath, executable):
     await osApi.authenticate("")
     openspace = await osApi.singleReturnLibrary()
     asyncio.create_task(internal_test_run(openspace), name=f"Test {group}/{name}")
+
+  time.sleep(5)
 
   osApi.onConnect(onConnect)
   disconnected = asyncio.Event()
@@ -116,7 +129,8 @@ def run_single_test(testPath, executable):
     "group": group,
     "name": name,
     "files": glob.glob(f"{screenshot_folder}/*.png"),
-    "timing": runtime
+    "timing": runtime,
+    "commit": commit
   }
 
 def submit_candidate_image(group, name, hardware, timestamp, timing, hash, file, runner_id, url):
@@ -187,6 +201,32 @@ if __name__ == "__main__":
       timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
       for candidate in res["files"]:
         hardware = config["hardware"]
+        runner_id = config["id"]
+        url = config["url"]
+        submit_candidate_image(
+          res["group"],
+          res["name"],
+          hardware,
+          timestamp,
+          res["timing"],
+          res["commit"],
+          candidate,
+          runner_id,
+          f"{url}/api/submit-test"
+        )
+        time.sleep(0.5)
+  else:
+    print(f"Running tests: {args.test}")
+    tests = args.test.split(",")
+    for test in tests:
+      path = f"{args.dir}/{test_base_dir}/{test}.ostest"
+      if not os.path.isfile(path):
+        raise Exception(f"Could not find test {path}")
+
+      timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+      res = run_single_test(path, executable)
+      for candidate in res["files"]:
+        hardware = config["hardware"]
         commit_hash = "abc"
         runner_id = config["id"]
         url = config["url"]
@@ -196,34 +236,11 @@ if __name__ == "__main__":
           hardware,
           timestamp,
           res["timing"],
-          commit_hash,
+          res["commit"],
           candidate,
           runner_id,
           f"{url}/api/submit-test"
         )
-  else:
-    path = f"{args.dir}/{test_base_dir}/{args.test}.ostest"
-    if not os.path.isfile(path):
-      raise Exception(f"Could not find test {path}")
-
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    res = run_single_test(path, executable)
-    for candidate in res["files"]:
-      hardware = config["hardware"]
-      commit_hash = "abc"
-      runner_id = config["id"]
-      url = config["url"]
-      submit_candidate_image(
-        res["group"],
-        res["name"],
-        hardware,
-        timestamp,
-        res["timing"],
-        commit_hash,
-        candidate,
-        runner_id,
-        f"{url}/api/submit-test"
-      )
   global_end = time.perf_counter()
   print(f"Total time: {global_end - global_start}")
 
