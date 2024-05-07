@@ -30,6 +30,7 @@ import { generateComparison } from "./imagecomparison";
 import fs from "fs";
 import { globSync } from "glob";
 import path from "path";
+import { PNG } from "pngjs";
 
 
 type TestRecord = {
@@ -133,10 +134,10 @@ export function verifyDataFolder() {
   printAudit("  Image size");
   let images = globSync(`${Config.data}/**/*.png`);
   for (let image of images) {
-    // const img = PNG.sync.read(fs.readFileSync(image));
-    // if (img.width != Config.size.width || img.height != Config.size.height) {
-    //   throw `Image ${image} has wrong size (${img.width}, ${img.height}})`;
-    // }
+    const img = PNG.sync.read(fs.readFileSync(image));
+    if (img.width != Config.size.width || img.height != Config.size.height) {
+      throw `Image ${image} has wrong size (${img.width}, ${img.height}})`;
+    }
   }
 
   printAudit("  Reference pointers");
