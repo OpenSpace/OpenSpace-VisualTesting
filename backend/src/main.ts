@@ -33,12 +33,6 @@ import fs from "fs";
 // @TODO: Go through all images in the system and ensure they have the same size
 // @TODO: Include consistency check that all of the images are represented in the
 //        test results and vice versa
-// @TODO: When invalidating a reference image, use the last candidate image as the new
-//        reference instead
-// @TODO: Extract commit hash from OpenSpace
-// @TODO: Error percentage to the left (maybe into color status)
-// @TODO: Show last images in the table overview
-// @TODO: Display timing information
 
 export function main() {
   loadConfiguration("config.json");
