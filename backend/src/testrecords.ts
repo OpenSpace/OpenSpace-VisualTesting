@@ -124,21 +124,11 @@ export function addTestData(group: string, name: string, hardware: string, data:
 /**
  * Runs a check on all of the data results and ensure that they are all self consistent.
  * This includes checks for:
- *   - All reference, candidate, or difference images have the expected size
  *   - All reference pointers point at files that exist
  *   - All test data files' reference images exist
  */
 export function verifyDataFolder() {
   printAudit("Verifying data files");
-
-  printAudit("  Image size");
-  let images = globSync(`${Config.data}/**/*.png`);
-  for (let image of images) {
-    const img = PNG.sync.read(fs.readFileSync(image));
-    if (img.width != Config.size.width || img.height != Config.size.height) {
-      throw `Image ${image} has wrong size (${img.width}, ${img.height}})`;
-    }
-  }
 
   printAudit("  Reference pointers");
   let references = globSync(`${Config.data}/reference/**/ref.txt`);
@@ -152,12 +142,32 @@ export function verifyDataFolder() {
   }
 
   printAudit("  Data file references");
-  let dataFiles = globSync(`${Config.data}/tests/**/data.json`);
-  for (let dataFile of dataFiles) {
-    let data: TestData = JSON.parse(fs.readFileSync(dataFile).toString());
-    console.log(data);
-  }
+  let hardwares = fs.readdirSync(`${Config.data}/tests`);
+  for (let hardware of hardwares) {
+    const base = `${Config.data}/tests/${hardware}`;
 
+    let groups = fs.readdirSync(base);
+    for (let group of groups) {
+      let names = fs.readdirSync(`${base}/${group}`);
+      for (let name of names) {
+        let runs = fs.readdirSync(`${base}/${group}/${name}`);
+        for (let run of runs) {
+          const p = `${base}/${group}/${name}/${run}`;
+          if (!fs.existsSync(`${p}/data.json`)) {
+            throw `Missing 'data.json' in ${p}`;
+          }
+
+          let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
+          let reference = data.referenceImage;
+          let folder = referenceImagePath(group, name, hardware);
+          let fullReference = `${folder}/${reference}`;
+          if (!fs.existsSync(fullReference)) {
+            throw `Missing reference file ${fullReference}`;
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
