@@ -390,7 +390,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   const difference = differenceImage(group, name, hardware, ts);
 
   fs.writeFileSync(candidate, file.buffer);
-  let candidateThumbnailPath = thumbnailForImage(difference);
+  let candidateThumbnailPath = thumbnailForImage(candidate);
   const image = await resizeImg(
     fs.readFileSync(candidate),
     { width: Config.size.width / 4, height: Config.size.height / 4 }
