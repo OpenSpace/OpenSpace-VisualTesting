@@ -25,12 +25,11 @@
 import { assert } from "./assert";
 import { printAudit } from "./audit";
 import { Config } from "./configuration";
-import { referenceImagePath } from "./globals";
+import { referenceImagePath, thumbnailForImage } from "./globals";
 import { generateComparison } from "./imagecomparison";
 import fs from "fs";
 import { globSync } from "glob";
 import path from "path";
-import { PNG } from "pngjs";
 
 
 type TestRecord = {
@@ -207,7 +206,7 @@ export function loadTestResults() {
  * the version of the image diff tool has been updated or if the global image threshold
  * limit has changed.
  */
-export function regenerateTestResults() {
+export async function regenerateTestResults() {
   printAudit("Regenerating all test results");
 
   let hardwares = fs.readdirSync(`${Config.data}/tests`);
@@ -224,11 +223,16 @@ export function regenerateTestResults() {
 
           let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
           let folder = referenceImagePath(group, name, hardware);
-          let diff = generateComparison(
+          let diff = await generateComparison(
             `${folder}/${data.referenceImage}`,
             `${p}/candidate.png`,
             `${p}/difference.png`
           );
+
+          // Remove the old thumbnail of the difference image
+          let diffThumbnail = thumbnailForImage(`${p}/difference.png`);
+          fs.unlinkSync(diffThumbnail);
+
           data.pixelError = diff!;
           saveTestData(data, `${p}/data.json`);
         }

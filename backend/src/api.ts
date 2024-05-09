@@ -38,7 +38,6 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 import { PNG } from "pngjs";
-import resizeImg from "resize-img";
 
 /**
  * Registers the routes for the available API calls.
@@ -199,11 +198,8 @@ async function handleResult(req: express.Request, res: express.Response) {
   if (isThumbnail) {
     let thumbnailPath = thumbnailForImage(path);
     if (!fs.existsSync(thumbnailPath)) {
-      const image = await resizeImg(
-        fs.readFileSync(path),
-        { width: Config.size.width / 4, height: Config.size.height / 4 }
-      );
-        fs.writeFileSync(thumbnailPath, image);
+      res.status(500).end();
+      return;
     }
 
     res.sendFile(thumbnailPath, { root: "." });
@@ -233,7 +229,7 @@ function handleTestRecords(req: express.Request, res: express.Response) {
  * this call must be a JSON object with the following values:
  *   - `adminToken`: The admin token that was provided in the configuration file
  */
-function handleChangeThreshold(req: express.Request, res: express.Response) {
+async function handleChangeThreshold(req: express.Request, res: express.Response) {
   let body = JSON.parse(req.body);
 
   if (body.adminToken != Config.adminToken) {
@@ -251,7 +247,7 @@ function handleChangeThreshold(req: express.Request, res: express.Response) {
 
   Config.comparisonThreshold = threshold;
   saveConfiguration();
-  regenerateTestResults();
+  await regenerateTestResults();
   res.status(200).end();
 }
 
@@ -272,7 +268,7 @@ function handleChangeThreshold(req: express.Request, res: express.Response) {
  * For the files, the following are needed:
  *   - file: The generated candidate file
  */
-function handleSubmitTest(req: express.Request, res: express.Response) {
+async function handleSubmitTest(req: express.Request, res: express.Response) {
   const runner = req.body.runnerID;
   if (runner == null) {
     res.status(400).json({ error: "Missing field 'runnerID'" });
@@ -388,7 +384,7 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
   fs.writeFileSync(candidate, file.buffer);
 
 
-  let nPixels = generateComparison(reference, candidate, difference);
+  let nPixels = await generateComparison(reference, candidate, difference);
   if (nPixels == null) {
     // The image comparison has failed, which means that the candidate image had the wrong
     // size
@@ -494,7 +490,7 @@ function handleRunTest(req: express.Request, res: express.Response) {
  *   - `group`: The name of the test's group for which to remove the reference image
  *   - `name`: The name of the test for which to remove the refernce image
  */
-function handleUpdateReference(req: express.Request, res: express.Response) {
+async function handleUpdateReference(req: express.Request, res: express.Response) {
   let body = JSON.parse(req.body);
   const adminToken = body.adminToken;
   if (adminToken == null || adminToken != Config.adminToken) {
@@ -551,7 +547,7 @@ function handleUpdateReference(req: express.Request, res: express.Response) {
   // Then we need to rerun the comparison image for the candidate image as it is now
   // out of date
   let difference = differenceImage(group, name, hardware, new Date(data.timeStamp));
-  let diff = generateComparison(newReference, candidate, difference);
+  let diff = await generateComparison(newReference, candidate, difference);
 
   // The diff cannot be `null` as `newReference` and `candidate` are the same image
   data.pixelError = diff!;

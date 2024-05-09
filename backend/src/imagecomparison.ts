@@ -26,8 +26,10 @@ import { assert } from "./assert";
 import { printAudit } from "./audit";
 import { Config } from "./configuration";
 import fs from "fs";
+import { thumbnailForImage } from "./globals";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
+import resizeImg from "resize-img";
 
 
 /**
@@ -46,8 +48,8 @@ import { PNG } from "pngjs";
  * @returns The percentage of pixels that are changed between the reference and the
  *          candidate image or `null` if the images had the wrong size
  */
-export function generateComparison(reference: string, candidate: string,
-                                   difference: string): number | null
+export async function generateComparison(reference: string, candidate: string,
+                                   difference: string): Promise<number | null>
 {
   assert(fs.existsSync(reference), `No reference ${reference}`);
   assert(fs.existsSync(candidate), `No candidate ${candidate}`);
@@ -77,6 +79,15 @@ export function generateComparison(reference: string, candidate: string,
   );
 
   fs.writeFileSync(difference, PNG.sync.write(diffImg));
+
+  // Generate the thumbnail for the image
+  let thumbnailPath = thumbnailForImage(difference);
+  const image = await resizeImg(
+    diffImg.data,
+    { width: Config.size.width / 4, height: Config.size.height / 4 }
+  );
+  fs.writeFileSync(thumbnailPath, image);
+
 
   let diff = nPixels / (width * height);
   return diff;
