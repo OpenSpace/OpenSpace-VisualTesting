@@ -83,7 +83,7 @@ export async function generateComparison(reference: string, candidate: string,
   // Generate the thumbnail for the image
   let thumbnailPath = thumbnailForImage(difference);
   const image = await resizeImg(
-    diffImg.data,
+    fs.readFileSync(difference),
     { width: Config.size.width / 4, height: Config.size.height / 4 }
   );
   fs.writeFileSync(thumbnailPath, image);
