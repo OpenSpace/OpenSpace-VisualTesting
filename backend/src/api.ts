@@ -376,6 +376,13 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     let p = updateReferencePointer(group, name, hardware, ts);
     // Write the current candidate image as the reference image
     fs.writeFileSync(p, file.buffer);
+
+    let referenceThumbnailPath = thumbnailForImage(p);
+    const image = await resizeImg(
+      fs.readFileSync(p),
+      { width: Config.size.width / 4, height: Config.size.height / 4 }
+    );
+    fs.writeFileSync(referenceThumbnailPath, image);
   }
 
   const reference = referenceImage(group, name, hardware);
