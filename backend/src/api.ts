@@ -38,6 +38,7 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 import { PNG } from "pngjs";
+import resizeImg from "resize-img";
 
 /**
  * Registers the routes for the available API calls.
@@ -382,7 +383,12 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   const difference = differenceImage(group, name, hardware, ts);
 
   fs.writeFileSync(candidate, file.buffer);
-
+  let candidateThumbnailPath = thumbnailForImage(difference);
+  const image = await resizeImg(
+    fs.readFileSync(candidate),
+    { width: Config.size.width / 4, height: Config.size.height / 4 }
+  );
+  fs.writeFileSync(candidateThumbnailPath, image);
 
   let nPixels = await generateComparison(reference, candidate, difference);
   if (nPixels == null) {
@@ -536,6 +542,13 @@ async function handleUpdateReference(req: express.Request, res: express.Response
   let currentReference = referenceImage(group, name, hardware);
   let time = dateToPath(new Date(data.timeStamp));
   let newReference = `${path.dirname(currentReference)}/${time}.png`;
+
+  let newReferenceThumbnailPath = thumbnailForImage(newReference);
+  const image = await resizeImg(
+    fs.readFileSync(newReference),
+    { width: Config.size.width / 4, height: Config.size.height / 4 }
+  );
+  fs.writeFileSync(newReferenceThumbnailPath, image);
 
   // Make the last candidate image the new reference image by copying it over
   let candidate = candidateImage(group, name, hardware, new Date(data.timeStamp));
