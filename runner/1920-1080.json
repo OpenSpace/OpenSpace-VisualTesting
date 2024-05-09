@@ -9,7 +9,7 @@
           "border": false,
           "name": "Image Test",
           "pos": { "x": 0, "y": 0 },
-          "size": { "x": 480, "y": 270 },
+          "size": { "x": 960, "y": 540 },
           "res": { "x": 1920, "y": 1080 },
           "viewports": [
             {
