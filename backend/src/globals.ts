@@ -262,3 +262,15 @@ export function referenceImagePath(group: string, name: string, hardware: string
 export function temporaryPath(): string {
   return `${Config.data}/temporary/`;
 }
+
+/**
+ * Returns the path used for stored the thumbnail for the provided image
+ *
+ * @param path The path to the image for which the thumbnail path should be returned
+ * @returns The path to the thumbnail image
+ */
+export function thumbnailForImage(path: string): string {
+  let ext = path.substring(path.lastIndexOf("."));
+  let base = path.substring(0, path.lastIndexOf("."));
+  return `${base}-thumbnail${ext}`;
+}

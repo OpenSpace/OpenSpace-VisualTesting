@@ -19,6 +19,7 @@
     "multer": "^1.4.5-lts.1",
     "pixelmatch": "^5.3.0",
     "pngjs": "^7.0.0",
+    "resize-img": "^2.0.0",
     "zod": "^3.23.5"
   },
   "devDependencies": {
@@ -27,6 +28,7 @@
     "@types/multer": "^1.4.11",
     "@types/node": "^20.12.7",
     "@types/pixelmatch": "^5.2.6",
+    "@types/resize-img": "^2.0.3",
     "typescript": "^5.4.5"
   }
 }

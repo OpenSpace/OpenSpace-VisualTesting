@@ -23,11 +23,12 @@
  ****************************************************************************************/
 
 import { printAudit } from "./audit";
+import { assert } from "./assert";
 import { Config, saveConfiguration } from "./configuration";
 import {
   candidateImage, clearReferencePointer, dateToPath, differenceImage, hasReferenceImage,
-  latestTestDataPath, latestTestPath, referenceImage, referenceImagePath, temporaryPath, testDataPath,
-  testPath, updateReferencePointer } from "./globals";
+  latestTestDataPath, latestTestPath, referenceImage, referenceImagePath, temporaryPath,
+  testDataPath, testPath, thumbnailForImage, updateReferencePointer } from "./globals";
 import { generateComparison } from "./imagecomparison";
 import { addTestData, regenerateTestResults, reloadTestResults, saveTestData, TestData,
   TestRecords } from "./testrecords";
@@ -37,6 +38,7 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 import { PNG } from "pngjs";
+import resizeImg from "resize-img";
 
 /**
  * Registers the routes for the available API calls.
@@ -46,6 +48,7 @@ import { PNG } from "pngjs";
 export function registerRoutes(app: express.Application) {
   app.get("/api", handleApi);
   app.get("/api/image/:type/:group/:name/:hardware/:timestamp?", handleImage);
+  app.get("/api/thumbnail/:type/:group/:name/:hardware/:timestamp?", handleThumbnail);
   app.get("/api/test-records", handleTestRecords);
   app.post(
     "/api/update-diff-threshold",
@@ -69,11 +72,16 @@ function handleApi(req: express.Request, res: express.Response) {
     { path: "/api", description: "This page describing all available API calls" },
     {
       path: "/api/image/:type/:group/:name/:hardware/:timestamp?",
-      description: `
-        Returns an image of the specific 'type', 'group', 'name', and 'hardware'. The
-        'timestamp' parameter is optional and if it is omitted, the latest image is used.
-        The type must be either 'reference', 'candidate', or 'difference'.
-      `
+      description: `Returns an image of the specific 'type', 'group', 'name', and
+        'hardware'. The 'timestamp' parameter is optional and if it is omitted, the latest
+        image is used. The type must be either 'reference', 'candidate', or 'difference'.`
+    },
+    {
+      path: "/api/thumbnail/:type/:group/:name/:hardware/:timestamp?",
+      description: `Returns a thumbnail of the image for the specific 'type', 'group',
+      'name', and 'hardware'. The 'timestamp' parameter is optional and if it is omitted,
+      the latest thumbnail is used. The type must be either 'reference', 'candidate', or
+      'difference'.`
     },
     {
       path: "/api/test-records",
@@ -81,40 +89,32 @@ function handleApi(req: express.Request, res: express.Response) {
     },
     {
       path: "/api/update-diff-threshold",
-      description: `
-        (Requires admin) This will recalculate all of the difference images with the new
-        threshold that is passed to this function. The JSON object in the body must
-        contain the 'threshold' value as a number between 0 and 1 that is the new error
-        threshold
-      `
+      description: `(Requires admin) This will recalculate all of the difference images
+        with the new threshold that is passed to this function. The JSON object in the
+        body must contain the 'threshold' value as a number between 0 and 1 that is the
+        new error threshold`
     },
     {
       path: "/api/submit-test",
-      description: `
-        (Requires runner) This will submit a new test to the image testing server. The
-        body of message must contain a 'runnerID', 'hardware', 'group', 'name',
-        'timestamp', 'timing', and 'commitHash'. The 'runnerID' must be one of the allowed
-        runners setup for this server. Furthermore, there needs to be the candidate file
-        as a multipart encoded file
-      `
+      description: `(Requires runner) This will submit a new test to the image testing
+        server. The body of message must contain a 'runnerID', 'hardware', 'group',
+        'name', 'timestamp', 'timing', and 'commitHash'. The 'runnerID' must be one of the
+        allowed runners setup for this server. Furthermore, there needs to be the
+        candidate file as a multipart encoded file`
     },
     {
       path: "/api/run-test",
-      description: `
-        This will run a comparison against the current reference image on the server
-        without storing the results. The body of message must contain a 'hardware',
+      description: `This will run a comparison against the current reference image on the
+        server without storing the results. The body of message must contain a 'hardware',
         'group', and 'name'. Furthermore, there needs to be the candidate file as a
-        multipart encoded file. The API returns the difference image.
-      `
+        multipart encoded file. The API returns the difference image.`
     },
     {
       path: "/api/update-reference",
-      description: `
-        (Requires admin) Marks the current reference image for a specific test as invalid
-        and instead use the latest test as a reference instead. In addition to the
-        admin token, the JSON object contained in the body must provide the 'hardware',
-        'group', and 'name' for test whose reference should be invalidated.
-      `
+      description: `(Requires admin) Marks the current reference image for a specific test
+        as invalid and instead use the latest test as a reference instead. In addition to
+        the admin token, the JSON object contained in the body must provide the
+        'hardware', 'group', and 'name' for test whose reference should be invalidated.`
     }
   ]);
 }
@@ -186,6 +186,85 @@ function handleImage(req: express.Request, res: express.Response) {
   }
 
   res.sendFile(path, { root: "." });
+}
+
+/**
+ * Returns a single requested thumbnail for an image image. The URL parameters used for
+ * this function are:
+ *  - `type`: One of "reference", "candidate", or "difference"
+ *  - `group`: The name of the test's group for which to return the image
+ *  - `name`: The name of the test for which to return the image
+ *  - `hardware`: The test's hardware for which to return the image
+ *  - `timestamp`: The timestamp of the test for which to return the image. This is an
+ *                 optional parameter. If it is left out, the latest result for the
+ *                 specified type will be returned
+ */
+async function handleThumbnail(req: express.Request, res: express.Response) {
+  const types = ["reference", "candidate", "difference"] as const;
+
+  const p: any = req.params;
+  const type = p.type;
+  const group = p.group;
+  const name = p.name;
+  const hardware = p.hardware;
+  const timestamp = p.timestamp;
+
+  if (!types.includes(type)) {
+    res.status(400).json({ error: `Invalid type ${type} provided` });
+    return;
+  }
+
+  let basePath = "";
+  if (timestamp == null) {
+    // If the request did not have any timestamp we are interested in the latest test
+    let p = latestTestPath(group, name, hardware);
+    if (p == null) {
+      res.status(404).end();
+      return;
+    }
+
+    basePath = p;
+  }
+  else {
+    // If there is a timestamp, we are trying to find that specific test instead
+    basePath = testPath(group, name, hardware, new Date(timestamp));
+
+    if (!fs.existsSync(basePath)) {
+      res.status(404).end();
+      return;
+    }
+  }
+
+  let path = "";
+  switch (type) {
+    case "reference":
+      let data = JSON.parse(fs.readFileSync(`${basePath}/data.json`).toString());
+      let folder = referenceImagePath(group, name, hardware);
+      path = `${folder}/${data.referenceImage}`;
+      break;
+    case "candidate":
+      path = `${basePath}/candidate.png`;
+      break;
+    case "difference":
+      path = `${basePath}/difference.png`;
+      break;
+  }
+
+  if (!fs.existsSync(path)) {
+    res.status(404).end();
+    return;
+  }
+
+  let thumbnailPath = thumbnailForImage(path);
+  if (!fs.existsSync(thumbnailPath)) {
+    const image = await resizeImg(
+      fs.readFileSync(path),
+      { width: Config.size.width / 4, height: Config.size.height / 4 }
+    );
+      fs.writeFileSync(thumbnailPath, image);
+  }
+
+  res.sendFile(thumbnailPath, { root: "." });
 }
 
 /**

@@ -131,7 +131,7 @@ function createRows(record, ul) {
       div.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = a.href;
+      img.src = `/api/thumbnail/candidate/${record.group}/${record.name}/${hardware}`;
       img.className = "overview";
       img.loading = "lazy";
       a.appendChild(img);
@@ -148,7 +148,7 @@ function createRows(record, ul) {
       div.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = a.href;
+      img.src = `/api/thumbnail/reference/${record.group}/${record.name}/${hardware}`;
       img.className = "overview";
       img.loading = "lazy";
       a.appendChild(img);
@@ -165,7 +165,7 @@ function createRows(record, ul) {
       div.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = a.href;
+      img.src = `/api/thumbnail/difference/${record.group}/${record.name}/${hardware}`;
       img.className = "overview";
       img.loading = "lazy";
       a.appendChild(img);
@@ -245,7 +245,7 @@ function createRows(record, ul) {
       td.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = a.href;
+      img.src = `/api/thumbnail/candidate/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
     }
@@ -263,7 +263,7 @@ function createRows(record, ul) {
       td.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = a.href;
+      img.src = `/api/thumbnail/reference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
     }
@@ -281,7 +281,7 @@ function createRows(record, ul) {
       td.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = a.href;
+      img.src = `/api/thumbnail/difference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
     }
