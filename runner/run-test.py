@@ -35,10 +35,19 @@ from test import Test
 import openspace
 
 # TODO: Retry openspace api connection until it works
-# TODO: Redirect stderr to a file and send along with image test
-# TODO: openspace.cfg enabling MRF caching (and some more things?)
 
 test_base_dir = "tests/visual"
+
+# Writes an overwrite file for the openspace.cfg
+def write_configuration_overwrite(base_path, data_path):
+  with open(f"{base_path}/openspace.cfg.override", "w") as f:
+    f.write(f"Paths.SYNC = [[{data_path}/sync]]\n")
+    f.write("ModuleConfigurations.GlobeBrowsing.MRFCacheEnabled = true\n")
+    f.write(f"ModuleConfigurations.GlobeBrowsing.MRFCacheLocation = [[{data_path}/mrf]]\n")
+    f.write("Logging.Logs = {}\n")
+    f.write("VersionCheckUrl = [[]]\n")
+    f.write("CheckOpenGLState = true\n")
+    f.write("ShutdownCountdown = 0.25\n")
 
 # Settings common to all test runs
 async def setup_test_run(openspace):
@@ -75,8 +84,13 @@ def run_single_test(testPath, executable):
       "--bypassLauncher"
     ],
     cwd=os.path.dirname(executable),
-    stdout=subprocess.DEVNULL
+    stdout=subprocess.DEVNULL,
+    stderr=subprocess.PIPE
   )
+
+  # Add a sleeping time instead of repeatedly trying to reconnect. Starting up OpenSpace
+  # in general takes longer than this, so we don't actually lose any time
+  time.sleep(15)
 
   osApi = openspace.Api("localhost", 4681)
 
@@ -106,7 +120,6 @@ def run_single_test(testPath, executable):
     openspace = await osApi.singleReturnLibrary()
     asyncio.create_task(internal_test_run(openspace), name=f"Test {group}/{name}")
 
-  time.sleep(5)
 
   osApi.onConnect(onConnect)
   disconnected = asyncio.Event()
@@ -117,6 +130,11 @@ def run_single_test(testPath, executable):
 
   loop = asyncio.new_event_loop()
   loop.run_until_complete(mainLoop())
+
+  # Another wait while OpenSpace is shutting down
+  time.sleep(2)
+
+  error = process.stderr.read().decode()
 
   process.kill()
   end = time.perf_counter()
@@ -130,10 +148,11 @@ def run_single_test(testPath, executable):
     "name": name,
     "files": glob.glob(f"{screenshot_folder}/*.png"),
     "timing": runtime,
-    "commit": commit
+    "commit": commit,
+    "error": error
   }
 
-def submit_candidate_image(group, name, hardware, timestamp, timing, hash, file, runner_id, url):
+def submit_candidate_image(group, name, hardware, timestamp, timing, hash, file, runner_id, error, url):
   res = requests.post(
     url,
     data = {
@@ -145,7 +164,10 @@ def submit_candidate_image(group, name, hardware, timestamp, timing, hash, file,
       "timing": timing,
       "commitHash": hash
     },
-    files = { "file": open(file, "rb") }
+    files = {
+      "file": open(file, "rb"),
+      "log": error
+    }
   )
   print(res)
 
@@ -161,7 +183,7 @@ if __name__ == "__main__":
     dest="dir",
     type=str,
     help="Specifies the OpenSpace directory in which to run the tests",
-    # required=True
+    required=True
   )
   parser.add_argument(
     "-t", "--test",
@@ -171,6 +193,27 @@ if __name__ == "__main__":
         "omitted, all tests will be run",
     required=False
   )
+  parser.add_argument(
+    "-uo", "--use-overwrite",
+    dest="overwrite",
+    type=bool,
+    help="Determines whether the test script should create an overwrite file for the "
+    "openspace.cfg file. The overwrite file will contain settings that we want all "
+    "regularly executing test machines to have, such as using caching, reusing "
+    "synchronization folders, etc. If this value is specified, the --overwrite-path "
+    "also needs to be set to the location that is used as a base folder to store data "
+    "that is retained between test runs",
+    required=False
+  )
+  parser.add_argument(
+    "-o", "--overwrite",
+    dest="overwrite_path",
+    type=str,
+    help="This specifies the base path to the folder where data is stored that is reused "
+      "between diffrent test runs. This value has to be specified if '--use-overwrite' "
+      "is provided. If that option is not set, setting this value does not do anything",
+    required=False
+  )
   args = parser.parse_args()
 
   # Find the executable location
@@ -178,6 +221,12 @@ if __name__ == "__main__":
     executable = f"{args.dir}/bin/RelWithDebInfo/OpenSpace.exe"
   else:
     executable = f"{args.dir}/bin/OpenSpace"
+
+  if args.overwrite != None:
+    if args.overwrite_path == None:
+      raise Exception("Missing overwrite path value")
+
+    write_configuration_overwrite(args.dir, args.overwrite_path)
 
   # If the executable does't exist, we need to build OpenSpace
   if not os.path.isfile(executable):
@@ -212,6 +261,7 @@ if __name__ == "__main__":
           res["commit"],
           candidate,
           runner_id,
+          res["error"],
           f"{url}/api/submit-test"
         )
         time.sleep(0.5)
@@ -239,6 +289,7 @@ if __name__ == "__main__":
           res["commit"],
           candidate,
           runner_id,
+          res["error"],
           f"{url}/api/submit-test"
         )
   global_end = time.perf_counter()
