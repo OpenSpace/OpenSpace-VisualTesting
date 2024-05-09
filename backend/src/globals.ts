@@ -207,7 +207,24 @@ export function candidateImage(group: string, name: string, hardware: string,
 export function differenceImage(group: string, name: string, hardware: string,
                                 timestamp: Date): string
 {
-return `${testPath(group, name, hardware, timestamp)}/difference.png`;
+  return `${testPath(group, name, hardware, timestamp)}/difference.png`;
+}
+
+/**
+ * Returns the path to the log file for the test identified by the @param group,
+ * @param name, @param hardware, and @param timestamp. Note that this path might not exist
+ * if no test has run for these test parameters.
+ *
+ * @param group The name of the group for which to return the log file
+ * @param name The name of the test for which to return the log file
+ * @param hardware The hardware for which to return the log file
+ * @param timestamp The time stamp for which to return the log file
+ * @returns The path to the log file for the requested test
+ */
+export function logFile(group: string, name: string, hardware: string,
+                        timestamp: Date): string
+{
+  return `${testPath(group, name, hardware, timestamp)}/log.txt`;
 }
 
 /**

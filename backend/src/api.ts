@@ -23,12 +23,12 @@
  ****************************************************************************************/
 
 import { printAudit } from "./audit";
-import { assert } from "./assert";
 import { Config, saveConfiguration } from "./configuration";
 import {
   candidateImage, clearReferencePointer, dateToPath, differenceImage, hasReferenceImage,
-  latestTestDataPath, latestTestPath, referenceImage, referenceImagePath, temporaryPath,
-  testDataPath, testPath, thumbnailForImage, updateReferencePointer } from "./globals";
+  latestTestDataPath, latestTestPath, logFile, referenceImage, referenceImagePath,
+  temporaryPath, testDataPath, testPath, thumbnailForImage,
+  updateReferencePointer } from "./globals";
 import { generateComparison } from "./imagecomparison";
 import { addTestData, regenerateTestResults, reloadTestResults, saveTestData, TestData,
   TestRecords } from "./testrecords";
@@ -47,15 +47,21 @@ import resizeImg from "resize-img";
  */
 export function registerRoutes(app: express.Application) {
   app.get("/api", handleApi);
-  app.get("/api/image/:type/:group/:name/:hardware/:timestamp?", handleImage);
-  app.get("/api/thumbnail/:type/:group/:name/:hardware/:timestamp?", handleThumbnail);
+  app.get("/api/result/:type/:group/:name/:hardware/:timestamp?", handleResult);
   app.get("/api/test-records", handleTestRecords);
   app.post(
     "/api/update-diff-threshold",
     bodyParser.raw({ type: [ "application/json"] }),
     handleChangeThreshold
   );
-  app.post("/api/submit-test", multer().single("file"), handleSubmitTest);
+  app.post(
+    "/api/submit-test",
+    multer().fields([
+      { name: "file", maxCount: 1 },
+      { name: "log", maxCount: 1 }
+    ]),
+    handleSubmitTest
+  );
   app.post("/api/run-test", multer().single("file"), handleRunTest);
   app.post(
     "/api/update-reference",
@@ -71,17 +77,13 @@ function handleApi(req: express.Request, res: express.Response) {
   res.status(200).json([
     { path: "/api", description: "This page describing all available API calls" },
     {
-      path: "/api/image/:type/:group/:name/:hardware/:timestamp?",
-      description: `Returns an image of the specific 'type', 'group', 'name', and
+      path: "/api/result/:type/:group/:name/:hardware/:timestamp?",
+      description: `Returns the result for a specific 'type', 'group', 'name', and
         'hardware'. The 'timestamp' parameter is optional and if it is omitted, the latest
-        image is used. The type must be either 'reference', 'candidate', or 'difference'.`
-    },
-    {
-      path: "/api/thumbnail/:type/:group/:name/:hardware/:timestamp?",
-      description: `Returns a thumbnail of the image for the specific 'type', 'group',
-      'name', and 'hardware'. The 'timestamp' parameter is optional and if it is omitted,
-      the latest thumbnail is used. The type must be either 'reference', 'candidate', or
-      'difference'.`
+        image is used. The type must be either 'reference', 'candidate', 'difference',
+        "reference-thumbnail", "candidate-thumbnail", "difference-thumbnail", or "log".
+        For all but the last option, the result will be an image file, for the "log"
+        option, the result will be a text file.`
     },
     {
       path: "/api/test-records",
@@ -120,8 +122,9 @@ function handleApi(req: express.Request, res: express.Response) {
 }
 
 /**
- * Returns a single requested image. The URL parameters used for this function are:
- *  - `type`: One of "reference", "candidate", or "difference"
+ * Returns a single requested result. The URL parameters used for this function are:
+ *  - `type`: One of "reference", "candidate", "difference", "reference-thumbnail",
+ *            "candidate-thumbnail", "difference-thumbnail", or "log"
  *  - `group`: The name of the test's group for which to return the image
  *  - `name`: The name of the test for which to return the image
  *  - `hardware`: The test's hardware for which to return the image
@@ -129,8 +132,11 @@ function handleApi(req: express.Request, res: express.Response) {
  *                 optional parameter. If it is left out, the latest result for the
  *                 specified type will be returned
  */
-function handleImage(req: express.Request, res: express.Response) {
-  const types = ["reference", "candidate", "difference"] as const;
+async function handleResult(req: express.Request, res: express.Response) {
+  const types = [
+    "reference", "candidate", "difference", "reference-thumbnail", "candidate-thumbnail",
+    "difference-thumbnail", "log"
+  ] as const;
 
   const p: any = req.params;
   const type = p.type;
@@ -166,105 +172,49 @@ function handleImage(req: express.Request, res: express.Response) {
   }
 
   let path = "";
+  let isThumbnail = false;
   switch (type) {
+    case "reference-thumbnail":
+      isThumbnail = true;
     case "reference":
       let data = JSON.parse(fs.readFileSync(`${basePath}/data.json`).toString());
       let folder = referenceImagePath(group, name, hardware);
       path = `${folder}/${data.referenceImage}`;
       break;
+    case "candidate-thumbnail":
+      isThumbnail = true;
     case "candidate":
       path = `${basePath}/candidate.png`;
       break;
+    case "difference-thumbnail":
+      isThumbnail = true;
     case "difference":
       path = `${basePath}/difference.png`;
       break;
+    case "log":
+      path = logFile(group, name, hardware, new Date(timestamp));
+      break;
   }
 
-  if (!fs.existsSync(path)) {
-    res.status(404).end();
-    return;
-  }
-
-  res.sendFile(path, { root: "." });
-}
-
-/**
- * Returns a single requested thumbnail for an image image. The URL parameters used for
- * this function are:
- *  - `type`: One of "reference", "candidate", or "difference"
- *  - `group`: The name of the test's group for which to return the image
- *  - `name`: The name of the test for which to return the image
- *  - `hardware`: The test's hardware for which to return the image
- *  - `timestamp`: The timestamp of the test for which to return the image. This is an
- *                 optional parameter. If it is left out, the latest result for the
- *                 specified type will be returned
- */
-async function handleThumbnail(req: express.Request, res: express.Response) {
-  const types = ["reference", "candidate", "difference"] as const;
-
-  const p: any = req.params;
-  const type = p.type;
-  const group = p.group;
-  const name = p.name;
-  const hardware = p.hardware;
-  const timestamp = p.timestamp;
-
-  if (!types.includes(type)) {
-    res.status(400).json({ error: `Invalid type ${type} provided` });
-    return;
-  }
-
-  let basePath = "";
-  if (timestamp == null) {
-    // If the request did not have any timestamp we are interested in the latest test
-    let p = latestTestPath(group, name, hardware);
-    if (p == null) {
-      res.status(404).end();
-      return;
+  if (isThumbnail) {
+    let thumbnailPath = thumbnailForImage(path);
+    if (!fs.existsSync(thumbnailPath)) {
+      const image = await resizeImg(
+        fs.readFileSync(path),
+        { width: Config.size.width / 4, height: Config.size.height / 4 }
+      );
+        fs.writeFileSync(thumbnailPath, image);
     }
 
-    basePath = p;
+    res.sendFile(thumbnailPath, { root: "." });
   }
   else {
-    // If there is a timestamp, we are trying to find that specific test instead
-    basePath = testPath(group, name, hardware, new Date(timestamp));
-
-    if (!fs.existsSync(basePath)) {
+    if (!fs.existsSync(path)) {
       res.status(404).end();
       return;
     }
+    res.sendFile(path, { root: "." });
   }
-
-  let path = "";
-  switch (type) {
-    case "reference":
-      let data = JSON.parse(fs.readFileSync(`${basePath}/data.json`).toString());
-      let folder = referenceImagePath(group, name, hardware);
-      path = `${folder}/${data.referenceImage}`;
-      break;
-    case "candidate":
-      path = `${basePath}/candidate.png`;
-      break;
-    case "difference":
-      path = `${basePath}/difference.png`;
-      break;
-  }
-
-  if (!fs.existsSync(path)) {
-    res.status(404).end();
-    return;
-  }
-
-  let thumbnailPath = thumbnailForImage(path);
-  if (!fs.existsSync(thumbnailPath)) {
-    const image = await resizeImg(
-      fs.readFileSync(path),
-      { width: Config.size.width / 4, height: Config.size.height / 4 }
-    );
-      fs.writeFileSync(thumbnailPath, image);
-  }
-
-  res.sendFile(thumbnailPath, { root: "." });
 }
 
 /**
@@ -370,13 +320,28 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
     return;
   }
 
-  if (req.file == null) {
-    res.status(400).json({ error: "Missing field 'file'" });
+  if (req.files == null) {
+    res.status(400).json({ error: "Missing files" });
     return;
   }
 
+  let files: any = req.files!;
+  if (files.file == null || files.file.length == 0) {
+    res.status(400).json({ error: "Missing field 'file'" });
+    return;
+  }
+  let file = files.file[0];
+
+  if (files.log == null || files.log.length == 0) {
+    res.status(400).json({ error: "Missing field 'log'" });
+    return;
+  }
+  let log = files.log[0];
+
+
+
   try {
-    const png = PNG.sync.read(req.file.buffer);
+    const png = PNG.sync.read(file.buffer);
     if (png.width != Config.size.width || png.height != Config.size.height) {
       let w = Config.size.width
       let h = Config.size.height
@@ -391,7 +356,6 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
 
 
   const ts = new Date(timeStamp);
-
   printAudit(`Submitting result for (${group}/${name}/${hardware}/${ts.toISOString()})`);
 
   const p = testPath(group, name, hardware, ts);
@@ -399,19 +363,29 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
     fs.mkdirSync(p, { recursive: true });
   }
 
+  let logPath = logFile(group, name, hardware, ts);
+  let logContent = log.buffer.toString();
+  function removeEmptyLines(str: string) {
+    return str.split("\n").filter(line => line.trim() !== "").join("\n");
+  }
+  logContent = removeEmptyLines(logContent);
+  let nLogLines = logContent.split("\n").length;
+  fs.writeFileSync(logPath, logContent);
+
+
   if (!hasReferenceImage(group, name, hardware)) {
     printAudit("  No reference image found");
     // We are either the first, or someone has marked the previous reference as not valid
     let p = updateReferencePointer(group, name, hardware, ts);
     // Write the current candidate image as the reference image
-    fs.writeFileSync(p, req.file.buffer);
+    fs.writeFileSync(p, file.buffer);
   }
 
   const reference = referenceImage(group, name, hardware);
   const candidate = candidateImage(group, name, hardware, ts);
   const difference = differenceImage(group, name, hardware, ts);
 
-  fs.writeFileSync(candidate, req.file.buffer);
+  fs.writeFileSync(candidate, file.buffer);
 
 
   let nPixels = generateComparison(reference, candidate, difference);
@@ -426,6 +400,7 @@ function handleSubmitTest(req: express.Request, res: express.Response) {
     pixelError: nPixels,
     timeStamp: ts,
     timing: timing,
+    nErrors: nLogLines,
     commitHash: commitHash,
     referenceImage: path.basename(reference)
   };

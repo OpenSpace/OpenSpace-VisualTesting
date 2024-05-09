@@ -55,6 +55,9 @@ export type TestData = {
   /// The number of seconds it took to run this test
   timing: number;
 
+  /// The number of error lines in the log file
+  nErrors: number;
+
   /// The commit hash of the OpenSpace repository that was used to generate this image
   commitHash: string;
 

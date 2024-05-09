@@ -126,12 +126,12 @@ function createRows(record, ul) {
       div.className = "cell candidate";
 
       let a = document.createElement("a");
-      a.href = `/api/image/candidate/${record.group}/${record.name}/${hardware}`;
+      a.href = `/api/result/candidate/${record.group}/${record.name}/${hardware}`;
       a.target = "_blank";
       div.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/thumbnail/candidate/${record.group}/${record.name}/${hardware}`;
+      img.src = `/api/result/candidate-thumbnail/${record.group}/${record.name}/${hardware}`;
       img.className = "overview";
       img.loading = "lazy";
       a.appendChild(img);
@@ -143,12 +143,12 @@ function createRows(record, ul) {
       div.className = "cell reference";
 
       let a = document.createElement("a");
-      a.href = `/api/image/reference/${record.group}/${record.name}/${hardware}`;
+      a.href = `/api/result/reference/${record.group}/${record.name}/${hardware}`;
       a.target = "_blank";
       div.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/thumbnail/reference/${record.group}/${record.name}/${hardware}`;
+      img.src = `/api/result/reference-thumbnail/${record.group}/${record.name}/${hardware}`;
       img.className = "overview";
       img.loading = "lazy";
       a.appendChild(img);
@@ -160,12 +160,12 @@ function createRows(record, ul) {
       div.className = "cell difference";
 
       let a = document.createElement("a");
-      a.href = `/api/image/difference/${record.group}/${record.name}/${hardware}`;
+      a.href = `/api/result/difference/${record.group}/${record.name}/${hardware}`;
       a.target = "_blank";
       div.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/thumbnail/difference/${record.group}/${record.name}/${hardware}`;
+      img.src = `/api/result/difference-thumbnail/${record.group}/${record.name}/${hardware}`;
       img.className = "overview";
       img.loading = "lazy";
       a.appendChild(img);
@@ -233,6 +233,19 @@ function createRows(record, ul) {
     }
     table.appendChild(trTiming);
 
+    let trLog = document.createElement("tr");
+    for (let data of testData) {
+      let td = document.createElement("td");
+      td.className = "log";
+      let a = document.createElement("a");
+      a.href = `/api/result/log/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      a.target = "_blank";
+      td.appendChild(a);
+      a.appendChild(document.createTextNode(`Log file (${data.nErrors} errors)`));
+      trLog.appendChild(td);
+    }
+    table.appendChild(trLog);
+
     let trCandidate = document.createElement("tr");
     for (let data of testData) {
       let td = document.createElement("td");
@@ -240,12 +253,12 @@ function createRows(record, ul) {
       trCandidate.appendChild(td);
 
       let a = document.createElement("a");
-      a.href = `/api/image/candidate/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      a.href = `/api/result/candidate/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/thumbnail/candidate/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      img.src = `/api/result/candidate-thumbnail/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
     }
@@ -258,12 +271,12 @@ function createRows(record, ul) {
       trReference.appendChild(td);
 
       let a = document.createElement("a");
-      a.href = `/api/image/reference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      a.href = `/api/result/reference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/thumbnail/reference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      img.src = `/api/result/reference-thumbnail/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
     }
@@ -276,12 +289,12 @@ function createRows(record, ul) {
       trDifference.appendChild(td);
 
       let a = document.createElement("a");
-      a.href = `/api/image/difference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      a.href = `/api/result/difference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/thumbnail/difference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      img.src = `/api/result/difference-thumbnail/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
     }
