@@ -108,7 +108,6 @@ def run_single_test(testPath, executable):
 
     global commit
     version = await openspace.version()
-    print(version)
     commit = version["Commit"]
 
     await openspace.toggleShutdown()
