@@ -44,6 +44,7 @@ def write_configuration_overwrite(base_path, data_path):
     f.write(f"Paths.SYNC = [[{data_path}/sync]]\n")
     f.write("ModuleConfigurations.GlobeBrowsing.MRFCacheEnabled = true\n")
     f.write(f"ModuleConfigurations.GlobeBrowsing.MRFCacheLocation = [[{data_path}/mrf]]\n")
+    f.write(f"ModuleConfigurations.CefWebGui.Enabled = false\n")
     f.write("VersionCheckUrl = [[]]\n")
     f.write("CheckOpenGLState = true\n")
     f.write("ShutdownCountdown = 0.25\n")
