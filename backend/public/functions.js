@@ -1,12 +1,3 @@
-function maxPixelError(record) {
-  let difference = 0;
-  for (let [_, value] of Object.entries(record.data)) {
-    // res is an array and for the sorting we are only caring about the latest result
-    difference = Math.max(difference, value[value.length - 1].pixelError);
-  }
-  return difference;
-} // function maxPixelError(record)
-
 function diffDisplay(diff) {
   // Round the error to 3 digits past the decimal
   return `${Math.round(diff * 100000) / 1000}%`;
@@ -75,7 +66,7 @@ function createHeader(ul) {
 } // function createHeader(ul)
 
 function createRows(record, ul) {
-  function createHead(divHead, divBody, record, hardware, data) {
+  function createHead(divHead, divBody, record, data) {
     divHead.className = "li-head toggle";
     divHead.onclick = () => divBody.classList.toggle("hidden");
 
@@ -97,7 +88,7 @@ function createRows(record, ul) {
 
     let hw = document.createElement("div");
     hw.className = "cell hardware";
-    hw.appendChild(document.createTextNode(hardware));
+    hw.appendChild(document.createTextNode(record.hardware));
     divHead.appendChild(hw);
 
     let timing = document.createElement("div");
@@ -117,7 +108,7 @@ function createRows(record, ul) {
     let timestamp = document.createElement("div");
     timestamp.className = "cell timestamp";
     timestamp.appendChild(
-      document.createTextNode(new Date(data.timeStamp).toUTCString())
+      document.createTextNode(new Date(data.timeStamp).toISOString())
     );
     divHead.appendChild(timestamp);
 
@@ -126,12 +117,12 @@ function createRows(record, ul) {
       div.className = "cell candidate";
 
       let a = document.createElement("a");
-      a.href = `/api/result/candidate/${record.group}/${record.name}/${hardware}`;
+      a.href = `/api/result/candidate/${record.group}/${record.name}/${record.hardware}`;
       a.target = "_blank";
       div.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/result/candidate-thumbnail/${record.group}/${record.name}/${hardware}`;
+      img.src = `/api/result/candidate-thumbnail/${record.group}/${record.name}/${record.hardware}`;
       img.className = "overview";
       img.loading = "lazy";
       a.appendChild(img);
@@ -143,12 +134,12 @@ function createRows(record, ul) {
       div.className = "cell reference";
 
       let a = document.createElement("a");
-      a.href = `/api/result/reference/${record.group}/${record.name}/${hardware}`;
+      a.href = `/api/result/reference/${record.group}/${record.name}/${record.hardware}`;
       a.target = "_blank";
       div.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/result/reference-thumbnail/${record.group}/${record.name}/${hardware}`;
+      img.src = `/api/result/reference-thumbnail/${record.group}/${record.name}/${record.hardware}`;
       img.className = "overview";
       img.loading = "lazy";
       a.appendChild(img);
@@ -160,12 +151,12 @@ function createRows(record, ul) {
       div.className = "cell difference";
 
       let a = document.createElement("a");
-      a.href = `/api/result/difference/${record.group}/${record.name}/${hardware}`;
+      a.href = `/api/result/difference/${record.group}/${record.name}/${record.hardware}`;
       a.target = "_blank";
       div.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/result/difference-thumbnail/${record.group}/${record.name}/${hardware}`;
+      img.src = `/api/result/difference-thumbnail/${record.group}/${record.name}/${record.hardware}`;
       img.className = "overview";
       img.loading = "lazy";
       a.appendChild(img);
@@ -173,9 +164,9 @@ function createRows(record, ul) {
     }
 
     return divHead;
-  } // function createHead(divHead, divBody, record, hardware, data)
+  } // function createHead(divHead, divBody, record, data)
 
-  function createBody(divBody, record, hardware, testData) {
+  function createBody(divBody, record,  testData) {
     divBody.className = "li-body hidden";
 
     let table = document.createElement("table");
@@ -238,7 +229,7 @@ function createRows(record, ul) {
       let td = document.createElement("td");
       td.className = "log";
       let a = document.createElement("a");
-      a.href = `/api/result/log/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      a.href = `/api/result/log/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
       a.appendChild(document.createTextNode(`Log file (${data.nErrors} errors)`));
@@ -253,12 +244,12 @@ function createRows(record, ul) {
       trCandidate.appendChild(td);
 
       let a = document.createElement("a");
-      a.href = `/api/result/candidate/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      a.href = `/api/result/candidate/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/result/candidate-thumbnail/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      img.src = `/api/result/candidate-thumbnail/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
     }
@@ -271,12 +262,12 @@ function createRows(record, ul) {
       trReference.appendChild(td);
 
       let a = document.createElement("a");
-      a.href = `/api/result/reference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      a.href = `/api/result/reference/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/result/reference-thumbnail/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      img.src = `/api/result/reference-thumbnail/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
     }
@@ -289,47 +280,44 @@ function createRows(record, ul) {
       trDifference.appendChild(td);
 
       let a = document.createElement("a");
-      a.href = `/api/result/difference/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      a.href = `/api/result/difference/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
       let img = document.createElement("img");
-      img.src = `/api/result/difference-thumbnail/${record.group}/${record.name}/${hardware}/${data.timeStamp}`;
+      img.src = `/api/result/difference-thumbnail/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
     }
     table.appendChild(trDifference);
-  } // function createBody(divBody, record, hardware, testData)
-
-  for (let [hardware, testData] of Object.entries(record.data)) {
-    if (testData.length === 0)  continue;
-    let data = testData[testData.length - 1];
+  } // function createBody(divBody, record, testData)
 
 
-    let li = document.createElement("li");
-    li.className = "row";
-    ul.appendChild(li);
+  let li = document.createElement("li");
+  li.className = "row";
+  ul.appendChild(li);
 
-    let divHead = document.createElement("div");
-    let divBody = document.createElement("div");
+  let divHead = document.createElement("div");
+  let divBody = document.createElement("div");
 
-    createHead(divHead, divBody, record, hardware, data);
-    li.appendChild(divHead);
+  createHead(divHead, divBody, record, record.data[record.data.length - 1]);
+  li.appendChild(divHead);
 
-    createBody(divBody, record, hardware, testData);
-    li.appendChild(divBody);
-  }
+  createBody(divBody, record, record.data);
+  li.appendChild(divBody);
 } // function createRows(record, ul)
 
 async function main() {
   let records = await fetch("/api/test-records").then(res => res.json());
 
-  // Sort so that the test results with the highest pixel difference are first
-  records.sort((a, b) => maxPixelError(a) < maxPixelError(b));
+  // Sort by the highest latest pixel difference are first
+  records.sort((a, b) => a.data[a.data.length - 1].pixelError < b.data[b.data.length - 1].pixelError);
 
   let list = document.getElementById("list");
   createHeader(list);
+
   for (let record of records) {
+    console.assert(record.data.length > 0);
     createRows(record, list);
   }
 

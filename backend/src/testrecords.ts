@@ -37,10 +37,10 @@ type TestRecord = {
   group: string; // @TODO Can only be filepath-valid names
   /// The name of the test record. This value contains URL safe characters
   name: string; // @TODO Can only be filepath-valid names
+  /// The name of the hardware that was used to generate this record
+  hardware: string;
   /// The individual test runs, grouped by the hardware string
-  data: {
-    [hardware: string]: [ TestData ]
-  }
+  data: [ TestData ];
 };
 
 export type TestData = {
@@ -96,19 +96,13 @@ export function addTestData(group: string, name: string, hardware: string, data:
   printAudit(`Adding new record for (${group}/${name}/${hardware})`);
 
   for (let record of TestRecords) {
-    if (record.group != group || record.name != name)  continue;
+    if (record.group != group || record.name != name || record.hardware != hardware) {
+      continue;
+    }
 
-    if (hardware in record.data) {
-      printAudit("  Adding to data existing record");
-      // @TODO: Not sure why the '?' is necessary here. We are checking in the 'if'
-      //        statement before that `os` exists in `record.data`
-      record.data[hardware]?.push(data);
-      record.data[hardware]?.sort((a, b) => a.timeStamp.getTime() - b.timeStamp.getTime())
-    }
-    else {
-      printAudit("  Creating new record list");
-      record.data[hardware] = [ data ];
-    }
+    printAudit("  Adding to data existing record");
+    record.data.push(data);
+    record.data.sort((a, b) => a.timeStamp.getTime() - b.timeStamp.getTime())
     return;
   }
 
@@ -117,9 +111,8 @@ export function addTestData(group: string, name: string, hardware: string, data:
   TestRecords.push({
     group: group,
     name: name,
-    data: {
-      [hardware]: [ data ]
-    }
+    hardware: hardware,
+    data: [ data ]
   });
 }
 
