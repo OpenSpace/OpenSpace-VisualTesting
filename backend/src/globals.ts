@@ -28,6 +28,7 @@ import fs from "fs";
 import path from "path";
 
 
+
 /**
  * Converts the provided @param date to a version in which it can be used as part of a
  * path in the filesystem or as part of a URL
@@ -38,6 +39,8 @@ import path from "path";
 export function dateToPath(date: Date): string {
   return date.toISOString().split("-").join("").split(":").join("").split(".").join("");
 }
+
+
 
 /**
  * Returns the base path to where the files for the latest test for the @param group,
@@ -67,6 +70,8 @@ export function latestTestPath(group: string, name: string,
   return `${path}/${tests[tests.length - 1]}`;
 }
 
+
+
 /**
  * Returns the path to where the files for the test identified by the @param group,
  * @param name, @param hardware, and @param timestamp are located. Note that the returned
@@ -83,6 +88,8 @@ export function testPath(group: string, name: string, hardware: string,
 {
   return `${Config.data}/tests/${hardware}/${group}/${name}/${dateToPath(timestamp)}`
 }
+
+
 
 /**
  * Returns the path to the file that contains the name of the file that is considered the
@@ -103,6 +110,8 @@ function referencePointer(group: string, name: string, hardware: string): string
   return `${Config.data}/reference/${hardware}/${group}/${name}/ref.txt`;
 }
 
+
+
 /**
  * Invalidates the current reference image for the test identified by the @param group,
  * @param name, and @param hardware.
@@ -115,6 +124,8 @@ function referencePointer(group: string, name: string, hardware: string): string
 export function clearReferencePointer(group: string, name: string, hardware: string) {
   fs.unlinkSync(referencePointer(group, name, hardware));
 }
+
+
 
 /**
  * Updates the current reference image for the test identified by @param group,
@@ -144,6 +155,8 @@ export function updateReferencePointer(group: string, name: string, hardware: st
   return referenceImage(group, name, hardware);
 }
 
+
+
 /**
  * Returns whether the test identified by @param group, @param name, and @param hardware
  * has a current reference image.
@@ -158,6 +171,8 @@ export function hasReferenceImage(group: string, name: string,
 {
   return fs.existsSync(referencePointer(group, name, hardware));
 }
+
+
 
 /**
  * Returns the path to the current reference image for the test identified by
@@ -176,6 +191,8 @@ export function referenceImage(group: string, name: string, hardware: string): s
   return `${Config.data}/reference/${hardware}/${group}/${name}/${path}`;
 }
 
+
+
 /**
  * Returns the path to the candidate image for the test identified by the @param group,
  * @param name, @param hardware, and @param timestamp. Note that this path might not exist
@@ -192,6 +209,8 @@ export function candidateImage(group: string, name: string, hardware: string,
 {
   return `${testPath(group, name, hardware, timestamp)}/candidate.png`;
 }
+
+
 
 /**
  * Returns the path to the difference image for the test identified by the @param group,
@@ -210,6 +229,8 @@ export function differenceImage(group: string, name: string, hardware: string,
   return `${testPath(group, name, hardware, timestamp)}/difference.png`;
 }
 
+
+
 /**
  * Returns the path to the log file for the test identified by the @param group,
  * @param name, @param hardware, and @param timestamp. Note that this path might not exist
@@ -226,6 +247,8 @@ export function logFile(group: string, name: string, hardware: string,
 {
   return `${testPath(group, name, hardware, timestamp)}/log.txt`;
 }
+
+
 
 /**
  * Returns the path to the test data file for the test identified by the @param group,
@@ -244,6 +267,8 @@ export function testDataPath(group: string, name: string, hardware: string,
   return `${testPath(group, name, hardware, timestamp)}/data.json`;
 }
 
+
+
 /**
  * Returns the path to the test data file for the latest test identified by the
  * @param group, @param name, and @param hardware. Note that this path might not exist if
@@ -259,6 +284,8 @@ export function latestTestDataPath(group: string, name: string, hardware: string
   return `${latestTestPath(group, name, hardware)}/data.json`;
 }
 
+
+
 /**
  * Returns a path the folder that contains all references images for the provided
  * @param group, @param name, and @param hardware.
@@ -273,12 +300,16 @@ export function referenceImagePath(group: string, name: string, hardware: string
   return `${Config.data}/reference/${hardware}/${group}/${name}`;
 }
 
+
+
 /**
  * Returns a path to a temporary file in which files can be stored for a short time
  */
 export function temporaryPath(): string {
   return `${Config.data}/temporary/`;
 }
+
+
 
 /**
  * Returns the path used for stored the thumbnail for the provided image

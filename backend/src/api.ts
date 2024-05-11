@@ -29,7 +29,7 @@ import {
   latestTestDataPath, latestTestPath, logFile, referenceImage, referenceImagePath,
   temporaryPath, testDataPath, testPath, thumbnailForImage,
   updateReferencePointer } from "./globals";
-import { generateComparison } from "./imagecomparison";
+import { createThumbnail, generateComparisonImage } from "./image";
 import { addTestData, regenerateTestResults, reloadTestResults, saveTestData, TestData,
   TestRecords } from "./testrecords";
 import bodyParser from "body-parser";
@@ -38,7 +38,8 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 import { PNG } from "pngjs";
-import resizeImg from "resize-img";
+
+
 
 /**
  * Registers the routes for the available API calls.
@@ -49,6 +50,7 @@ export function registerRoutes(app: express.Application) {
   app.get("/api", handleApi);
   app.get("/api/result/:type/:group/:name/:hardware/:timestamp?", handleResult);
   app.get("/api/test-records", handleTestRecords);
+  app.get("/api/diff-threshold", handleThreshold);
   app.post(
     "/api/update-diff-threshold",
     bodyParser.raw({ type: [ "application/json"] }),
@@ -70,6 +72,8 @@ export function registerRoutes(app: express.Application) {
   );
 }
 
+
+
 /**
  * Returns a list of all available API endpoints
  */
@@ -88,6 +92,10 @@ function handleApi(req: express.Request, res: express.Response) {
     {
       path: "/api/test-records",
       description: "Returns all of the tests results as a JSON object"
+    },
+    {
+      path: "/api/diff-threshold",
+      description: "Returns the current difference threshold used for image comparisons"
     },
     {
       path: "/api/update-diff-threshold",
@@ -120,6 +128,8 @@ function handleApi(req: express.Request, res: express.Response) {
     }
   ]);
 }
+
+
 
 /**
  * Returns a single requested result. The URL parameters used for this function are:
@@ -214,6 +224,8 @@ async function handleResult(req: express.Request, res: express.Response) {
   }
 }
 
+
+
 /**
  * Returns a full list of the test records to the API caller. This API call has no further
  * parameters.
@@ -221,6 +233,17 @@ async function handleResult(req: express.Request, res: express.Response) {
 function handleTestRecords(req: express.Request, res: express.Response) {
   res.status(200).json(TestRecords);
 }
+
+
+
+/**
+ * Returns the current threshold value used for image comparisons
+ */
+function handleThreshold(req: express.Request, res: express.Response) {
+  res.status(200).json({ value: Config.comparisonThreshold });
+}
+
+
 
 /**
  * This API call updates the threshold value used to determine which pixels of a candidate
@@ -240,7 +263,7 @@ async function handleChangeThreshold(req: express.Request, res: express.Response
 
   const threshold = body.threshold;
   if (threshold == null || typeof threshold !== "number") {
-    res.status(400).end();
+    res.status(400).json({ error: "Threshold must be provided and be a number" });
     return;
   }
 
@@ -251,6 +274,8 @@ async function handleChangeThreshold(req: express.Request, res: express.Response
   await regenerateTestResults();
   res.status(200).end();
 }
+
+
 
 /**
  * This API call is made when a new test result is submitted. The necessary test
@@ -376,13 +401,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     let p = updateReferencePointer(group, name, hardware, ts);
     // Write the current candidate image as the reference image
     fs.writeFileSync(p, file.buffer);
-
-    let referenceThumbnailPath = thumbnailForImage(p);
-    const image = await resizeImg(
-      fs.readFileSync(p),
-      { width: Config.size.width / 4, height: Config.size.height / 4 }
-    );
-    fs.writeFileSync(referenceThumbnailPath, image);
+    createThumbnail(p);
   }
 
   const reference = referenceImage(group, name, hardware);
@@ -390,14 +409,9 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   const difference = differenceImage(group, name, hardware, ts);
 
   fs.writeFileSync(candidate, file.buffer);
-  let candidateThumbnailPath = thumbnailForImage(candidate);
-  const image = await resizeImg(
-    fs.readFileSync(candidate),
-    { width: Config.size.width / 4, height: Config.size.height / 4 }
-  );
-  fs.writeFileSync(candidateThumbnailPath, image);
+  createThumbnail(candidate);
 
-  let nPixels = await generateComparison(reference, candidate, difference);
+  let nPixels = await generateComparisonImage(reference, candidate, difference);
   if (nPixels == null) {
     // The image comparison has failed, which means that the candidate image had the wrong
     // size
@@ -418,6 +432,8 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   addTestData(group, name, hardware, testData);
   res.status(200).end();
 }
+
+
 
 /**
  * This API call runs a single test against the current reference image and returns the
@@ -482,7 +498,7 @@ function handleRunTest(req: express.Request, res: express.Response) {
 
   fs.writeFileSync(candidate, req.file.buffer);
 
-  let nPixels = generateComparison(reference, candidate, difference);
+  let nPixels = generateComparisonImage(reference, candidate, difference);
   if (nPixels == null) {
     // The image comparison has failed, which means that the candidate image had the wrong
     // size
@@ -492,6 +508,8 @@ function handleRunTest(req: express.Request, res: express.Response) {
 
   res.sendFile(difference, { root: ".", headers: { Result: nPixels } });
 }
+
+
 
 /**
  * Updates the current reference for a specific test. The latest candidate image will be
@@ -550,16 +568,11 @@ async function handleUpdateReference(req: express.Request, res: express.Response
   let time = dateToPath(new Date(data.timeStamp));
   let newReference = `${path.dirname(currentReference)}/${time}.png`;
 
-  let newReferenceThumbnailPath = thumbnailForImage(newReference);
-  const image = await resizeImg(
-    fs.readFileSync(newReference),
-    { width: Config.size.width / 4, height: Config.size.height / 4 }
-  );
-  fs.writeFileSync(newReferenceThumbnailPath, image);
-
   // Make the last candidate image the new reference image by copying it over
   let candidate = candidateImage(group, name, hardware, new Date(data.timeStamp));
   fs.copyFileSync(candidate, newReference)
+  createThumbnail(newReference);
+
   // And updating the reference pointer
   clearReferencePointer(group, name, hardware);
   updateReferencePointer(group, name, hardware, new Date(data.timeStamp));
@@ -567,7 +580,7 @@ async function handleUpdateReference(req: express.Request, res: express.Response
   // Then we need to rerun the comparison image for the candidate image as it is now
   // out of date
   let difference = differenceImage(group, name, hardware, new Date(data.timeStamp));
-  let diff = await generateComparison(newReference, candidate, difference);
+  let diff = await generateComparisonImage(newReference, candidate, difference);
 
   // The diff cannot be `null` as `newReference` and `candidate` are the same image
   data.pixelError = diff!;

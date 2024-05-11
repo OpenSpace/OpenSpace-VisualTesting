@@ -26,10 +26,11 @@ import { assert } from "./assert";
 import { printAudit } from "./audit";
 import { Config } from "./configuration";
 import { referenceImagePath, thumbnailForImage } from "./globals";
-import { generateComparison } from "./imagecomparison";
+import { createThumbnail, generateComparisonImage } from "./image";
 import fs from "fs";
 import { globSync } from "glob";
 import path from "path";
+
 
 
 type TestRecord = {
@@ -42,6 +43,8 @@ type TestRecord = {
   /// The individual test runs, grouped by the hardware string
   data: [ TestData ];
 };
+
+
 
 export type TestData = {
   /// Contains the pixel error in the image as a value between 0 and 1 as the ratio of
@@ -64,10 +67,14 @@ export type TestData = {
   referenceImage: string;
 }
 
+
+
 /// An in-memory data storage of test records. The array gets created at startup time by
 /// parsing the 'data' folder and continuously updated as new test data comes in. This
 /// array is not stored on disk, but instead recreated from files that are kept instead
 export let TestRecords: TestRecord[] = [];
+
+
 
 /**
  * Saves a specific test data to the provided path. It will overwrite the file that is
@@ -79,6 +86,8 @@ export let TestRecords: TestRecord[] = [];
 export function saveTestData(data: TestData, path: string) {
   fs.writeFileSync(path, JSON.stringify(data, null, 2));
 }
+
+
 
 /**
  * Add a new test data to the internal list of records that are being kept. If the
@@ -115,6 +124,8 @@ export function addTestData(group: string, name: string, hardware: string, data:
     data: [ data ]
   });
 }
+
+
 
 /**
  * Runs a check on all of the data results and ensure that they are all self consistent.
@@ -159,6 +170,8 @@ export function verifyDataFolder() {
   }
 }
 
+
+
 /**
  * Loads all of the existing test results from the data folder as provided in the
  * configuration. It will iterate through all of the tests and will assert if one of the
@@ -179,10 +192,13 @@ export function loadTestResults() {
         for (let run of runs) {
           const p = `${base}/${group}/${name}/${run}`;
           const files = fs.readdirSync(p);
-          assert(files.length == 3, `Wrong number of files in ${p}`);
-          assert(files.includes("candidate.png"), `'candidate.png' in ${p}`);
-          assert(files.includes("difference.png"), `'difference.png' in ${p}`);
-          assert(files.includes("data.json"), `'data.json' in ${p}`);
+          assert(files.length == 6, `Wrong number of files in ${p}`);
+          assert(files.includes("candidate.png"), `No 'candidate.png' in ${p}`);
+          assert(files.includes("candidate-thumbnail.png"), `No 'candidate-thumbnail.png' in ${p}`);
+          assert(files.includes("difference.png"), `No 'difference.png' in ${p}`);
+          assert(files.includes("difference-thumbnail.png"), `No 'difference-thumbnail.png' in ${p}`);
+          assert(files.includes("data.json"), `No 'data.json' in ${p}`);
+          assert(files.includes("log.txt"), `No 'log.txt' in ${p}`);
 
           let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
           data.timeStamp = new Date(data.timeStamp);
@@ -192,6 +208,8 @@ export function loadTestResults() {
     }
   }
 }
+
+
 
 /**
  * This function will regenerate all of the difference images that are locally stored and
@@ -216,7 +234,7 @@ export async function regenerateTestResults() {
 
           let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
           let folder = referenceImagePath(group, name, hardware);
-          let diff = await generateComparison(
+          let diff = await generateComparisonImage(
             `${folder}/${data.referenceImage}`,
             `${p}/candidate.png`,
             `${p}/difference.png`
@@ -225,6 +243,9 @@ export async function regenerateTestResults() {
           // Remove the old thumbnail of the difference image
           let diffThumbnail = thumbnailForImage(`${p}/difference.png`);
           fs.unlinkSync(diffThumbnail);
+
+          // And regenerate it
+          createThumbnail(`${p}/difference.png`);
 
           data.pixelError = diff!;
           saveTestData(data, `${p}/data.json`);
@@ -236,6 +257,8 @@ export async function regenerateTestResults() {
   // Reset the local records and load a fresh version from disk
   reloadTestResults();
 }
+
+
 
 /**
  * Reloads all of the test results from disk. This should be called whenever any testdata

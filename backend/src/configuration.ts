@@ -25,6 +25,8 @@
 import fs from "fs";
 import { z } from "zod";
 
+
+
 /**
  * The schema describing the structure of the main configuration file
  */
@@ -36,11 +38,14 @@ const ConfigurationSchema = z.object({
   }),
   comparisonThreshold: z.number().min(0).max(1),
   imageSize: z.tuple([ z.number().min(1), z.number().min(1) ]),
+  thumbnailScale: z.number().min(1),
   adminToken: z.string().min(1),
   data: z.string().min(1),
   runners: z.array(z.string().min(1)),
   path: z.string().optional()
 }).strict();
+
+
 
 class Configuration {
   constructor(configFile: string) {
@@ -58,6 +63,7 @@ class Configuration {
     this.slackChannel = config.slack.channel;
     this.comparisonThreshold = config.comparisonThreshold;
     this.size = { width: config.imageSize[0], height: config.imageSize[1] };
+    this.thumbnailScale = config.thumbnailScale;
     this.adminToken = config.adminToken;
     this.data = config.data;
     this.runners = config.runners;
@@ -82,6 +88,9 @@ class Configuration {
     height: number
   };
 
+  /// The scaling factor by which the image is reduced to produce a thumbnail
+  thumbnailScale: number;
+
   /// A token that has to be sent in the header to be able to invalidate references
   adminToken: string;
 
@@ -95,6 +104,8 @@ class Configuration {
   path: string;
 }
 
+
+
 /**
  * Loads the configuration file from the provided @param path and stores the results into
  * the global configuration object.
@@ -105,6 +116,8 @@ export function loadConfiguration(path: string) {
   Config = new Configuration(path);
 }
 
+
+
 /**
  * Updates the configuration file on disk that was used to originally load the global
  * configuration.
@@ -112,6 +125,8 @@ export function loadConfiguration(path: string) {
 export function saveConfiguration() {
   fs.writeFileSync(Config.path, JSON.stringify(Config, null, 2));
 }
+
+
 
 /**
  * The global configuration object that stores general configuration option that are used

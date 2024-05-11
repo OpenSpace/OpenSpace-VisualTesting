@@ -6,6 +6,7 @@ body {
   font-size: 16px;
 }
 
+
 h1 {
   text-align: center;
   font-variant: small-caps;
@@ -22,9 +23,18 @@ h1 {
   text-shadow: 0px 4px 5px #000000;
 }
 
+
+h2 {
+  text-align: center;
+  font-variant: small-caps;
+  font-size: 28px;
+}
+
+
 a {
   color: #fdfdfd;
 }
+
 
 ul {
   list-style: none;
@@ -33,51 +43,64 @@ ul {
   padding: 0px;
 }
 
+
 .row {
   border-top-style: solid;
   border-top-width: 1px;
   border-top-color: #dddddd;
 }
 
+
 img {
   width: 250px;
+  height: 140.625px;
 }
+
 
 img.overview {
   width: 85px;
+  height: 47.8125px;
 }
+
 
 table {
   border-spacing: 20px 0px;
 }
 
+
 .li-head {
   cursor: pointer;
 }
+
 
 .li-head:hover {
   background-color: #353535;
 }
 
+
 .hidden {
   display: none;
 }
+
 
 .li-body {
   padding-left: 50px;
   background-color: #303030;
 }
 
+
 .cell {
   margin: 2px 5px 3px 5px;
   display: inline-block;
 }
+
 
 .heading {
   font-size: 18px;
   font-variant: small-caps;
   font-weight: 1000;
 }
+
 
 .status:not(.heading) {
   width: 70px;
@@ -88,41 +111,63 @@ table {
   padding-bottom: 4px;
 }
 
+
 .status-small {
   width: 20px;
   height: 15px;
 }
 
+
 .status {
   width: 70px;
 }
+
 
 .group {
   width: 140px;
 }
 
+
 .name {
   width: 175px;
 }
+
 
 .hardware {
   width: 150px;
 }
 
+
 .timing {
   width: 80px;
 }
+
 
 .commit {
   width: 85px;
 }
 
+
 .timestamp {
   width: 200px;
 }
 
+
 .heading {
   text-align: left;
+}
+
+
+.grouping {
+  margin: 25px auto 25px;
+  padding: 5px 10px 15px 10px;
+  width: 90%;
+  background-color: #303030;
+}
+
+.error {
+  color: #ed3535;
+  font-size: 28px;
 }
 
 
