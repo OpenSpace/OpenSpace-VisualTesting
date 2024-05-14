@@ -422,7 +422,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   let testData: TestData = {
     pixelError: nPixels,
     timeStamp: ts,
-    timing: timing,
+    timing: Number(timing),
     nErrors: nLogLines,
     commitHash: commitHash,
     referenceImage: path.basename(reference)

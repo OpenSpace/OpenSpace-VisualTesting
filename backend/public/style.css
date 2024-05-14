@@ -115,6 +115,8 @@ table {
   font-size: 18px;
   font-variant: small-caps;
   font-weight: 1000;
+
+  cursor: pointer;
 }
 
 

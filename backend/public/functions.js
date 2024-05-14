@@ -22,6 +22,70 @@ function classForDiff(diff) {
   else                   { return "error-9"; }
 } // function classForDiff(diff)
 
+function sortRows(column) {
+  let list = document.getElementById("list");
+
+  let lis = []
+  // Starting a 1 as the first line (the header) should not participate in sorting
+  for (let i = 1; i < list.childNodes.length; i++) {
+    console.assert(list.childNodes[i].nodeName === "LI");
+    lis.push(list.childNodes[i]);
+  }
+
+  // Sorts the two `li`s by the column that is captures in this lambda. There is probably
+  // a better way to write this, but it works for now and I don't foresee adding many
+  // columns to the list for now that we'd want to sort on
+  function sortFunc(a, b) {
+    console.assert(a.record);
+    console.assert(b.record);
+    if (column in a.record) {
+      console.assert(["group", "name", "hardware"].includes(column));
+      console.assert(column in b.record);
+
+      // These are just names so we want to sort them with the lower value first
+      return a.record[column] > b.record[column];
+    }
+    else {
+      console.assert(["pixelError", "timing", "commitHash", "timeStamp"].includes(column));
+      console.assert(a.record.data.length > 0);
+      console.assert(b.record.data.length > 0);
+
+      // These are values that exist in the individual records and we want to sort based
+      // on the most recent value, which is at the front of the list
+      let aData = a.record.data[0];
+      let bData = b.record.data[0];
+      console.assert(column in aData);
+      console.assert(column in bData);
+
+      let aVal = aData[column];
+      let bVal = bData[column];
+
+      if (column == "timeStamp") {
+        // The time stamp gets passed to us as an ISO string, which we need to convert
+        // into a Date object to do a proper comparison
+        return new Date(aVal) > new Date(bVal);
+      }
+      else if (column == "pixelError") {
+        // The pixel error is the only value that we want to sort inverted, meaning that
+        // we want the row with the biggest error at the top
+        return aVal < bVal;
+      }
+      else {
+        return aVal > bVal;
+      }
+    }
+  }
+
+  lis.sort(sortFunc);
+  let newList = list.cloneNode(false);
+  // Add the header at the top again
+  newList.appendChild(list.childNodes[0]);
+  for (let li of lis) {
+    newList.appendChild(li);
+  }
+  list.parentNode.replaceChild(newList, list);
+}
+
 function createHeader(ul) {
   let li = document.createElement("li");
   ul.appendChild(li);
@@ -31,36 +95,43 @@ function createHeader(ul) {
 
   let status = document.createElement("div");
   status.className = "cell status heading";
+  status.onclick = () => sortRows("pixelError");
   status.appendChild(document.createTextNode("Error"));
   div.appendChild(status);
 
   let group = document.createElement("div");
   group.className = "cell group heading";
+  group.onclick = () => sortRows("group");
   group.appendChild(document.createTextNode("Group"));
   div.appendChild(group);
 
   let name = document.createElement("div");
   name.className = "cell name heading";
+  name.onclick = () => sortRows("name");
   name.appendChild(document.createTextNode("Name"));
   div.appendChild(name);
 
   let hw = document.createElement("div");
   hw.className = "cell hardware heading";
+  hw.onclick = () => sortRows("hardware");
   hw.appendChild(document.createTextNode("Hardware"));
   div.appendChild(hw);
 
   let timing = document.createElement("div");
   timing.className = "cell timing heading";
+  timing.onclick = () => sortRows("timing");
   timing.appendChild(document.createTextNode("Timing"));
   div.appendChild(timing);
 
   let commit = document.createElement("div");
   commit.className = "cell commit heading";
+  commit.onclick = () => sortRows("commitHash");
   commit.appendChild(document.createTextNode("Commit"));
   div.appendChild(commit);
 
   let timestamp = document.createElement("div");
   timestamp.className = "cell timestamp heading";
+  timestamp.onclick = () => sortRows("timeStamp");
   timestamp.appendChild(document.createTextNode("Timestamp"));
   div.appendChild(timestamp);
 } // function createHeader(ul)
@@ -295,6 +366,7 @@ function createRows(record, ul) {
 
   let li = document.createElement("li");
   li.className = "row";
+  li.record = record;
   ul.appendChild(li);
 
   let divHead = document.createElement("div");
