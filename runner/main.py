@@ -89,7 +89,8 @@ def setup_argparse():
     type=str,
     help="A comma-separated list of specific tests that should be run. If this value is "
       "omitted, all tests will be run. Each of the comma-separated entries should be "
-      "a path relative to the base visual testing folder without a file extension. For " "example, if there is a test file called `default/earth.ostest`, then the value "
+      "a path relative to the base visual testing folder without a file extension. For "
+      "example, if there is a test file called `default/earth.ostest`, then the value "
       "provided to this argument should be `default/earth`.",
     required=False
   )
@@ -98,9 +99,9 @@ def setup_argparse():
     dest="overwrite_path",
     type=str,
     help="This specifies the base path to the folder where data is stored that is reused "
-      "between diffrent test runs. The overwrite file will contain settings that we want "
-      "all regularly executing test machines to have, such as using caching, reusing "
-      "synchronization folders, etc.",
+      "between different test runs. The overwrite file will contain settings that we "
+      "want all regularly executing test machines to have, such as using caching, "
+      "reusing synchronization folders, etc.",
     required=False
   )
 

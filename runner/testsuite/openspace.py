@@ -85,11 +85,11 @@ async def setup_test_run(openspace):
 
 async def internal_run(openspace, test):
   """
-  This function runs the actual test in the library object passed into it. It first sets
+  This function runs the actual test with the library object passed into it. It first sets
   up default values, then runs the individual instructions for the test, and retreives
   other information such as the screenshot location, and the commit hash from OpenSpace.
 
-  This function assumes that the `openspace` instance is already authenticated and
+  This function assumes that the `openspace` library object is already authenticated and
   connected to the OpenSpace instance and is ready to take commands.
   """
   print(f"  Starting test")
@@ -110,7 +110,7 @@ async def internal_run(openspace, test):
 
   await openspace.toggleShutdown()
 
-  return (screenshot_folder, commit)
+  return screenshot_folder, commit
 
 
 
@@ -159,11 +159,11 @@ def run_single_test(test_path, executable) -> TestResult:
     openspace = await os_api.singleReturnLibrary()
     print("  Connected to OpenSpace")
     # Run the current test
-    (screenshot_folder, commit) = await asyncio.create_task(internal_run(openspace, test))
+    screenshot_folder, commit = await asyncio.create_task(internal_run(openspace, test))
     os_api.disconnect()
-    return (screenshot_folder, commit)
+    return screenshot_folder, commit
 
-  (screenshot_folder, commit) = asyncio.new_event_loop().run_until_complete(mainLoop())
+  screenshot_folder, commit = asyncio.new_event_loop().run_until_complete(mainLoop())
 
 
   # Another wait while OpenSpace is shutting down
