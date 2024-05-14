@@ -32,6 +32,9 @@ import fs from "fs";
 
 
 
+// @TODO: Comparing between hardware on a separate page
+// @TODO: Add graphs showing timing information
+// @TODO: List all of the hardware combinations
 export function main() {
   loadConfiguration("config.json");
 

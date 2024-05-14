@@ -41,8 +41,7 @@ const ConfigurationSchema = z.object({
   thumbnailScale: z.number().min(1),
   adminToken: z.string().min(1),
   data: z.string().min(1),
-  runners: z.array(z.string().min(1)),
-  path: z.string().optional()
+  runners: z.array(z.string().min(1))
 }).strict();
 
 
@@ -123,7 +122,20 @@ export function loadConfiguration(path: string) {
  * configuration.
  */
 export function saveConfiguration() {
-  fs.writeFileSync(Config.path, JSON.stringify(Config, null, 2));
+  let config = {
+    port: Config.port,
+    slack: {
+      token: Config.slackToken,
+      channel: Config.slackChannel
+    },
+    comparisonThreshold: Config.comparisonThreshold,
+    imageSize: [ Config.size.width, Config.size.height ],
+    thumbnailScale: Config.thumbnailScale,
+    adminToken: Config.adminToken,
+    data: Config.data,
+    runners: Config.runners
+  }
+  fs.writeFileSync(Config.path, JSON.stringify(config, null, 2));
 }
 
 
