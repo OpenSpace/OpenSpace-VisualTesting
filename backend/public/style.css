@@ -83,6 +83,9 @@ table {
 
 .li-head {
   cursor: pointer;
+
+  display: flex;
+  align-items: center;
 }
 
 
