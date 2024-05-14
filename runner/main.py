@@ -28,6 +28,7 @@ import glob
 import json
 import os
 import requests
+import shutil
 import time
 from testsuite.constants import test_base_dir
 from testsuite.openspace import write_configuration_overwrite, run_single_test
@@ -55,7 +56,7 @@ def submit_image(result: TestResult, hardware: str, timestamp: str, file: str,
       "runnerID": runner,
       "timestamp": timestamp,
       "timing": result.timing,
-      "commitHash": hash
+      "commitHash": result.commit
     },
     files = {
       "file": open(file, "rb"),
@@ -67,6 +68,19 @@ def submit_image(result: TestResult, hardware: str, timestamp: str, file: str,
     print(res.text)
   else:
     print("Image submitted successfully")
+
+
+
+def store_image(result: TestResult, file: str):
+  """
+  Stores the images of the provided `TestResult` locally by creating the necessary folders
+  if they don't exist and then saving the image. Only the latest test result are stored.
+  """
+  dest_folder = f"tests/{result.group}"
+  os.makedirs(dest_folder, exist_ok=True)
+  destination = f"{dest_folder}/{result.name}.png"
+  print(f"Copying file {file} -> {destination}")
+  shutil.copy(file, destination)
 
 
 
@@ -111,11 +125,18 @@ def setup_argparse():
 
 
 global_start = time.perf_counter()
-if not os.path.exists("config.json"):
-  raise Exception(f"Could not find config file 'config.json'")
+if os.path.exists("config.json"):
+  submit_images = True
+  with open("config.json") as f:
+    config = json.load(f)
+    url = config["url"]
+    submit_url = f"{url}/api/submit-test"
+    hardware = config["hardware"]
+    runner_id = config["id"]
+else:
+  print("No 'config.json' provided. Test results will be stored locally instead")
+  submit_images = False
 
-with open("config.json") as f:
-  config = json.load(f)
 
 args = setup_argparse()
 
@@ -134,10 +155,7 @@ if not os.path.exists(executable):
 if args.overwrite_path != None:
   write_configuration_overwrite(args.dir, args.overwrite_path)
 
-url = config["url"]
-submit_url = f"{url}/api/submit-test"
-hardware = config["hardware"]
-runner_id = config["id"]
+
 
 # Running the tests
 if args.test is None:
@@ -148,8 +166,11 @@ if args.test is None:
     file = file.replace(os.sep, "/")
     timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
     result = run_single_test(file, executable)
-    for candidate in result.files:
-      submit_image(result, hardware, timestamp, candidate, runner_id, submit_url)
+    for file in result.files:
+      if submit_images:
+        submit_image(result, hardware, timestamp, file, runner_id, submit_url)
+      else:
+        store_image(result, file)
     time.sleep(0.5)
 else:
   tests = args.test.split(",")
@@ -161,8 +182,11 @@ else:
 
     timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
     result = run_single_test(path, executable)
-    for candidate in result.files:
-      submit_image(result, hardware, timestamp, candidate, runner_id, submit_url)
+    for file in result.files:
+      submit_image(result, hardware, timestamp, file, runner_id, submit_url)
+    else:
+      store_image(result, file)
+    time.sleep(0.5)
 
 global_end = time.perf_counter()
 print(f"Total time for all tests: {global_end - global_start}")

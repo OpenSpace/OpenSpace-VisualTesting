@@ -50,6 +50,8 @@ class Test:
   """
   This class represents an entire test run, consisting of multiple Instructions and a
   profile that should be used.
+
+  For now only a single screenshot instruction is supported.
   """
   def __init__(self, path: str):
     assert(os.path.isfile(path))
@@ -72,14 +74,15 @@ class Test:
       except Exception as error:
         raise Exception(f"Error loading test {path}: {error}")
 
-    found_screenshot_instruction = False
+    number_screenshot_instruction = 0
     for instruction in self.instructions:
       if instruction.type == "screenshot":
-        found_screenshot_instruction = True
-        break
+        number_screenshot_instruction = number_screenshot_instruction + 1
 
-    if not found_screenshot_instruction:
+    if number_screenshot_instruction == 0:
       raise Exception(f"Error loading test {path}: No screenshot instruction")
+    if number_screenshot_instruction != 1:
+      raise Exception(f"Error loading test {path}: Only a single screenshot supported")
 
 
     # Get the testname by removing everything before (and including) "test/visual" and

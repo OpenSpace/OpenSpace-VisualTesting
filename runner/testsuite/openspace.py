@@ -97,9 +97,6 @@ async def internal_run(openspace, test):
   await test.run(openspace)
   print("  Finished test")
 
-  # Give the screenshot writing some time to finish
-  time.sleep(1)
-
   # Get the location of the screenshot folder from OpenSpace. It should always be the
   # same but this is just to make sure it will work
   screenshot_folder = await openspace.absPath("${SCREENSHOTS}")
@@ -144,7 +141,7 @@ def run_single_test(test_path, executable) -> TestResult:
 
   # Add a sleeping time instead of repeatedly trying to reconnect. Starting up OpenSpace
   # in general takes longer than this, so we don't actually lose any time
-  time.sleep(15)
+  time.sleep(10)
 
 
   async def mainLoop():
@@ -157,8 +154,9 @@ def run_single_test(test_path, executable) -> TestResult:
     os_api = Api("localhost", 4681)
     os_api.connect()
     openspace = await os_api.singleReturnLibrary()
+    # Injecting the main API into the library as we use it in some test instructions
+    openspace.__api__ = os_api
     print("  Connected to OpenSpace")
-    # Run the current test
     screenshot_folder, commit = await asyncio.create_task(internal_run(openspace, test))
     os_api.disconnect()
     return screenshot_folder, commit
@@ -169,10 +167,10 @@ def run_single_test(test_path, executable) -> TestResult:
   # Another wait while OpenSpace is shutting down
   time.sleep(2)
 
-  # Get the error log from OpenSpace
+  # Get the error log from the OpenSpace subprocess
   error_log = process.stderr.read().decode()
 
-  # Kill OpenSpace
+  # Kill the OpenSpace subprocess
   process.kill()
   end_time = time.perf_counter()
 
