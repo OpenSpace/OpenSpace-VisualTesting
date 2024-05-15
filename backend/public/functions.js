@@ -379,8 +379,103 @@ function createRows(record, ul) {
   li.appendChild(divBody);
 } // function createRows(record, ul)
 
+
+function updateHardwareVisibility() {
+  // Collect all selected hardware values
+  let hardwareElements = document.getElementsByClassName("hardware-checkbox");
+  let hardware = [];
+  for (let element of hardwareElements) {
+    if (element.checked) {
+      hardware.push(element.value);
+    }
+  }
+
+
+  let ul = document.getElementById("list");
+  // Skipping the first entry as it is the header
+  for (let i = 1; i < ul.childNodes.length; i++) {
+    let li = ul.childNodes[i];
+    if (hardware.includes(li.record.hardware)) {
+      li.style.display = "";
+    }
+    else {
+      li.style.display = "none";
+    }
+  }
+} // function updateHardwareVisibility(hardware)
+
+
+function createHardware(ul, hardwares) {
+  //
+  // Create the dropdown menu
+  let select = document.createElement("select");
+  select.id = "hardware-select";
+  ul.appendChild(select);
+
+  // The option to show all
+  let allOption = document.createElement("option");
+  allOption.value = "all";
+  allOption.onclick = function() {
+    let checkboxes = document.getElementsByClassName("hardware-checkbox");
+    for (let checkbox of checkboxes) {
+      checkbox.checked = true;
+    }
+    updateHardwareVisibility();
+  };
+  allOption.appendChild(document.createTextNode("All"));
+  select.appendChild(allOption);
+
+  // Add the rest of the options
+  for (let hardware of hardwares) {
+    let hardwareOption = document.createElement("option");
+    hardwareOption.value = hardware;
+    hardwareOption.appendChild(document.createTextNode(hardware));
+
+    hardwareOption.onclick = function() {
+      let checkboxes = document.getElementsByClassName("hardware-checkbox");
+      for (let checkbox of checkboxes) {
+        checkbox.checked = checkbox.value == hardwareOption.value;
+      }
+      updateHardwareVisibility();
+    };
+    select.appendChild(hardwareOption);
+  }
+
+
+  //
+  // Create the checkboxes
+  for (let hardware of hardwares) {
+    let li = document.createElement("li");
+
+    let input = document.createElement("input");
+    input.type = "checkbox";
+    input.className = "hardware-checkbox";
+    input.id = `hardware-${hardware}`;
+    input.onclick = () => updateHardwareVisibility();
+    input.value = hardware;
+    input.checked = true;
+    li.appendChild(input);
+    let label = document.createElement("label");
+    label.for = input.id;
+    label.appendChild(document.createTextNode(hardware));
+    li.appendChild(label);
+    ul.appendChild(li);
+  }
+
+} // function createHardware(hardwares)
+
+
 async function main() {
   let records = await fetch("/api/test-records").then(res => res.json());
+
+  let hardwares = []
+  for (let record of records) {
+    if (!hardwares.includes(record.hardware)) {
+      hardwares.push(record.hardware);
+    }
+  }
+  let hardwareList = document.getElementById("hardware-list");
+  createHardware(hardwareList, hardwares);
 
   // Sort by the highest latest pixel difference are first
   records.sort((a, b) => a.data[a.data.length - 1].pixelError < b.data[b.data.length - 1].pixelError);
