@@ -29,7 +29,7 @@ import {
   latestTestDataPath, latestTestPath, logFile, referenceImage, referenceImagePath,
   temporaryPath, testDataPath, testPath, thumbnailForImage,
   updateReferencePointer } from "./globals";
-import { createThumbnail, generateComparisonImage } from "./image";
+import { createThumbnail, generateComparisonImage, saveComparisonImage } from "./image";
 import { addTestData, regenerateTestResults, reloadTestResults, saveTestData, TestData,
   TestRecords } from "./testrecords";
 import bodyParser from "body-parser";
@@ -49,6 +49,7 @@ import { PNG } from "pngjs";
 export function registerRoutes(app: express.Application) {
   app.get("/api", handleApi);
   app.get("/api/result/:type/:group/:name/:hardware/:timestamp?", handleResult);
+  app.get("/api/compare/:type/:group/:name/:hardware1/:hardware2", handleCompare);
   app.get("/api/test-records", handleTestRecords);
   app.get("/api/diff-threshold", handleThreshold);
   app.post(
@@ -88,6 +89,14 @@ function handleApi(req: express.Request, res: express.Response) {
         "reference-thumbnail", "candidate-thumbnail", "difference-thumbnail", or "log".
         For all but the last option, the result will be an image file, for the "log"
         option, the result will be a text file.`
+    },
+    {
+      path: "/api/compare/:type/:group/:name/:hardware1/:hardware2",
+      description: `Generates a new comparison image that takes either the reference
+        images or the candidate images for two hardware setups for the same test and runs
+        a comparison image on those. These images will generally not be cached and thus
+        this API call will take some time to finish. The 'type' must be either
+        "reference" or "candidate".`
     },
     {
       path: "/api/test-records",
@@ -222,6 +231,63 @@ async function handleResult(req: express.Request, res: express.Response) {
     }
     res.sendFile(path, { root: "." });
   }
+}
+
+
+
+/**
+ * Generates a new comparison image that takes either the reference images or the
+ * candidate images for two hardware setups for the same test and runs a comparison image
+ * on those. These images will generally not be cached and thus this API call will take
+ * some time to finish. The URL parameters used for this function are:
+ *  - `type`: Must be either "reference" or "candidate"
+ *  - `group`: The name of the test's group for which to return the comparison
+ *  - `name`: The name of the test for which to return the comparison
+ *  - `hardware1`: The first hardware for which to return the comparison.
+ *  - `hardware2`: The second hardware for which to return the comparison
+ */
+async function handleCompare(req: express.Request, res: express.Response) {
+  const p: any = req.params;
+  const type = p.type;
+  const group = p.group;
+  const name = p.name;
+  const hardware1 = p.hardware1;
+  const hardware2 = p.hardware2;
+
+  if (![ "reference", "candidate" ].includes(type)) {
+    res.status(400).json({ error: `Invalid type ${type} provided` });
+    return;
+  }
+
+  let img1;
+  let img2;
+  if (type == "reference") {
+    img1 = referenceImage(group, name, hardware1);
+    img2 = referenceImage(group, name, hardware2);
+  }
+  else {
+    img1 = candidateImage(group, name, hardware1);
+    img2 = candidateImage(group, name, hardware2);
+  }
+
+  if (!fs.existsSync(img1) || !fs.existsSync(img2)) {
+    res.status(400).json({ error: `Unknown image ${img1} or ${img2}`});
+    return;
+  }
+
+
+  printAudit(
+    `Generating temporary comparison for ${group}/${name}. ${hardware1} <-> ${hardware2}`
+  );
+  let r = await generateComparisonImage(img1, img2);
+  if (r == null) {
+    res.status(500).end();
+    return;
+  }
+  let [img, nPixels] = r;
+  let diff = `${temporaryPath()}/compare/${group}-${name}-${hardware1}-${hardware2}}.png`;
+  fs.writeFileSync(diff, PNG.sync.write(img));
+  res.sendFile(diff, { root: ".", headers: { Result: nPixels } });
 }
 
 
@@ -411,7 +477,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   fs.writeFileSync(candidate, file.buffer);
   createThumbnail(candidate);
 
-  let nPixels = await generateComparisonImage(reference, candidate, difference);
+  let nPixels = await saveComparisonImage(reference, candidate, difference);
   if (nPixels == null) {
     // The image comparison has failed, which means that the candidate image had the wrong
     // size
@@ -498,7 +564,7 @@ function handleRunTest(req: express.Request, res: express.Response) {
 
   fs.writeFileSync(candidate, req.file.buffer);
 
-  let nPixels = generateComparisonImage(reference, candidate, difference);
+  let nPixels = saveComparisonImage(reference, candidate, difference);
   if (nPixels == null) {
     // The image comparison has failed, which means that the candidate image had the wrong
     // size
@@ -580,7 +646,7 @@ async function handleUpdateReference(req: express.Request, res: express.Response
   // Then we need to rerun the comparison image for the candidate image as it is now
   // out of date
   let difference = differenceImage(group, name, hardware, new Date(data.timeStamp));
-  let diff = await generateComparisonImage(newReference, candidate, difference);
+  let diff = await saveComparisonImage(newReference, candidate, difference);
 
   // The diff cannot be `null` as `newReference` and `candidate` are the same image
   data.pixelError = diff!;

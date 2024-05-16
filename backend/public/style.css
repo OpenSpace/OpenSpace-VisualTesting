@@ -16,7 +16,7 @@ h1 {
 
   padding-top: 15px;
   padding-bottom: 15px;
-  margin-bottom: 5px;
+  margin-bottom: 0px;
   background-color: #333333;
   color: #ffffff;
   width: 100%;
@@ -71,9 +71,17 @@ img.overview {
 
 .admin-panel {
   position: absolute;
-  font-size: 22px;
+  font-size: 20px;
   top: 25px;
   right: 20px;
+}
+
+
+.compare-panel {
+  position: absolute;
+  font-size: 20px;
+  top: 25px;
+  left: 20px;
 }
 
 
@@ -112,10 +120,22 @@ table {
 }
 
 
+.control {
+  background-color: #333333;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-bottom: 20px;
+}
+
+
 .hardware-list {
   display: flex;
-  margin-top: 5px;
-  margin-bottom: 20px;
+}
+
+
+.hardware-list li {
+  margin-left: 5px;
+  margin-right: 5px;
 }
 
 

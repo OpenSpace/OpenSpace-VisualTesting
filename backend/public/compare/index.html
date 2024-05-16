@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <title>OpenSpace Visual Tests - Compare</title>
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto" />
+    <link rel="stylesheet" type="text/css" href="../style.css" />
+
+    <script src="functions.js"></script>
+  </head>
+  <body>
+    <h1 id="header"><a href="/">OpenSpace Image Testing</a></h1>
+    <div>
+      Group: <input type="text" id="group">
+    </div>
+    <div>
+      Name: <input type="text" id="name">
+    </div>
+    <div>
+      <button id="compare" onclick="generateComparison()">Generate</button>
+    </div>
+
+    <table id="splom"></table>
+  </body>
+
+  <script>
+    window.onload = function() {
+      const params = new URLSearchParams(document.location.search);
+      console.log(params);
+    }
+  </script>
+</html>

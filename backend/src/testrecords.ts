@@ -26,7 +26,7 @@ import { assert } from "./assert";
 import { printAudit } from "./audit";
 import { Config } from "./configuration";
 import { referenceImagePath, thumbnailForImage } from "./globals";
-import { createThumbnail, generateComparisonImage } from "./image";
+import { createThumbnail, saveComparisonImage } from "./image";
 import fs from "fs";
 import { globSync } from "glob";
 import path from "path";
@@ -234,7 +234,7 @@ export async function regenerateTestResults() {
 
           let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
           let folder = referenceImagePath(group, name, hardware);
-          let diff = await generateComparisonImage(
+          let diff = await saveComparisonImage(
             `${folder}/${data.referenceImage}`,
             `${p}/candidate.png`,
             `${p}/difference.png`

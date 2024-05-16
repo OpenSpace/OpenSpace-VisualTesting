@@ -205,9 +205,14 @@ export function referenceImage(group: string, name: string, hardware: string): s
  * @returns The path to the candidate image for the requested test
  */
 export function candidateImage(group: string, name: string, hardware: string,
-                               timestamp: Date): string
+                               timestamp?: Date): string
 {
-  return `${testPath(group, name, hardware, timestamp)}/candidate.png`;
+  if (timestamp == null) {
+    return `${latestTestPath(group, name, hardware)}/candidate.png`;
+  }
+  else {
+    return `${testPath(group, name, hardware, timestamp)}/candidate.png`;
+  }
 }
 
 

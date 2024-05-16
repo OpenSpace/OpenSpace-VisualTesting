@@ -35,27 +35,25 @@ import resizeImg from "resize-img";
 
 /**
  * Runs an image comparison to compare the @param reference image with the
- * @param candidate image. The result is stored in the @param difference image. Both the
- * @param reference and @param candidate parameters need to point towards PNG files that
- * exist and that are readable. Any existing file at the path @param difference will be
- * silently overwritten with the new image result.
- * The @param reference and @param candidate images must have the same size
+ * @param candidate image. The result returned as a Buffer and the percentage of pixels
+ * that are different between the two images. The @param reference and @param candidate
+ * images must have the same size
  *
  * @param reference The path to the reference image. This path must exist and be a valid
  *                  PNG file
  * @param candidate The path to the candidate image. This path must exist and be a valid
  *                  PNG file
- * @param difference The path to where the difference image is stored by this function
- * @returns The percentage of pixels that are changed between the reference and the
- *          candidate image or `null` if the images had the wrong size
+ * @returns A buffer containing the difference image and the percentage of pixels that are
+ *          changed between the reference and the candidate image or. Returns `null` if
+ *          the images had the wrong size
  */
-export async function generateComparisonImage(reference: string, candidate: string,
-                                              difference: string): Promise<number | null>
+export async function generateComparisonImage(reference: string,
+                                         candidate: string): Promise<[PNG, number] | null>
 {
   assert(fs.existsSync(reference), `No reference ${reference}`);
   assert(fs.existsSync(candidate), `No candidate ${candidate}`);
 
-  printAudit(`Creating comparison: "${reference}" & "${candidate}" -> "${difference}"`);
+  printAudit(`Creating comparison: "${reference}" & "${candidate}"`);
 
   const refImg = PNG.sync.read(fs.readFileSync(reference));
   if (refImg.width != Config.size.width || refImg.height != Config.size.height) {
@@ -79,12 +77,46 @@ export async function generateComparisonImage(reference: string, candidate: stri
     { threshold: Config.comparisonThreshold }
   );
 
-  fs.writeFileSync(difference, PNG.sync.write(diffImg));
+  let diff = nPixels / (width * height);
+  return [ diffImg, diff ];
+}
+
+
+
+/**
+ * Runs an image comparison to compare the @param reference image with the
+ * @param candidate image. The result is stored in the @param difference image. Both the
+ * @param reference and @param candidate parameters need to point towards PNG files that
+ * exist and that are readable. Any existing file at the path @param difference will be
+ * silently overwritten with the new image result. This function will also generate a
+ * thumbnail of the comparison image.
+ * The @param reference and @param candidate images must have the same size.
+ *
+ * @param reference The path to the reference image. This path must exist and be a valid
+ *                  PNG file
+ * @param candidate The path to the candidate image. This path must exist and be a valid
+ *                  PNG file
+ * @param difference The path to where the difference image is stored by this function
+ * @returns The percentage of pixels that are changed between the reference and the
+ *          candidate image or `null` if the images had the wrong size
+ */
+export async function saveComparisonImage(reference: string, candidate: string,
+                                          difference: string): Promise<number | null>
+{
+  let res = await generateComparisonImage(reference, candidate);
+  if (res == null) {
+    return null;
+  }
+
+  let [img, nPixels] = res;
+
+  fs.writeFileSync(difference, PNG.sync.write(img));
   await createThumbnail(difference);
 
-  let diff = nPixels / (width * height);
+  let diff = nPixels / (img.width * img.height);
   return diff;
 }
+
 
 
 /**

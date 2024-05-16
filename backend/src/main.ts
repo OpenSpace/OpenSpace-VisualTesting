@@ -34,7 +34,6 @@ import fs from "fs";
 
 // @TODO: Comparing between hardware on a separate page
 // @TODO: Add graphs showing timing information
-// @TODO: List all of the hardware combinations and add filtering based on hardware
 export function main() {
   loadConfiguration("config.json");
 
@@ -50,11 +49,13 @@ export function main() {
   verifyDataFolder();
   loadTestResults();
 
-  const app = express();
+  let app = express();
   app.use(cors({ origin: "*" }));
 
   registerRoutes(app);
   app.use("/", express.static("public"));
+  app.use("/admin", express.static("public/admin"));
+  app.use("/compare", express.static("public/compare"));
 
   console.log(`Listening on port: ${Config.port}`);
   app.listen(Config.port);
