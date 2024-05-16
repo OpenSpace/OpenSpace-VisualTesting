@@ -32,18 +32,17 @@ import fs from "fs";
 
 
 
-// @TODO: Comparing between hardware on a separate page
 // @TODO: Add graphs showing timing information
+// @TODO: Add repeating task to clean the files in the temporary folder
 export function main() {
   loadConfiguration("config.json");
 
-  // Create the folder infrastructure if it doesn't exist already
-  if (!fs.existsSync(Config.data)) {
-    fs.mkdirSync(Config.data, { recursive: true });
-    fs.mkdirSync(`${Config.data}/tests`);
-    fs.mkdirSync(`${Config.data}/reference`);
-    fs.mkdirSync(`${Config.data}/temporary`);
-  }
+  // Create the data folder infrastructure
+  fs.mkdirSync(Config.data, { recursive: true });
+  fs.mkdirSync(`${Config.data}/tests`, { recursive: true });
+  fs.mkdirSync(`${Config.data}/reference`, { recursive: true });
+  fs.mkdirSync(`${Config.data}/temporary`, { recursive: true });
+  fs.mkdirSync(`${Config.data}/temporary/compare`, { recursive: true });
 
   initializeAudit();
   verifyDataFolder();

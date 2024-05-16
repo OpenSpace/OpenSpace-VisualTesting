@@ -277,7 +277,7 @@ async function handleCompare(req: express.Request, res: express.Response) {
 
 
   printAudit(
-    `Generating temporary comparison for ${group}/${name}. ${hardware1} <-> ${hardware2}`
+    `Generating temporary comparison for ${group}/${name}   ${hardware1} <-> ${hardware2}`
   );
   let r = await generateComparisonImage(img1, img2);
   if (r == null) {
@@ -285,7 +285,7 @@ async function handleCompare(req: express.Request, res: express.Response) {
     return;
   }
   let [img, nPixels] = r;
-  let diff = `${temporaryPath()}/compare/${group}-${name}-${hardware1}-${hardware2}}.png`;
+  let diff = `${temporaryPath()}/compare/${group}-${name}-${hardware1}-${hardware2}.png`;
   fs.writeFileSync(diff, PNG.sync.write(img));
   res.sendFile(diff, { root: ".", headers: { Result: nPixels } });
 }

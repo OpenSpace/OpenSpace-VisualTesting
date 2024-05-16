@@ -86,7 +86,7 @@ img.overview {
 
 
 table {
-  border-spacing: 20px 0px;
+  border-spacing: 5px;
 }
 
 
@@ -125,6 +125,35 @@ table {
   padding-top: 5px;
   padding-bottom: 5px;
   margin-bottom: 20px;
+}
+
+
+.input-fields {
+  background-color: #333333;
+  display: flex;
+  margin-bottom: 50px;
+}
+
+
+.input-fields div {
+  margin-right: auto;
+}
+
+
+.input-fields  button {
+  width: 100px;
+}
+
+
+.input-fields  img {
+  width: 150px;
+  height: 84.375px;
+}
+
+
+td.comparison {
+  background-color: #252525;
+  border: 0.5px solid #eeeeee;
 }
 
 

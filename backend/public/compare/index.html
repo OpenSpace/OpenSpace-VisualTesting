@@ -8,14 +8,23 @@
   </head>
   <body>
     <h1 id="header"><a href="/">OpenSpace Image Testing</a></h1>
-    <div>
-      Group: <input type="text" id="group">
-    </div>
-    <div>
-      Name: <input type="text" id="name">
-    </div>
-    <div>
-      <button id="compare" onclick="generateComparison()">Generate</button>
+    <div class="input-fields">
+      <div>
+        Group: <input type="text" id="group">
+      </div>
+      <div>
+        Name: <input type="text" id="name">
+      </div>
+      <div>
+        Type:
+        <select id="type">
+          <option value="reference">Reference</option>
+          <option value="candidate">Candidate</option>
+        </select>
+      </div>
+      <div>
+        <button id="compare" onclick="generateComparison()">Generate</button>
+      </div>
     </div>
 
     <table id="splom"></table>
