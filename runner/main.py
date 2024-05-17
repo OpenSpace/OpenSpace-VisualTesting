@@ -118,6 +118,15 @@ def setup_argparse():
       "reusing synchronization folders, etc.",
     required=False
   )
+  parser.add_argument(
+    "-dr", "--dry-run",
+    dest="dry_run",
+    help="Provides a full list of the tests to be run in the proper order, but does not "
+      "run any tests.",
+    required=False,
+    action="store_true",
+    default=False
+  )
 
   args = parser.parse_args()
   return args
@@ -165,6 +174,10 @@ if args.test is None:
     # Normalize the path endings to always do forward slashes
     file = file.replace(os.sep, "/")
     timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    if args.dry_run:
+      print(f"Test: '{file}' run against executable '{executable}'")
+      continue
+
     result = run_single_test(file, executable)
     for file in result.files:
       if submit_images:
@@ -181,6 +194,11 @@ else:
       raise Exception(f"Could not find test '{path}'")
 
     timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    if args.dry_run:
+      print(f"Test: '{path}' run against executable '{executable}'")
+      continue
+
     result = run_single_test(path, executable)
     for file in result.files:
       submit_image(result, hardware, timestamp, file, runner_id, submit_url)
