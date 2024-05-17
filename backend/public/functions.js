@@ -555,5 +555,4 @@ async function main() {
     console.assert(record.data.length > 0);
     createRows(record, list);
   }
-
 }

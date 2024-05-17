@@ -16,7 +16,6 @@ async function generateComparison() {
   let group = document.getElementById("group").value;
   let name = document.getElementById("name").value;
   let type = document.getElementById("type").value;
-  console.log(type);
   let table = document.getElementById("splom");
   while (table.lastElementChild) {
     table.removeChild(table.lastElementChild);

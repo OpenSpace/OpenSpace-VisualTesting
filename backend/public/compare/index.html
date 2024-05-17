@@ -33,7 +33,23 @@
   <script>
     window.onload = function() {
       const params = new URLSearchParams(document.location.search);
-      console.log(params);
+      let group = params.get("group");
+      let name = params.get("name");
+      let type = params.get("type");
+      if (group) {
+        document.getElementById("group").value = group;
+      }
+      if (name) {
+        document.getElementById("name").value = name;
+      }
+      if (type) {
+        document.getElementById("type").value = type;
+      }
+
+      if (group && name) {
+        // If the group and the name are provided, automatically generate the result
+        generateComparison();
+      }
     }
   </script>
 </html>
