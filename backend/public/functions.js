@@ -107,7 +107,12 @@ async function updateReferenceImage(record) {
     },
   );
 
-  console.log(response);
+  if (response.status === 200) {
+    alert("Successfully updated reference image")
+  }
+  else {
+    alert(`Error updating reference\n${response.status}\nError: ${response.statusText}`);
+  }
 } // async function updateReferenceImage(record)
 
 
