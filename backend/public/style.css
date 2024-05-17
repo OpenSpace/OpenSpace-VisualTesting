@@ -1,4 +1,11 @@
-.li-head {
+li.row {
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #dddddd;
+}
+
+
+li.row div.head {
   cursor: pointer;
 
   display: flex;
@@ -6,7 +13,7 @@
 }
 
 
-.li-head:hover {
+li.row:hover {
   background-color: #353535;
 }
 
@@ -16,7 +23,7 @@
 }
 
 
-.li-body {
+li.row div.body {
   padding-left: 50px;
   background-color: #303030;
 }
@@ -28,7 +35,7 @@
 }
 
 
-.heading {
+li.heading div {
   font-size: 18px;
   font-variant: small-caps;
   font-weight: 1000;
@@ -37,7 +44,16 @@
 }
 
 
-.status:not(.heading) {
+div.status { width: 70px; }
+div.group { width: 140px; }
+div.name { width: 175px; }
+div.hardware { width: 150px; }
+div.timing { width: 80px; }
+div.commit { width: 85px; }
+div.timestamp { width: 200px; }
+
+
+li.row div.status {
   width: 70px;
   height: 20px;
   text-align: center;
@@ -46,59 +62,16 @@
   padding-bottom: 4px;
 }
 
-.status {
-  width: 70px;
-}
-
-
-.group {
-  width: 140px;
-}
-
-
-.name {
-  width: 175px;
-}
-
-
-.hardware {
-  width: 150px;
-}
-
-
-.timing {
-  width: 80px;
-}
-
-
-.commit {
-  width: 85px;
-}
-
-
-.timestamp {
-  width: 200px;
-}
-
-
-.heading {
-  text-align: left;
-}
 
 .status-small {
   width: 20px;
   height: 15px;
 }
 
+
 img.overview {
   width: 85px;
   height: 47.8125px;
-}
-
-.row {
-  border-top-style: solid;
-  border-top-width: 1px;
-  border-top-color: #dddddd;
 }
 
 
@@ -114,7 +87,6 @@ img.overview {
   margin-bottom: 20px;
   display: flex;
 }
-
 
 
 .hardware-list {
@@ -142,7 +114,6 @@ img.overview {
   width: auto;
   right: 10px;
 }
-
 
 
 /*

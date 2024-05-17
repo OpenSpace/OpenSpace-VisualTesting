@@ -1,5 +1,7 @@
 async function generateComparison() {
   let records = await fetch("/api/test-records").then(res => res.json());
+
+  // Get a unique list of all hardwares used in the tests
   let hardwares = []
   for (let record of records) {
     if (!hardwares.includes(record.hardware)) {
@@ -8,10 +10,22 @@ async function generateComparison() {
   }
   hardwares = hardwares.sort();
 
-  let group = document.getElementById("group").value;
-  let name = document.getElementById("name").value;
-  let type = document.getElementById("type").value;
+  let groupElem = document.getElementById("group");
+  console.assert(groupElem, "No element 'group' found");
+  let group = groupElem.value;
+
+  let nameElem = document.getElementById("name");
+  console.assert(nameElem, "No element 'name' found");
+  let name = nameElem.value;
+
+  let typeElem = document.getElementById("type");
+  console.assert(typeElem, "No element 'type' found");
+  let type = typeElem.value;
+
   let table = document.getElementById("splom");
+  console.assert(table, "No element 'splom' found");
+
+  // Remove all entries from the table
   while (table.lastElementChild) {
     table.removeChild(table.lastElementChild);
   }
@@ -26,7 +40,7 @@ async function generateComparison() {
       let td = document.createElement("td");
       td.className = "comparison";
 
-      if (i == j) {
+      if (i === j) {
         // This is the diagonal and we want to show the actual image
         let a = document.createElement("a");
         a.href = `/api/result/${type}/${group}/${name}/${hardwares[i]}`;
@@ -43,8 +57,11 @@ async function generateComparison() {
         td.appendChild(div);
       }
       else {
+        // The off-diagonal values are the interesting ones where we want to compare two
+        // different hardwares
         let compareUrl = `/api/compare/${type}/${group}/${name}/${hardwares[i]}/${hardwares[j]}`;
         let response = await fetch(compareUrl);
+        console.assert(response.status === 200);
         let pixelError = response.headers.get("result");
 
         let a = document.createElement("a");
@@ -66,4 +83,41 @@ async function generateComparison() {
     }
     table.appendChild(tr);
   }
-}
+
+  // Create the URL that can serve as a bookmark to the current page
+  let url = document.getElementById("url");
+  console.assert(url, "No element 'url' found");
+  let loc = `${location.protocol}//${location.host}${location.pathname}`;
+  url.href = `${loc}?group=${group}&name=${name}&type=${type}`
+  url.innerHTML = `${loc}?group=${group}&name=${name}&type=${type}`
+} // async function generateComparison()
+
+
+async function main() {
+  // The webpage can be called with up to three URL parameters that we use to fill in the
+  // existing fields
+  const params = new URLSearchParams(document.location.search);
+  let group = params.get("group");
+  let name = params.get("name");
+  let type = params.get("type");
+  if (group) {
+    let groupElem = document.getElementById("group");
+    console.assert(groupElem, "No element 'group' found");
+    groupElem.value = group;
+  }
+  if (name) {
+    let nameElem = document.getElementById("name");
+    console.assert(nameElem, "No element 'name' found");
+    nameElem.value = name;
+  }
+  if (type) {
+    let typeElem = document.getElementById("type");
+    console.assert(typeElem, "No element 'type' found");
+    typeElem.value = type;
+  }
+
+  if (group && name) {
+    // If the group and the name are provided, automatically generate the result
+    generateComparison();
+  }
+} // async function main()

@@ -2,7 +2,6 @@
   background-color: #333333;
   display: flex;
   padding-bottom: 5px;
-  margin-bottom: 50px;
 }
 
 
@@ -30,4 +29,9 @@ td.comparison {
 
 .info {
   text-align: center;
+}
+
+
+.url {
+  margin-bottom: 20px;
 }

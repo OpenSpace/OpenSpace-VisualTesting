@@ -1,4 +1,7 @@
 function classForDiff(diff) {
+  console.assert(typeof(diff) === "number", `Diff ${diff} is not a number`);
+  console.assert(diff >= 0.0 && diff <= 1.0, `Diff ${diff} out of range [0,1]`);
+
   // Diff is in [0, 1] and represents % of changed pixels
   if (diff == 0.0)       { return "error-0"; }
   else if (diff < 0.001) { return "error-1"; }
@@ -15,6 +18,7 @@ function classForDiff(diff) {
 
 function sortRows(column) {
   let list = document.getElementById("list");
+  console.assert(list, "Not element 'list' found");
 
   let lis = []
   // Starting a 1 as the first line (the header) should not participate in sorting
@@ -27,36 +31,42 @@ function sortRows(column) {
   // a better way to write this, but it works for now and I don't foresee adding many
   // columns to the list for now that we'd want to sort on
   function sortFunc(a, b) {
-    console.assert(a.record);
-    console.assert(b.record);
+    console.assert(a.record, `a ${a} does not contain a record`);
+    console.assert(b.record, `b ${b} does not contain a record`);
     if (column in a.record) {
-      console.assert(["group", "name", "hardware"].includes(column));
-      console.assert(column in b.record);
+      console.assert(
+        ["group", "name", "hardware"].includes(column),
+        `Invalid column ${column}`
+      );
+      console.assert(column in b.record, `Missing column ${column} in b ${b}`);
 
       // These are just names so we want to sort them with the lower value first
       return a.record[column] > b.record[column];
     }
     else {
-      console.assert(["pixelError", "timing", "commitHash", "timeStamp"].includes(column));
-      console.assert(a.record.data.length > 0);
-      console.assert(b.record.data.length > 0);
+      console.assert(
+        ["pixelError", "timing", "commitHash", "timeStamp"].includes(column),
+        `Invalid column ${column}`
+      );
+      console.assert(a.record.data.length > 0, `No test records in a ${a}`);
+      console.assert(b.record.data.length > 0, `No test records in b ${b}`);
 
       // These are values that exist in the individual records and we want to sort based
       // on the most recent value, which is at the front of the list
       let aData = a.record.data[0];
       let bData = b.record.data[0];
-      console.assert(column in aData);
-      console.assert(column in bData);
+      console.assert(column in aData, `Missing column ${column} in a ${a}`);
+      console.assert(column in bData, `Missing column ${column} in b ${b}`);
 
       let aVal = aData[column];
       let bVal = bData[column];
 
-      if (column == "timeStamp") {
+      if (column === "timeStamp") {
         // The time stamp gets passed to us as an ISO string, which we need to convert
         // into a Date object to do a proper comparison
         return new Date(aVal) > new Date(bVal);
       }
-      else if (column == "pixelError") {
+      else if (column === "pixelError") {
         // The pixel error is the only value that we want to sort inverted, meaning that
         // we want the row with the biggest error at the top
         return aVal < bVal;
@@ -75,7 +85,7 @@ function sortRows(column) {
     newList.appendChild(li);
   }
   list.parentNode.replaceChild(newList, list);
-}
+} // function sortRows(column)
 
 
 async function updateReferenceImage(record) {
@@ -98,62 +108,60 @@ async function updateReferenceImage(record) {
   );
 
   console.log(response);
-}
+} // async function updateReferenceImage(record)
 
 
 function createHeader(ul) {
   let li = document.createElement("li");
+  li.className = "heading";
   ul.appendChild(li);
 
-  let div = document.createElement("div");
-  li.appendChild(div);
-
   let status = document.createElement("div");
-  status.className = "cell status heading";
+  status.className = "cell status";
   status.onclick = () => sortRows("pixelError");
   status.appendChild(document.createTextNode("Error"));
-  div.appendChild(status);
+  li.appendChild(status);
 
   let group = document.createElement("div");
-  group.className = "cell group heading";
+  group.className = "cell group";
   group.onclick = () => sortRows("group");
   group.appendChild(document.createTextNode("Group"));
-  div.appendChild(group);
+  li.appendChild(group);
 
   let name = document.createElement("div");
-  name.className = "cell name heading";
+  name.className = "cell name";
   name.onclick = () => sortRows("name");
   name.appendChild(document.createTextNode("Name"));
-  div.appendChild(name);
+  li.appendChild(name);
 
   let hw = document.createElement("div");
-  hw.className = "cell hardware heading";
+  hw.className = "cell hardware";
   hw.onclick = () => sortRows("hardware");
   hw.appendChild(document.createTextNode("Hardware"));
-  div.appendChild(hw);
+  li.appendChild(hw);
 
   let timing = document.createElement("div");
-  timing.className = "cell timing heading";
+  timing.className = "cell timing";
   timing.onclick = () => sortRows("timing");
   timing.appendChild(document.createTextNode("Timing"));
-  div.appendChild(timing);
+  li.appendChild(timing);
 
   let commit = document.createElement("div");
-  commit.className = "cell commit heading";
+  commit.className = "cell commit";
   commit.onclick = () => sortRows("commitHash");
   commit.appendChild(document.createTextNode("Commit"));
-  div.appendChild(commit);
+  li.appendChild(commit);
 
   let timestamp = document.createElement("div");
-  timestamp.className = "cell timestamp heading";
+  timestamp.className = "cell timestamp";
   timestamp.onclick = () => sortRows("timeStamp");
   timestamp.appendChild(document.createTextNode("Timestamp"));
-  div.appendChild(timestamp);
+  li.appendChild(timestamp);
 } // function createHeader(ul)
 
 function createRows(record, ul) {
   function createHead(divHead, divBody, record, data) {
-    divHead.className = "li-head";
+    divHead.className = "head";
     divHead.onclick = () => divBody.classList.toggle("hidden");
 
     let status = document.createElement("div");
@@ -253,7 +261,7 @@ function createRows(record, ul) {
   } // function createHead(divHead, divBody, record, data)
 
   function createBody(divBody, record, testData) {
-    divBody.className = "li-body hidden";
+    divBody.className = "body hidden";
 
     let table = document.createElement("table");
     table.className = "history";
@@ -490,7 +498,7 @@ function createHardware(ul, hardwares) {
     hardwareOption.onclick = function() {
       let checkboxes = document.getElementsByClassName("hardware-checkbox");
       for (let checkbox of checkboxes) {
-        checkbox.checked = checkbox.value == hardwareOption.value;
+        checkbox.checked = (checkbox.value === hardwareOption.value);
       }
       updateHardwareVisibility();
     };
@@ -531,16 +539,20 @@ async function main() {
     }
   }
   let hardwareList = document.getElementById("hardware-list");
+  console.assert(hardwareList, "No element 'hardware-list' found");
   createHardware(hardwareList, hardwares);
 
   // Sort by the highest latest pixel difference are first
-  records.sort((a, b) => a.data[a.data.length - 1].pixelError < b.data[b.data.length - 1].pixelError);
+  records.sort(
+    (a, b) => a.data[a.data.length - 1].pixelError < b.data[b.data.length - 1].pixelError
+  );
 
   let list = document.getElementById("list");
+  console.assert(hardwareList, "No element 'list' found");
   createHeader(list);
 
   for (let record of records) {
     console.assert(record.data.length > 0);
     createRows(record, list);
   }
-}
+} // async function main()
