@@ -1,8 +1,3 @@
-function diffDisplay(diff) {
-  // Round the error to 3 digits past the decimal
-  return `${Math.round(diff * 100000) / 1000}%`;
-} // function diffDisplay(diff)
-
 async function generateComparison() {
   let records = await fetch("/api/test-records").then(res => res.json());
   let hardwares = []

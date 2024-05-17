@@ -1,15 +1,3 @@
-function diffDisplay(diff) {
-  // Round the error to 3 digits past the decimal
-  return `${Math.round(diff * 100000) / 1000}%`;
-} // function diffDisplay(diff)
-
-
-function timingDisplay(timing) {
-  // Round the riming to 3 digits past the decimal
-  return `${Math.round(timing * 1000) / 1000}s`;
-} // function timingDisplay(timing)
-
-
 function classForDiff(diff) {
   // Diff is in [0, 1] and represents % of changed pixels
   if (diff == 0.0)       { return "error-0"; }
@@ -165,7 +153,7 @@ function createHeader(ul) {
 
 function createRows(record, ul) {
   function createHead(divHead, divBody, record, data) {
-    divHead.className = "li-head toggle";
+    divHead.className = "li-head";
     divHead.onclick = () => divBody.classList.toggle("hidden");
 
     let status = document.createElement("div");

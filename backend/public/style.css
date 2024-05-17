@@ -1,95 +1,3 @@
-body {
-  background-color: #101010;
-  color: #fdfdfd;
-
-  font-family: "Roboto";
-  font-size: 16px;
-}
-
-
-h1 {
-  text-align: center;
-  font-variant: small-caps;
-  font-size: 36px;
-
-  line-height: 30px;
-
-  padding-top: 15px;
-  padding-bottom: 15px;
-  margin-bottom: 0px;
-  background-color: #333333;
-  color: #ffffff;
-  width: 100%;
-
-  text-shadow: 0px 4px 5px #000000;
-}
-
-
-h1 a {
-  text-decoration: none;
-}
-
-
-h2 {
-  text-align: center;
-  font-variant: small-caps;
-  font-size: 28px;
-}
-
-
-a {
-  color: #fdfdfd;
-}
-
-
-ul {
-  list-style: none;
-  width: 100%;
-  margin: 0px;
-  padding: 0px;
-}
-
-
-.row {
-  border-top-style: solid;
-  border-top-width: 1px;
-  border-top-color: #dddddd;
-}
-
-
-img {
-  width: 250px;
-  height: 140.625px;
-}
-
-
-img.overview {
-  width: 85px;
-  height: 47.8125px;
-}
-
-
-.admin-panel {
-  position: absolute;
-  font-size: 20px;
-  top: 25px;
-  right: 20px;
-}
-
-
-.compare-panel {
-  position: absolute;
-  font-size: 20px;
-  top: 25px;
-  left: 20px;
-}
-
-
-table {
-  border-spacing: 5px;
-}
-
-
 .li-head {
   cursor: pointer;
 
@@ -120,68 +28,6 @@ table {
 }
 
 
-.table-label {
-  transform: rotate(270deg);
-}
-
-
-.control {
-  background-color: #333333;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  margin-bottom: 20px;
-  display: flex;
-}
-
-
-.input-fields {
-  background-color: #333333;
-  display: flex;
-  margin-bottom: 50px;
-}
-
-
-.input-fields div {
-  margin-right: auto;
-}
-
-
-.input-fields  button {
-  width: 100px;
-}
-
-
-.input-fields  img {
-  width: 150px;
-  height: 84.375px;
-}
-
-
-td.comparison {
-  background-color: #252525;
-  border: 0.5px solid #eeeeee;
-}
-
-
-.hardware-list {
-  display: flex;
-}
-
-
-.admin-list {
-  display: flex;
-  position: absolute;
-  width: auto;
-  right: 10px;
-}
-
-
-.hardware-list li {
-  margin-left: 5px;
-  margin-right: 5px;
-}
-
-
 .heading {
   font-size: 18px;
   font-variant: small-caps;
@@ -199,13 +45,6 @@ td.comparison {
   padding-top: 4px;
   padding-bottom: 4px;
 }
-
-
-.status-small {
-  width: 20px;
-  height: 15px;
-}
-
 
 .status {
   width: 70px;
@@ -246,24 +85,70 @@ td.comparison {
   text-align: left;
 }
 
-
-.grouping {
-  margin: 25px auto 25px;
-  padding: 5px 10px 15px 10px;
-  width: 90%;
-  background-color: #303030;
+.status-small {
+  width: 20px;
+  height: 15px;
 }
 
-.error {
-  color: #ed3535;
-  font-size: 28px;
+img.overview {
+  width: 85px;
+  height: 47.8125px;
 }
+
+.row {
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #dddddd;
+}
+
+
+.table-label {
+  transform: rotate(270deg);
+}
+
+
+.control {
+  background-color: #333333;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-bottom: 20px;
+  display: flex;
+}
+
+
+
+.hardware-list {
+  display: flex;
+}
+
+
+.hardware-list li {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+
+.compare-panel {
+  position: absolute;
+  font-size: 20px;
+  top: 25px;
+  left: 20px;
+}
+
+
+.admin-list {
+  display: flex;
+  position: absolute;
+  width: auto;
+  right: 10px;
+}
+
 
 
 /*
  * Error colors used for status reporting
  */
-.error-0 {
+ .error-0 {
   background-color: #eeeeee;
   color: #111111;
 }

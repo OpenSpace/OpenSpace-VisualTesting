@@ -1,0 +1,33 @@
+.input-fields {
+  background-color: #333333;
+  display: flex;
+  padding-bottom: 5px;
+  margin-bottom: 50px;
+}
+
+
+.input-fields div {
+  margin-right: auto;
+}
+
+
+.input-fields  button {
+  width: 100px;
+}
+
+
+.input-fields  img {
+  width: 150px;
+  height: 84.375px;
+}
+
+
+td.comparison {
+  background-color: #252525;
+  border: 0.5px solid #eeeeee;
+}
+
+
+.info {
+  text-align: center;
+}
