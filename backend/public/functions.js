@@ -3,10 +3,12 @@ function diffDisplay(diff) {
   return `${Math.round(diff * 100000) / 1000}%`;
 } // function diffDisplay(diff)
 
+
 function timingDisplay(timing) {
   // Round the riming to 3 digits past the decimal
   return `${Math.round(timing * 1000) / 1000}s`;
 } // function timingDisplay(timing)
+
 
 function classForDiff(diff) {
   // Diff is in [0, 1] and represents % of changed pixels
@@ -21,6 +23,7 @@ function classForDiff(diff) {
   else if (diff < 1.0)   { return "error-8"; }
   else                   { return "error-9"; }
 } // function classForDiff(diff)
+
 
 function sortRows(column) {
   let list = document.getElementById("list");
@@ -85,6 +88,30 @@ function sortRows(column) {
   }
   list.parentNode.replaceChild(newList, list);
 }
+
+
+async function updateReferenceImage(record) {
+  let authentication = document.getElementById("admin").value;
+
+  let response = await fetch(
+    "/api/update-reference",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        adminToken: authentication,
+        group: record.group,
+        name: record.name,
+        hardware: record.hardware
+      })
+    },
+  );
+
+  console.log(response);
+}
+
 
 function createHeader(ul) {
   let li = document.createElement("li");
@@ -237,7 +264,7 @@ function createRows(record, ul) {
     return divHead;
   } // function createHead(divHead, divBody, record, data)
 
-  function createBody(divBody, record,  testData) {
+  function createBody(divBody, record, testData) {
     divBody.className = "li-body hidden";
 
     let table = document.createElement("table");
@@ -247,6 +274,7 @@ function createRows(record, ul) {
 
     testData = testData.reverse();
     let trStatus = document.createElement("tr");
+    trStatus.appendChild(document.createElement("td"));
     for (let data of testData) {
       let td = document.createElement("td");
       let errorClass = classForDiff(data.pixelError);
@@ -256,6 +284,7 @@ function createRows(record, ul) {
     table.appendChild(trStatus);
 
     let trTimeStamp = document.createElement("tr");
+    trTimeStamp.appendChild(document.createElement("td"));
     for (let data of testData) {
       let td = document.createElement("td");
       td.className = "timestamp";
@@ -265,6 +294,7 @@ function createRows(record, ul) {
     table.appendChild(trTimeStamp);
 
     let trDiff = document.createElement("tr");
+    trDiff.appendChild(document.createElement("td"));
     for (let data of testData) {
       let td = document.createElement("td");
       td.className = "diff";
@@ -274,6 +304,7 @@ function createRows(record, ul) {
     table.appendChild(trDiff);
 
     let trCommit = document.createElement("tr");
+    trCommit.appendChild(document.createElement("td"));
     for (let data of testData) {
       let td = document.createElement("td");
       td.className = "commit";
@@ -287,6 +318,7 @@ function createRows(record, ul) {
     table.appendChild(trCommit);
 
     let trTiming = document.createElement("tr");
+    trTiming.appendChild(document.createElement("td"));
     for (let data of testData) {
       let td = document.createElement("td");
       td.className = "timing";
@@ -296,6 +328,7 @@ function createRows(record, ul) {
     table.appendChild(trTiming);
 
     let trLog = document.createElement("tr");
+    trLog.appendChild(document.createElement("td"));
     for (let data of testData) {
       let td = document.createElement("td");
       td.className = "log";
@@ -309,6 +342,12 @@ function createRows(record, ul) {
     table.appendChild(trLog);
 
     let trCandidate = document.createElement("tr");
+    {
+      let td = document.createElement("td");
+      td.className = "table-label";
+      td.appendChild(document.createTextNode("Candidate"));
+      trCandidate.appendChild(td);
+    }
     for (let data of testData) {
       let td = document.createElement("td");
       td.className = "candidate";
@@ -327,6 +366,12 @@ function createRows(record, ul) {
     table.appendChild(trCandidate);
 
     let trReference = document.createElement("tr");
+    {
+      let td = document.createElement("td");
+      td.className = "table-label";
+      td.appendChild(document.createTextNode("Reference"));
+      trReference.appendChild(td);
+    }
     for (let data of testData) {
       let td = document.createElement("td");
       td.className = "reference";
@@ -345,6 +390,12 @@ function createRows(record, ul) {
     table.appendChild(trReference);
 
     let trDifference = document.createElement("tr");
+    {
+      let td = document.createElement("td");
+      td.className = "table-label";
+      td.appendChild(document.createTextNode("Difference"));
+      trDifference.appendChild(td);
+    }
     for (let data of testData) {
       let td = document.createElement("td");
       td.className = "difference";
@@ -361,6 +412,23 @@ function createRows(record, ul) {
       a.appendChild(img);
     }
     table.appendChild(trDifference);
+
+    {
+      let trUpdate = document.createElement("tr");
+      trUpdate.appendChild(document.createElement("td"));
+      // We can only use the more recent image as a new reference image
+      let td = document.createElement("td");
+      let button = document.createElement("button");
+      button.onclick = () => updateReferenceImage(record)
+      button.appendChild(document.createTextNode("Upgrade Candidate to Reference"));
+      td.appendChild(button);
+      trUpdate.appendChild(td);
+      table.appendChild(trUpdate);
+
+      for (let i = 0; i < testData.length - 1; i++) {
+        trUpdate.appendChild(document.createElement("td"));
+      }
+    }
   } // function createBody(divBody, record, testData)
 
 
