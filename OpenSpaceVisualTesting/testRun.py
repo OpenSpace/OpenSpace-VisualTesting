@@ -12,15 +12,15 @@ import AssetTester as AST
 #BuildFlag is the full path to the file that Jenkins will modify when its build
 #is complete. The single-line content of this file is the full path to the directory
 #where Jenkins built the latest version of OpenSpace
-BuildFlag = "C:/Users/OpenSpace/Desktop/latestBuild.txt"
+BuildFlag = "/home/openspace/Desktop/latestBuild.txt"
 #OsSyncDir is the full path to the sync directory that all Jenkins builds should use.
 #This saves test time, preventing the new build from downloading all of the sync data.
-OsSyncDir= "C:/Users/OpenSpace/Desktop/SYNC"
+OsSyncDir= "/home/openspace/Desktop/sync"
 #OpenSpaceExeInOs is the relative path (from ${BASE}) to the OpenSpace executable.
-OpenSpaceExeInOs = "bin/Debug/OpenSpace.exe"
+OpenSpaceExeInOs = "bin/OpenSpace"
 LogFile = "log/testLog.txt"
 #Platform must be either "windows" or "linux"
-Platform = "windows"
+Platform = "linux"
 #ImageTestingSubdirInOs is relative path to the visual tests (.ostest files) from ${BASE}
 ImageTestingSubdirInOs = "tests/visual"
 #UsrRecordSubdirInOs is relative path to the session recording files from ${BASE}
@@ -46,6 +46,10 @@ def parserInitialization():
                             "test specified here, instead of at the beginning. "\
                             "Provide in 'group/testFile.ostest' format.",
                             required=False, default="")
+        parser.add_argument("-l", "--list-only", dest="listOnly",
+                            help="Provides a full list of the tests to be run "\
+                            "in the proper order, but does not run any tests.",
+                            required=False, action='store_true', default=False)
     except ImportError:
         parser = None
     return parser
@@ -238,8 +242,13 @@ if __name__ == "__main__":
         args.customDir = getPathFromJenkinsTriggerFile()
     else:
         customizedTest = True
-        logAndDisplayMsg(f"Running test(s) on OpenSpace installation at " \
-                         f"{args.customDir}.")
+        logAndDisplayMsg(f"Using OpenSpace installation at {args.customDir}.")
+
+    if args.listOnly == True:
+        allTestsListed = listAllTestFiles(args.customDir)
+        for i in range(0, len(allTestsListed)):
+            logAndDisplayMsg(f"    {i+1} {allTestsListed[i]}")
+        quit(0)
 
     if args.startAtTest != "":
         verifyCustomFile(args.customDir, args.startAtTest, "Starting test file run at ")
