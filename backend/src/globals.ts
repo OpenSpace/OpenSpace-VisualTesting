@@ -74,7 +74,7 @@ export function latestTestPath(group: string, name: string,
 /**
  * Returns the path to where the files for the test identified by the `group`, `name`,
  * `hardware`, and `timestamp` are located. Note that the returned folder might not exist,
- * if such a test is not available. If the timestamp
+ * if such a test is not available.
  *
  * @param group The name of the group for which the path should be returned
  * @param name The name of the test for which the path should be returned
@@ -83,7 +83,7 @@ export function latestTestPath(group: string, name: string,
  * @returns The path to the test files for the provided parameters
  */
 export function testPath(group: string, name: string, hardware: string,
-                         timestamp?: Date): string
+                         timestamp: Date): string
 {
   return `${Config.data}/tests/${hardware}/${group}/${name}/${dateToPath(timestamp)}`
 }

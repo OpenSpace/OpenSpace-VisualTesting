@@ -491,8 +491,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     timing: Number(timing),
     nErrors: nLogLines,
     commitHash: commitHash,
-    referenceImage: path.basename(reference),
-    candidateImage: timeStamp
+    referenceImage: path.basename(reference)
   };
 
   saveTestData(testData, testDataPath(group, name, hardware, ts));
