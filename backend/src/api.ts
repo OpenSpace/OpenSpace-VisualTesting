@@ -76,7 +76,7 @@ export function registerRoutes(app: express.Application) {
 
 
 /**
- * Returns a list of all available API endpoints
+ * Returns a list of all available API endpoints.
  */
 function handleApi(req: express.Request, res: express.Response) {
   res.status(200).json([
@@ -491,7 +491,8 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     timing: Number(timing),
     nErrors: nLogLines,
     commitHash: commitHash,
-    referenceImage: path.basename(reference)
+    referenceImage: path.basename(reference),
+    candidateImage: timeStamp
   };
 
   saveTestData(testData, testDataPath(group, name, hardware, ts));

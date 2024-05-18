@@ -36,8 +36,8 @@ let AuditPath: string;
 
 
 /**
- * Adds the provided @param text to the audit log. The line will also contain the current
- * date and time.
+ * Adds the provided `text` to the audit log. The line will also contain the current date
+ * and time.
  *
  * @param text The line that should be added to the audit log
  */

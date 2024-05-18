@@ -91,9 +91,9 @@ export function saveTestData(data: TestData, path: string) {
 
 /**
  * Add a new test data to the internal list of records that are being kept. If the
- * @param group, @param name, or @param hardware did not exist before in the record, they
- * will be created inside this function. At the end of the function call, a record will
- * exist that contains at least the @param data passed into this function.
+ * `group`, `name`, or `hardware` did not exist before in the record, they will be created
+ * inside this function. At the end of the function call, a record will exist that
+ * contains at least the `data` passed into this function.
  *
  * @param group The name of the group to which the @param data belongs
  * @param name The name of the test to which the @param data belongs
@@ -262,7 +262,7 @@ export async function regenerateTestResults() {
 
 /**
  * Reloads all of the test results from disk. This should be called whenever any testdata
- * file has been rewritten
+ * file has been rewritten.
  */
 export function reloadTestResults() {
   TestRecords = [];

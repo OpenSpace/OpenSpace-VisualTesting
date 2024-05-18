@@ -28,7 +28,7 @@ import { z } from "zod";
 
 
 /**
- * The schema describing the structure of the main configuration file
+ * The schema describing the structure of the main configuration file.
  */
 const ConfigurationSchema = z.object({
   port: z.number().int().min(1000).max(65535),
@@ -106,8 +106,8 @@ class Configuration {
 
 
 /**
- * Loads the configuration file from the provided @param path and stores the results into
- * the global configuration object.
+ * Loads the configuration file from the provided `path` and stores the results into the
+ * global configuration object.
  *
  * @param path The path from which to load the configuration
  */
@@ -142,6 +142,6 @@ export function saveConfiguration() {
 
 /**
  * The global configuration object that stores general configuration option that are used
- * in various places throughout the server
+ * in various places throughout the server.
  */
 export let Config: Configuration;

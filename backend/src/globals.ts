@@ -30,8 +30,8 @@ import path from "path";
 
 
 /**
- * Converts the provided @param date to a version in which it can be used as part of a
- * path in the filesystem or as part of a URL
+ * Converts the provided `date` to a version in which it can be used as part of a path in
+ * the filesystem or as part of a URL
  *
  * @param date The Date object that should be converted
  * @returns A string that is safe to be used as a filesystem path or a URL
@@ -43,9 +43,8 @@ export function dateToPath(date: Date): string {
 
 
 /**
- * Returns the base path to where the files for the latest test for the @param group,
- * @param name, and @param hardware are stored. If no test exists for that test, `null` is
- * returned.
+ * Returns the base path to where the files for the latest test for the `group`, `name`,
+ * and `hardware` are stored. If no test exists for that test, `null` is returned.
  *
  * @param group The name of the group for which the latest test should be returned
  * @param name The name of the test for which the latest run should be returned
@@ -73,9 +72,9 @@ export function latestTestPath(group: string, name: string,
 
 
 /**
- * Returns the path to where the files for the test identified by the @param group,
- * @param name, @param hardware, and @param timestamp are located. Note that the returned
- * folder might not exist, if such a test is not available.
+ * Returns the path to where the files for the test identified by the `group`, `name`,
+ * `hardware`, and `timestamp` are located. Note that the returned folder might not exist,
+ * if such a test is not available. If the timestamp
  *
  * @param group The name of the group for which the path should be returned
  * @param name The name of the test for which the path should be returned
@@ -84,7 +83,7 @@ export function latestTestPath(group: string, name: string,
  * @returns The path to the test files for the provided parameters
  */
 export function testPath(group: string, name: string, hardware: string,
-                         timestamp: Date): string
+                         timestamp?: Date): string
 {
   return `${Config.data}/tests/${hardware}/${group}/${name}/${dateToPath(timestamp)}`
 }
@@ -113,8 +112,8 @@ function referencePointer(group: string, name: string, hardware: string): string
 
 
 /**
- * Invalidates the current reference image for the test identified by the @param group,
- * @param name, and @param hardware.
+ * Invalidates the current reference image for the test identified by the `group`, `name`,
+ * and `hardware`.
  *
  * @param group The name of the group for which the current reference should be
  *              invalidated
@@ -128,9 +127,8 @@ export function clearReferencePointer(group: string, name: string, hardware: str
 
 
 /**
- * Updates the current reference image for the test identified by @param group,
- * @param name, and @param hardware to point at the image identified by the
- * @param timestamp.
+ * Updates the current reference image for the test identified by `group`, `name`, and
+ * `hardware` to point at the image identified by the `timestamp`.
  *
  * @param group The name of the group for which to update the current reference image
  * @param name The name of the test for which to update the current reference image
@@ -158,8 +156,8 @@ export function updateReferencePointer(group: string, name: string, hardware: st
 
 
 /**
- * Returns whether the test identified by @param group, @param name, and @param hardware
- * has a current reference image.
+ * Returns whether the test identified by `group`, `name`, and `hardware` has a current
+ * reference image.
  *
  * @param group The name of the group for which to check the current reference image
  * @param name The name of the test for which to check the current reference image
@@ -175,9 +173,9 @@ export function hasReferenceImage(group: string, name: string,
 
 
 /**
- * Returns the path to the current reference image for the test identified by
- * @param group, @param name, and @param hardware. This function assumes that this test
- * has a currently valid reference image.
+ * Returns the path to the current reference image for the test identified by `group`,
+ * `name`, and `hardware`. This function assumes that this test has a currently valid
+ * reference image.
  *
  * @param group The name of the group for which to return the current reference image
  * @param name The name of the test for which to return the current reference image
@@ -194,9 +192,9 @@ export function referenceImage(group: string, name: string, hardware: string): s
 
 
 /**
- * Returns the path to the candidate image for the test identified by the @param group,
- * @param name, @param hardware, and @param timestamp. Note that this path might not exist
- * if no test has run for these test parameters.
+ * Returns the path to the candidate image for the test identified by the `group`, `name`,
+ * `hardware`, and `timestamp`. Note that this path might not exist if no test has run for
+ * these test parameters.
  *
  * @param group The name of the group for which to return the candidate image
  * @param name The name of the test for which to return the candidate image
@@ -218,9 +216,9 @@ export function candidateImage(group: string, name: string, hardware: string,
 
 
 /**
- * Returns the path to the difference image for the test identified by the @param group,
- * @param name, @param hardware, and @param timestamp. Note that this path might not exist
- * if no test has run for these test parameters.
+ * Returns the path to the difference image for the test identified by the `group`,
+ * `name`, `hardware`, and `timestamp`. Note that this path might not exist if no test has
+ * run for these test parameters.
  *
  * @param group The name of the group for which to return the difference image
  * @param name The name of the test for which to return the difference image
@@ -237,9 +235,9 @@ export function differenceImage(group: string, name: string, hardware: string,
 
 
 /**
- * Returns the path to the log file for the test identified by the @param group,
- * @param name, @param hardware, and @param timestamp. Note that this path might not exist
- * if no test has run for these test parameters.
+ * Returns the path to the log file for the test identified by the `group`, `name`,
+ * `hardware`, and `timestamp`. Note that this path might not exist if no test has run for
+ * these test parameters.
  *
  * @param group The name of the group for which to return the log file
  * @param name The name of the test for which to return the log file
@@ -256,9 +254,9 @@ export function logFile(group: string, name: string, hardware: string,
 
 
 /**
- * Returns the path to the test data file for the test identified by the @param group,
- * @param name, @param hardware, and @param timestamp. Note that this path might not exist
- * if no test has run for these test parameters.
+ * Returns the path to the test data file for the test identified by the `group`, `name`,
+ * `hardware`, and `timestamp`. Note that this path might not exist if no test has run for
+ * these test parameters.
  *
  * @param group The name of the group for which to return the test data file
  * @param name The name of the test for which to return the test data file
@@ -275,9 +273,9 @@ export function testDataPath(group: string, name: string, hardware: string,
 
 
 /**
- * Returns the path to the test data file for the latest test identified by the
- * @param group, @param name, and @param hardware. Note that this path might not exist if
- * no test has run for these test parameters.
+ * Returns the path to the test data file for the latest test identified by the `group`,
+ * `name`, and `hardware`. Note that this path might not exist if no test has run for
+ * these test parameters.
  *
  * @param group The name of the group for which to return the test data file
  * @param name The name of the test for which to return the test data file
@@ -292,8 +290,8 @@ export function latestTestDataPath(group: string, name: string, hardware: string
 
 
 /**
- * Returns a path the folder that contains all references images for the provided
- * @param group, @param name, and @param hardware.
+ * Returns a path the folder that contains all references images for the provided `group`,
+ * `name`, and `hardware`.
  *
  * @param group The name of the group for which to return the reference folder path
  * @param name The name of the test for which to return the reference folder path
@@ -308,7 +306,7 @@ export function referenceImagePath(group: string, name: string, hardware: string
 
 
 /**
- * Returns a path to a temporary file in which files can be stored for a short time
+ * Returns a path to a temporary file in which files can be stored for a short time.
  */
 export function temporaryPath(): string {
   return `${Config.data}/temporary/`;
@@ -317,7 +315,7 @@ export function temporaryPath(): string {
 
 
 /**
- * Returns the path used for stored the thumbnail for the provided image
+ * Returns the path used for stored the thumbnail for the provided image.
  *
  * @param path The path to the image for which the thumbnail path should be returned
  * @returns The path to the thumbnail image

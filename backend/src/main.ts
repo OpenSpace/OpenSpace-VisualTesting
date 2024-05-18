@@ -34,6 +34,7 @@ import fs from "fs";
 
 // @TODO: Add graphs showing timing information
 // @TODO: Add repeating task to clean the files in the temporary folder
+// @TODO: Use <dialog> instead of alert() when reporting status
 export function main() {
   loadConfiguration("config.json");
 
