@@ -25,13 +25,13 @@
 import { printAudit } from "./audit";
 import { Config, saveConfiguration } from "./configuration";
 import {
-  candidateImage, clearReferencePointer, dateToPath, differenceImage, hasReferenceImage,
-  latestTestDataPath, latestTestPath, logFile, referenceImage, referenceImagePath,
-  temporaryPath, testDataPath, testPath, thumbnailForImage,
-  updateReferencePointer } from "./globals";
+  candidateImage, clearReferencePointer, dateToPath, differenceImage,
+  findMatchingCandidateImage, findMatchingDifferenceImage, hasReferenceImage,
+  latestTestPath, logFile, referenceImage, referenceImagePath, temporaryPath,
+  testDataPath, testPath, thumbnailForImage, updateReferencePointer } from "./globals";
 import { createThumbnail, generateComparisonImage, saveComparisonImage } from "./image";
-import { addTestData, regenerateTestResults, reloadTestResults, saveTestData, TestData,
-  TestRecords } from "./testrecords";
+import { addTestData, loadTestRecord, regenerateTestResults, reloadTestResults,
+  saveTestData, TestData, TestRecords } from "./testrecords";
 import bodyParser from "body-parser";
 import express from "express";
 import fs from "fs";
@@ -170,7 +170,7 @@ async function handleResult(req: express.Request, res: express.Response) {
   }
 
   let basePath = "";
-  if (timestamp == null) {
+  if (!timestamp) {
     // If the request did not have any timestamp we are interested in the latest test
     let p = latestTestPath(group, name, hardware);
     if (p == null) {
@@ -196,19 +196,19 @@ async function handleResult(req: express.Request, res: express.Response) {
     case "reference-thumbnail":
       isThumbnail = true;
     case "reference":
-      let data = JSON.parse(fs.readFileSync(`${basePath}/data.json`).toString());
+      let data = loadTestRecord(`${basePath}/data.json`);
       let folder = referenceImagePath(group, name, hardware);
       path = `${folder}/${data.referenceImage}`;
       break;
     case "candidate-thumbnail":
       isThumbnail = true;
     case "candidate":
-      path = `${basePath}/candidate.png`;
+      path = candidateImage(group, name, hardware, timestamp ? new Date(timestamp) : undefined);
       break;
     case "difference-thumbnail":
       isThumbnail = true;
     case "difference":
-      path = `${basePath}/difference.png`;
+      path = differenceImage(group, name, hardware, timestamp ? new Date(timestamp) : undefined);
       break;
     case "log":
       path = logFile(group, name, hardware, new Date(timestamp));
@@ -390,11 +390,11 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     return;
   }
 
-  const timeStamp = req.body.timestamp;
-  if (timeStamp == null) {
+  if (req.body.timestamp == null) {
     res.status(400).json({ error: "Missing field 'timeStamp'" });
     return;
   }
+  const timeStamp = new Date(req.body.timestamp);
 
   const timing = req.body.timing;
   if (timing == null) {
@@ -443,15 +443,16 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   }
 
 
-  const ts = new Date(timeStamp);
-  printAudit(`Submitting result for (${group}/${name}/${hardware}/${ts.toISOString()})`);
+  printAudit(
+    `Submitting result for (${group}/${name}/${hardware}/${timeStamp.toISOString()})`
+  );
 
-  const p = testPath(group, name, hardware, ts);
+  const p = testPath(group, name, hardware, timeStamp);
   if (!fs.existsSync(p)) {
     fs.mkdirSync(p, { recursive: true });
   }
 
-  let logPath = logFile(group, name, hardware, ts);
+  let logPath = logFile(group, name, hardware, timeStamp);
   let logContent = log.buffer.toString();
   function removeEmptyLines(str: string) {
     return str.split("\n").filter(line => line.trim() !== "").join("\n");
@@ -464,18 +465,31 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   if (!hasReferenceImage(group, name, hardware)) {
     printAudit("  No reference image found");
     // We are either the first, or someone has marked the previous reference as not valid
-    let p = updateReferencePointer(group, name, hardware, ts);
+    let p = updateReferencePointer(group, name, hardware, timeStamp);
     // Write the current candidate image as the reference image
     fs.writeFileSync(p, file.buffer);
     createThumbnail(p);
   }
 
   const reference = referenceImage(group, name, hardware);
-  const candidate = candidateImage(group, name, hardware, ts);
-  const difference = differenceImage(group, name, hardware, ts);
+  let candidate = candidateImage(group, name, hardware, timeStamp);
+  let difference = differenceImage(group, name, hardware, timeStamp);
 
   fs.writeFileSync(candidate, file.buffer);
-  createThumbnail(candidate);
+
+  // Check if a previous test has already created this file. If that is the case, we don't
+  // have to store it a second time
+  let candidateMatch = findMatchingCandidateImage(group, name, hardware, candidate);
+  if (candidateMatch) {
+    // The candidate image we have received already exists, so we can remove the new one
+    fs.unlinkSync(candidate);
+    // and use the old one instead
+    candidate = candidateImage(group, name, hardware, candidateMatch);
+  }
+  else {
+    // The candidate image is new and thus doesn't have a thumbnail yet
+    createThumbnail(candidate);
+  }
 
   let nPixels = await saveComparisonImage(reference, candidate, difference);
   if (nPixels == null) {
@@ -485,16 +499,30 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     return;
   }
 
+  let differenceMatch = findMatchingDifferenceImage(group, name, hardware, difference);
+  if (differenceMatch) {
+    // The difference image we calculated already existed, so we can remove this one. The
+    // `saveComparisonImage` will also generate a thumbnail already, so we have to delete
+    // that file, too
+    fs.unlinkSync(difference);
+    fs.unlinkSync(thumbnailForImage(difference));
+    // and use the old one instead
+    difference = differenceImage(group, name, hardware, differenceMatch);
+  }
+
+
   let testData: TestData = {
     pixelError: nPixels,
-    timeStamp: ts,
+    timeStamp: timeStamp,
     timing: Number(timing),
     nErrors: nLogLines,
     commitHash: commitHash,
-    referenceImage: path.basename(reference)
+    referenceImage: path.basename(reference),
+    candidateImage: candidateMatch ? candidateMatch : timeStamp,
+    differenceImage: differenceMatch ? differenceMatch : timeStamp
   };
 
-  saveTestData(testData, testDataPath(group, name, hardware, ts));
+  saveTestData(testData, testDataPath(group, name, hardware, timeStamp));
   addTestData(group, name, hardware, testData);
   res.status(200).end();
 }
@@ -625,7 +653,7 @@ async function handleUpdateReference(req: express.Request, res: express.Response
 
   printAudit(`Updating reference for (${group}, ${name}, ${hardware})`);
 
-  let dataPath = latestTestDataPath(group, name, hardware);
+  let dataPath = testDataPath(group, name, hardware);
   let data: TestData = JSON.parse(fs.readFileSync(dataPath).toString());
 
   // Get the new file name for the reference image. First get the old reference image,

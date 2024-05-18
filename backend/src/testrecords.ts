@@ -25,11 +25,13 @@
 import { assert } from "./assert";
 import { printAudit } from "./audit";
 import { Config } from "./configuration";
-import { referenceImagePath, thumbnailForImage } from "./globals";
+import { candidateImage, differenceImage, referenceImagePath,
+  thumbnailForImage } from "./globals";
 import { createThumbnail, saveComparisonImage } from "./image";
 import fs from "fs";
 import { globSync } from "glob";
 import path from "path";
+import { z } from "zod";
 
 
 
@@ -44,6 +46,18 @@ type TestRecord = {
   data: [ TestData ];
 };
 
+
+
+const TestDataSchema = z.object({
+  pixelError: z.number().min(0).max(1),
+  timeStamp: z.coerce.date(),
+  timing: z.number().min(0),
+  nErrors: z.number().int().positive(),
+  commitHash: z.string().min(1),
+  referenceImage: z.string().min(1),
+  candidateImage: z.coerce.date(),
+  differenceImage: z.coerce.date()
+});
 
 
 export type TestData = {
@@ -65,6 +79,12 @@ export type TestData = {
 
   /// Path to the reference image that was used for this test
   referenceImage: string;
+
+  /// The timestamp of the test whose candidate image that was used for this test
+  candidateImage: Date;
+
+  /// The timestamp for the test whose difference image that was used for this test
+  differenceImage: Date;
 }
 
 
@@ -73,6 +93,25 @@ export type TestData = {
 /// parsing the 'data' folder and continuously updated as new test data comes in. This
 /// array is not stored on disk, but instead recreated from files that are kept instead
 export let TestRecords: TestRecord[] = [];
+
+
+
+/**
+ * Loads a test record from the provided `path`.
+ *
+ * @param path The path to the `.json` file that should be loaded
+ * @returns The loaded TestRecord instance
+ */
+export function loadTestRecord(path: string): TestData {
+  const data = JSON.parse(fs.readFileSync(path).toString());
+  const res = TestDataSchema.safeParse(data);
+  if (!res.success) {
+    console.error(res.error.issues);
+    process.exit();
+  }
+
+  return res.data;
+}
 
 
 
@@ -159,11 +198,33 @@ export function verifyDataFolder() {
           const p = `${base}/${group}/${name}/${run}`;
           assert(fs.existsSync(`${p}/data.json`), `Missing 'data.json' in ${p}`);
 
-          let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
+          let data = loadTestRecord(`${p}/data.json`);
+
+          // Verify reference image existence
           let reference = data.referenceImage;
           let folder = referenceImagePath(group, name, hardware);
           let fullReference = `${folder}/${reference}`;
           assert(fs.existsSync(fullReference), `Missing reference file ${fullReference}`);
+          assert(
+            fs.existsSync(thumbnailForImage(fullReference)),
+            `Missing thumbnail for reference image ${fullReference}`
+          );
+
+          // Verify candidate image existence
+          let candidate = candidateImage(group, name, hardware, new Date(data.candidateImage));
+          assert(fs.existsSync(candidate), `Missing candidate file ${candidate}`);
+          assert(
+            fs.existsSync(thumbnailForImage(candidate)),
+            `Missing thumbnail for candidate image ${candidate}`
+          );
+
+          // Verify difference image existence
+          let difference = differenceImage(group, name, hardware, new Date(data.differenceImage));
+          assert(fs.existsSync(difference), `Missing difference file ${difference}`);
+          assert(
+            fs.existsSync(thumbnailForImage(difference)),
+            `Missing thumbnail for difference image ${difference}`
+          );
         }
       }
     }
@@ -192,16 +253,10 @@ export function loadTestResults() {
         for (let run of runs) {
           const p = `${base}/${group}/${name}/${run}`;
           const files = fs.readdirSync(p);
-          assert(files.length == 6, `Wrong number of files in ${p}`);
-          assert(files.includes("candidate.png"), `No 'candidate.png' in ${p}`);
-          assert(files.includes("candidate-thumbnail.png"), `No 'candidate-thumbnail.png' in ${p}`);
-          assert(files.includes("difference.png"), `No 'difference.png' in ${p}`);
-          assert(files.includes("difference-thumbnail.png"), `No 'difference-thumbnail.png' in ${p}`);
           assert(files.includes("data.json"), `No 'data.json' in ${p}`);
           assert(files.includes("log.txt"), `No 'log.txt' in ${p}`);
 
-          let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
-          data.timeStamp = new Date(data.timeStamp);
+          let data = loadTestRecord(`${p}/data.json`);
           addTestData(group, name, hardware, data);
         }
       }
@@ -232,7 +287,7 @@ export async function regenerateTestResults() {
         for (let run of runs) {
           const p = `${base}/${group}/${name}/${run}`;
 
-          let data: TestData = JSON.parse(fs.readFileSync(`${p}/data.json`).toString());
+          let data = loadTestRecord(`${p}/data.json`);
           let folder = referenceImagePath(group, name, hardware);
           let diff = await saveComparisonImage(
             `${folder}/${data.referenceImage}`,

@@ -24,6 +24,8 @@
 
 import { assert } from "./assert";
 import { Config } from "./configuration";
+import { imagesAreEqual } from "./image";
+import { loadTestRecord } from "./testrecords";
 import fs from "fs";
 import path from "path";
 
@@ -38,6 +40,20 @@ import path from "path";
  */
 export function dateToPath(date: Date): string {
   return date.toISOString().split("-").join("").split(":").join("").split(".").join("");
+}
+
+
+
+/**
+ * Returns the path used for stored the thumbnail for the provided image.
+ *
+ * @param path The path to the image for which the thumbnail path should be returned
+ * @returns The path to the thumbnail image
+ */
+export function thumbnailForImage(path: string): string {
+  let ext = path.substring(path.lastIndexOf("."));
+  let base = path.substring(0, path.lastIndexOf("."));
+  return `${base}-thumbnail${ext}`;
 }
 
 
@@ -173,7 +189,7 @@ export function hasReferenceImage(group: string, name: string,
 
 
 /**
- * Returns the path to the current reference image for the test identified by `group`,
+ * Returns the path to the reference image for the test identified by `group`,
  * `name`, and `hardware`. This function assumes that this test has a currently valid
  * reference image.
  *
@@ -205,11 +221,19 @@ export function referenceImage(group: string, name: string, hardware: string): s
 export function candidateImage(group: string, name: string, hardware: string,
                                timestamp?: Date): string
 {
-  if (timestamp == null) {
-    return `${latestTestPath(group, name, hardware)}/candidate.png`;
+  let path = testDataPath(group, name, hardware, timestamp);
+  if (fs.existsSync(path)) {
+    let data = loadTestRecord(path);
+    return `${testPath(group, name, hardware, data.candidateImage)}/candidate.png`;
   }
   else {
-    return `${testPath(group, name, hardware, timestamp)}/candidate.png`;
+    // The data path might not exist yet, if this is the first time the test is run
+    if (timestamp == null) {
+      return `${latestTestPath(group, name, hardware)}/candidate.png`;
+    }
+    else {
+      return `${testPath(group, name, hardware, timestamp)}/candidate.png`;
+    }
   }
 }
 
@@ -227,9 +251,22 @@ export function candidateImage(group: string, name: string, hardware: string,
  * @returns The path to the difference image for the requested test
  */
 export function differenceImage(group: string, name: string, hardware: string,
-                                timestamp: Date): string
+                                timestamp?: Date): string
 {
-  return `${testPath(group, name, hardware, timestamp)}/difference.png`;
+  let path = testDataPath(group, name, hardware, timestamp);
+  if (fs.existsSync(path)) {
+    let data = loadTestRecord(path);
+    return `${testPath(group, name, hardware, data.differenceImage)}/difference.png`;
+  }
+  else {
+    // The data path might not exist yet, if this is the first time the test is run
+    if (timestamp == null) {
+      return `${latestTestPath(group, name, hardware)}/difference.png`;
+    }
+    else {
+      return `${testPath(group, name, hardware, timestamp)}/difference.png`;
+    }
+  }
 }
 
 
@@ -255,36 +292,26 @@ export function logFile(group: string, name: string, hardware: string,
 
 /**
  * Returns the path to the test data file for the test identified by the `group`, `name`,
- * `hardware`, and `timestamp`. Note that this path might not exist if no test has run for
+ * `hardware`, and `timestamp`. If the `timestamp` value is not provided, the lastest path
+ * will be returned instead. Note that this path might not exist if no test has run for
  * these test parameters.
  *
  * @param group The name of the group for which to return the test data file
  * @param name The name of the test for which to return the test data file
  * @param hardware The hardware for which to return the test data file
- * @param timestamp The time stamp for which to return the test data file
+ * @param timestamp The time stamp for which to return the test data file or the latest
+ *                  test path if this parameter is omitted
  * @returns The path to the test data file for the requested test
  */
 export function testDataPath(group: string, name: string, hardware: string,
-                             timestamp: Date): string
+                             timestamp?: Date): string
 {
-  return `${testPath(group, name, hardware, timestamp)}/data.json`;
-}
-
-
-
-/**
- * Returns the path to the test data file for the latest test identified by the `group`,
- * `name`, and `hardware`. Note that this path might not exist if no test has run for
- * these test parameters.
- *
- * @param group The name of the group for which to return the test data file
- * @param name The name of the test for which to return the test data file
- * @param hardware The hardware for which to return the test data file
- * @returns The path to the latest test data file for the requested test
- */
-export function latestTestDataPath(group: string, name: string, hardware: string): string
-{
-  return `${latestTestPath(group, name, hardware)}/data.json`;
+  if (timestamp) {
+    return `${testPath(group, name, hardware, timestamp)}/data.json`;
+  }
+  else {
+    return `${latestTestPath(group, name, hardware)}/data.json`;
+  }
 }
 
 
@@ -315,13 +342,85 @@ export function temporaryPath(): string {
 
 
 /**
- * Returns the path used for stored the thumbnail for the provided image.
+ * Inspects all available candidate images for the test identified by `group`, `name`, and
+ * `hardware` and checks if any of the candidate images are identical to the image
+ * provided by `image`. If that is the case, the timetsamp of the test in which the
+ * already existing candidate image is located will be returned.
  *
- * @param path The path to the image for which the thumbnail path should be returned
- * @returns The path to the thumbnail image
+ * @param group The name of the group for which to check all candidate images
+ * @param name The name of the test for which to check all candidate images
+ * @param hardware The hardware identifier of the test for which to check candidate images
+ * @param image The path to the image for which we want to find a duplicate
+ * @returns The timestamp of the test in which to find the already existing candidate
+ *          file if a duplicate was found or `null` if the `image` does not have any
+ *          duplicates
  */
-export function thumbnailForImage(path: string): string {
-  let ext = path.substring(path.lastIndexOf("."));
-  let base = path.substring(0, path.lastIndexOf("."));
-  return `${base}-thumbnail${ext}`;
+export function findMatchingCandidateImage(group: string, name: string,
+                                           hardware: string, image: string): Date | null
+{
+  let base = `${Config.data}/tests/${hardware}/${group}/${name}`;
+  let runs = fs.readdirSync(base);
+  assert(runs.length > 0, `Could not find test folders for ${hardware}/${group}/${name}`);
+
+  for (let run of runs) {
+    let path = `${base}/${run}/candidate.png`;
+
+    // We don't want to compare the image with itself
+    if (path == image)  continue;
+
+    if (fs.existsSync(path)) {
+      let equal = imagesAreEqual(image, path);
+      if (equal) {
+        // We have found our winner
+        let data = loadTestRecord(`${base}/${run}/data.json`);
+        return data.timeStamp;
+      }
+    }
+  }
+
+  // If we get this far, we have tested all iamges and not found a match
+  return null;
+}
+
+
+
+/**
+ * Inspects all available difference images for the test identified by `group`, `name`,
+ * and `hardware` and checks if any of the difference images are identical to the image
+ * provided by `image`. If that is the case, the timetsamp of the test in which the
+ * already existing difference image is located will be returned.
+ *
+ * @param group The name of the group for which to check all difference images
+ * @param name The name of the test for which to check all difference images
+ * @param hardware The hardware id of the test for which to check difference images
+ * @param image The path to the image for which we want to find a duplicate
+ * @returns The timestamp of the test in which to find the already existing difference
+ *          file if a duplicate was found or `null` if the `image` does not have any
+ *          duplicates
+ */
+export function findMatchingDifferenceImage(group: string, name: string,
+  hardware: string, image: string): Date | null
+{
+  let base = `${Config.data}/tests/${hardware}/${group}/${name}`;
+  let runs = fs.readdirSync(base);
+  assert(runs.length > 0, `Could not find test folders for ${hardware}/${group}/${name}`);
+
+  for (let run of runs) {
+    let path = `${base}/${run}/difference.png`;
+
+    // We don't want to compare the image with itself
+    if (path == image)  continue;
+
+    if (fs.existsSync(path)) {
+      let equal = imagesAreEqual(image, path);
+      if (equal) {
+        // We have found our winner
+        let data = loadTestRecord(`${base}/${run}/data.json`);
+        return data.timeStamp;
+      }
+    }
+  }
+
+  // If we get this far, we have tested all iamges and not found a match
+  return null;
 }

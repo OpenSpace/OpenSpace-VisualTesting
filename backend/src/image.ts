@@ -25,8 +25,8 @@
 import { assert } from "./assert";
 import { printAudit } from "./audit";
 import { Config } from "./configuration";
-import fs from "fs";
 import { thumbnailForImage } from "./globals";
+import fs from "fs";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 import resizeImg from "resize-img";
@@ -46,8 +46,8 @@ import resizeImg from "resize-img";
  *          changed between the reference and the candidate image or. Returns `null` if
  *          the images had the wrong size
  */
-export async function generateComparisonImage(reference: string,
-                                         candidate: string): Promise<[PNG, number] | null>
+export function generateComparisonImage(reference: string,
+                                        candidate: string): [PNG, number] | null
 {
   assert(fs.existsSync(reference), `No reference ${reference}`);
   assert(fs.existsSync(candidate), `No candidate ${candidate}`);
@@ -83,6 +83,31 @@ export async function generateComparisonImage(reference: string,
 
 
 /**
+ * Runs an image comparison to compare the `path1` image with the `path2` image and return
+ * whether those two images are pixel-identical. Both images have to exist and be readable
+ * PNG files.
+ *
+ * @param path1 The first image to test
+ * @param path2 The second image to test
+ * @returns `true` if `path1 == path2`, `false` otherwise
+ */
+export function imagesAreEqual(path1: string, path2: string): boolean {
+  assert(fs.existsSync(path1), `No image ${path1}`);
+  assert(fs.existsSync(path2), `No image ${path2}`);
+
+  const i1 = PNG.sync.read(fs.readFileSync(path1));
+  const i2 = PNG.sync.read(fs.readFileSync(path2));
+  if (i1.width != i2.width || i1.height != i2.height) {
+    // The images are considered different if they have a difference resolution
+    return false;
+  }
+
+  let diff = pixelmatch(i1.data, i2.data, null, i1.width, i1.height, { threshold: 0 });
+  return diff == 0;
+}
+
+
+/**
  * Runs an image comparison to compare the `reference` image with the `candidate` image.
  * The result is stored in the `difference` image. Both the `reference` and `candidate`
  * parameters need to point towards PNG files that exist and that are readable. Any
@@ -110,9 +135,7 @@ export async function saveComparisonImage(reference: string, candidate: string,
 
   fs.writeFileSync(difference, PNG.sync.write(img));
   await createThumbnail(difference);
-
-  let diff = nPixels / (img.width * img.height);
-  return diff;
+  return nPixels;
 }
 
 
