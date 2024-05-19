@@ -31,13 +31,16 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+
+# Request the records from the source server
 res = requests.get(f"{args.source}/api/test-records")
 if res.status_code != 200:
   print(f"Image submission failed with error {res.status_code}")
   print(res.text)
   exit(-1)
-
 records = json.loads(res.text)
+
+# and then resubmit it as a new test to the destination server
 for record in records:
   group = record["group"]
   name = record["name"]
