@@ -37,7 +37,7 @@ const ConfigurationSchema = z.object({
     channel: z.string()
   }),
   comparisonThreshold: z.number().min(0).max(1),
-  imageSize: z.tuple([ z.number().min(1), z.number().min(1) ]),
+  imageSize: z.object({ width: z.number().min(1), height: z.number().min(1) }),
   thumbnailScale: z.number().min(1),
   adminToken: z.string().min(1),
   data: z.string().min(1),
@@ -61,7 +61,7 @@ class Configuration {
     this.slackToken = config.slack.token;
     this.slackChannel = config.slack.channel;
     this.comparisonThreshold = config.comparisonThreshold;
-    this.size = { width: config.imageSize[0], height: config.imageSize[1] };
+    this.size = config.imageSize;
     this.thumbnailScale = config.thumbnailScale;
     this.adminToken = config.adminToken;
     this.data = config.data;
@@ -129,7 +129,7 @@ export function saveConfiguration() {
       channel: Config.slackChannel
     },
     comparisonThreshold: Config.comparisonThreshold,
-    imageSize: [ Config.size.width, Config.size.height ],
+    imageSize: Config.size,
     thumbnailScale: Config.thumbnailScale,
     adminToken: Config.adminToken,
     data: Config.data,

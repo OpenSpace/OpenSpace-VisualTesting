@@ -5,7 +5,7 @@
     "channel": ""
   },
   "comparisonThreshold": 0.1,
-  "imageSize": [ 1920, 1080 ],
+  "imageSize": { "width": 1920, "height": 1080 },
   "thumbnailScale": 6,
   "data": "data",
   "adminToken": "",
