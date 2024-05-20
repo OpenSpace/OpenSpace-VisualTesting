@@ -64,10 +64,10 @@ export function generateComparisonImage(reference: string,
     return null;
   }
 
-  let width = Config.size.width;
-  let height = Config.size.height
-  let diffImg = new PNG({ width, height });
-  let nPixels = pixelmatch(
+  const width = Config.size.width;
+  const height = Config.size.height
+  const diffImg = new PNG({ width, height });
+  const nPixels = pixelmatch(
     refImg.data,
     testImg.data,
     diffImg.data,
@@ -76,7 +76,7 @@ export function generateComparisonImage(reference: string,
     { threshold: Config.comparisonThreshold }
   );
 
-  let diff = nPixels / (width * height);
+  const diff = nPixels / (width * height);
   return [ diffImg, diff ];
 }
 
@@ -126,12 +126,12 @@ export function imagesAreEqual(path1: string, path2: string): boolean {
 export async function saveComparisonImage(reference: string, candidate: string,
                                           difference: string): Promise<number | null>
 {
-  let res = await generateComparisonImage(reference, candidate);
+  const res = await generateComparisonImage(reference, candidate);
   if (res == null) {
     return null;
   }
 
-  let [img, nPixels] = res;
+  const [img, nPixels] = res;
 
   fs.writeFileSync(difference, PNG.sync.write(img));
   await createThumbnail(difference);
@@ -151,9 +151,9 @@ export async function saveComparisonImage(reference: string, candidate: string,
 export async function createThumbnail(path: string) {
   assert(fs.existsSync(path), `No path ${path} found`);
 
-  let thumbnailPath = thumbnailForImage(path);
-  let width = Config.size.width / Config.thumbnailScale;
-  let height = Config.size.height / Config.thumbnailScale
+  const thumbnailPath = thumbnailForImage(path);
+  const width = Config.size.width / Config.thumbnailScale;
+  const height = Config.size.height / Config.thumbnailScale
   const image = await resizeImg(fs.readFileSync(path), { width: width, height: height });
   fs.writeFileSync(thumbnailPath, image);
 }

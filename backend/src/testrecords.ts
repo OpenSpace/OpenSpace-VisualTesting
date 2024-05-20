@@ -176,34 +176,34 @@ export function verifyDataFolder() {
   printAudit("Verifying data files");
 
   printAudit("  Reference pointers");
-  let references = globSync(`${Config.data}/reference/**/ref.txt`);
+  const references = globSync(`${Config.data}/reference/**/ref.txt`);
   for (let reference of references) {
-    let content = fs.readFileSync(reference).toString();
-    let dir = path.dirname(reference);
-    let p = `${dir}/${content}`;
+    const content = fs.readFileSync(reference).toString();
+    const dir = path.dirname(reference);
+    const p = `${dir}/${content}`;
     assert(fs.existsSync(p), `Reference image ${content} in ${reference} does not exist`);
   }
 
   printAudit("  Data file references");
-  let hardwares = fs.readdirSync(`${Config.data}/tests`);
-  for (let hardware of hardwares) {
+  const hardwares = fs.readdirSync(`${Config.data}/tests`);
+  for (const hardware of hardwares) {
     const base = `${Config.data}/tests/${hardware}`;
 
-    let groups = fs.readdirSync(base);
-    for (let group of groups) {
-      let names = fs.readdirSync(`${base}/${group}`);
-      for (let name of names) {
-        let runs = fs.readdirSync(`${base}/${group}/${name}`);
+    const groups = fs.readdirSync(base);
+    for (const group of groups) {
+      const names = fs.readdirSync(`${base}/${group}`);
+      for (const name of names) {
+        const runs = fs.readdirSync(`${base}/${group}/${name}`);
         for (let run of runs) {
           const p = `${base}/${group}/${name}/${run}`;
           assert(fs.existsSync(`${p}/data.json`), `Missing 'data.json' in ${p}`);
 
-          let data = loadTestRecord(`${p}/data.json`);
+          const data = loadTestRecord(`${p}/data.json`);
 
           // Verify reference image existence
-          let reference = data.referenceImage;
-          let folder = referenceImagePath(group, name, hardware);
-          let fullReference = `${folder}/${reference}`;
+          const reference = data.referenceImage;
+          const folder = referenceImagePath(group, name, hardware);
+          const fullReference = `${folder}/${reference}`;
           assert(fs.existsSync(fullReference), `Missing reference file ${fullReference}`);
           assert(
             fs.existsSync(thumbnailForImage(fullReference)),
@@ -211,7 +211,7 @@ export function verifyDataFolder() {
           );
 
           // Verify candidate image existence
-          let candidate = candidateImage(group, name, hardware, new Date(data.candidateImage));
+          const candidate = candidateImage(group, name, hardware, new Date(data.candidateImage));
           assert(fs.existsSync(candidate), `Missing candidate file ${candidate}`);
           assert(
             fs.existsSync(thumbnailForImage(candidate)),
@@ -219,7 +219,12 @@ export function verifyDataFolder() {
           );
 
           // Verify difference image existence
-          let difference = differenceImage(group, name, hardware, new Date(data.differenceImage));
+          const difference = differenceImage(
+            group,
+            name,
+            hardware,
+            new Date(data.differenceImage)
+          );
           assert(fs.existsSync(difference), `Missing difference file ${difference}`);
           assert(
             fs.existsSync(thumbnailForImage(difference)),
@@ -241,22 +246,22 @@ export function verifyDataFolder() {
 export function loadTestResults() {
   printAudit("Loading test results");
 
-  let hardwares = fs.readdirSync(`${Config.data}/tests`);
-  for (let hardware of hardwares) {
+  const hardwares = fs.readdirSync(`${Config.data}/tests`);
+  for (const hardware of hardwares) {
     const base = `${Config.data}/tests/${hardware}`;
 
-    let groups = fs.readdirSync(base);
-    for (let group of groups) {
-      let names = fs.readdirSync(`${base}/${group}`);
-      for (let name of names) {
-        let runs = fs.readdirSync(`${base}/${group}/${name}`);
-        for (let run of runs) {
+    const groups = fs.readdirSync(base);
+    for (const group of groups) {
+      const names = fs.readdirSync(`${base}/${group}`);
+      for (const name of names) {
+        const runs = fs.readdirSync(`${base}/${group}/${name}`);
+        for (const run of runs) {
           const p = `${base}/${group}/${name}/${run}`;
           const files = fs.readdirSync(p);
           assert(files.includes("data.json"), `No 'data.json' in ${p}`);
           assert(files.includes("log.txt"), `No 'log.txt' in ${p}`);
 
-          let data = loadTestRecord(`${p}/data.json`);
+          const data = loadTestRecord(`${p}/data.json`);
           addTestData(group, name, hardware, data);
         }
       }
@@ -275,28 +280,28 @@ export function loadTestResults() {
 export async function regenerateTestResults() {
   printAudit("Regenerating all test results");
 
-  let hardwares = fs.readdirSync(`${Config.data}/tests`);
-  for (let hardware of hardwares) {
+  const hardwares = fs.readdirSync(`${Config.data}/tests`);
+  for (const hardware of hardwares) {
     const base = `${Config.data}/tests/${hardware}`;
 
-    let groups = fs.readdirSync(base);
-    for (let group of groups) {
-      let names = fs.readdirSync(`${base}/${group}`);
-      for (let name of names) {
-        let runs = fs.readdirSync(`${base}/${group}/${name}`);
-        for (let run of runs) {
+    const groups = fs.readdirSync(base);
+    for (const group of groups) {
+      const names = fs.readdirSync(`${base}/${group}`);
+      for (const name of names) {
+        const runs = fs.readdirSync(`${base}/${group}/${name}`);
+        for (const run of runs) {
           const p = `${base}/${group}/${name}/${run}`;
 
-          let data = loadTestRecord(`${p}/data.json`);
-          let folder = referenceImagePath(group, name, hardware);
-          let diff = await saveComparisonImage(
+          const data = loadTestRecord(`${p}/data.json`);
+          const folder = referenceImagePath(group, name, hardware);
+          const diff = await saveComparisonImage(
             `${folder}/${data.referenceImage}`,
             `${p}/candidate.png`,
             `${p}/difference.png`
           );
 
           // Remove the old thumbnail of the difference image
-          let diffThumbnail = thumbnailForImage(`${p}/difference.png`);
+          const diffThumbnail = thumbnailForImage(`${p}/difference.png`);
           fs.unlinkSync(diffThumbnail);
 
           // And regenerate it

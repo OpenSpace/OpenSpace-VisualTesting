@@ -201,7 +201,7 @@ export function hasReferenceImage(group: string, name: string,
 export function referenceImage(group: string, name: string, hardware: string): string {
   assert(hasReferenceImage(group, name, hardware), "No reference image found");
 
-  let path = fs.readFileSync(referencePointer(group, name, hardware)).toString();
+  const path = fs.readFileSync(referencePointer(group, name, hardware)).toString();
   return `${Config.data}/reference/${hardware}/${group}/${name}/${path}`;
 }
 
@@ -221,9 +221,9 @@ export function referenceImage(group: string, name: string, hardware: string): s
 export function candidateImage(group: string, name: string, hardware: string,
                                timestamp?: Date): string
 {
-  let path = testDataPath(group, name, hardware, timestamp);
+  const path = testDataPath(group, name, hardware, timestamp);
   if (fs.existsSync(path)) {
-    let data = loadTestRecord(path);
+    const data = loadTestRecord(path);
     return `${testPath(group, name, hardware, data.candidateImage)}/candidate.png`;
   }
   else {
@@ -253,9 +253,9 @@ export function candidateImage(group: string, name: string, hardware: string,
 export function differenceImage(group: string, name: string, hardware: string,
                                 timestamp?: Date): string
 {
-  let path = testDataPath(group, name, hardware, timestamp);
+  const path = testDataPath(group, name, hardware, timestamp);
   if (fs.existsSync(path)) {
-    let data = loadTestRecord(path);
+    const data = loadTestRecord(path);
     return `${testPath(group, name, hardware, data.differenceImage)}/difference.png`;
   }
   else {
@@ -358,21 +358,21 @@ export function temporaryPath(): string {
 export function findMatchingCandidateImage(group: string, name: string,
                                            hardware: string, image: string): Date | null
 {
-  let base = `${Config.data}/tests/${hardware}/${group}/${name}`;
-  let runs = fs.readdirSync(base);
+  const base = `${Config.data}/tests/${hardware}/${group}/${name}`;
+  const runs = fs.readdirSync(base);
   assert(runs.length > 0, `Could not find test folders for ${hardware}/${group}/${name}`);
 
-  for (let run of runs) {
-    let path = `${base}/${run}/candidate.png`;
+  for (const run of runs) {
+    const path = `${base}/${run}/candidate.png`;
 
     // We don't want to compare the image with itself
     if (path == image)  continue;
 
     if (fs.existsSync(path)) {
-      let equal = imagesAreEqual(image, path);
+      const equal = imagesAreEqual(image, path);
       if (equal) {
         // We have found our winner
-        let data = loadTestRecord(`${base}/${run}/data.json`);
+        const data = loadTestRecord(`${base}/${run}/data.json`);
         return data.timeStamp;
       }
     }
@@ -401,21 +401,21 @@ export function findMatchingCandidateImage(group: string, name: string,
 export function findMatchingDifferenceImage(group: string, name: string,
   hardware: string, image: string): Date | null
 {
-  let base = `${Config.data}/tests/${hardware}/${group}/${name}`;
-  let runs = fs.readdirSync(base);
+  const base = `${Config.data}/tests/${hardware}/${group}/${name}`;
+  const runs = fs.readdirSync(base);
   assert(runs.length > 0, `Could not find test folders for ${hardware}/${group}/${name}`);
 
-  for (let run of runs) {
-    let path = `${base}/${run}/difference.png`;
+  for (const run of runs) {
+    const path = `${base}/${run}/difference.png`;
 
     // We don't want to compare the image with itself
     if (path == image)  continue;
 
     if (fs.existsSync(path)) {
-      let equal = imagesAreEqual(image, path);
+      const equal = imagesAreEqual(image, path);
       if (equal) {
         // We have found our winner
-        let data = loadTestRecord(`${base}/${run}/data.json`);
+        const data = loadTestRecord(`${base}/${run}/data.json`);
         return data.timeStamp;
       }
     }

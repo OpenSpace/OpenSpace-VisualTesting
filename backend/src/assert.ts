@@ -45,7 +45,10 @@ export function assert(condition: boolean, message: string) {
     const web = new WebClient(Config.slackToken);
 
     (async () => {
-      let response = await web.chat.postMessage({ channel: Config.slackChannel, text: message });
+      const response = await web.chat.postMessage({
+        channel: Config.slackChannel,
+        text: message
+      });
       console.log(response);
     })();
   }

@@ -172,7 +172,7 @@ async function handleResult(req: express.Request, res: express.Response) {
   let basePath = "";
   if (!timestamp) {
     // If the request did not have any timestamp we are interested in the latest test
-    let p = latestTestPath(group, name, hardware);
+    const p = latestTestPath(group, name, hardware);
     if (p == null) {
       res.status(404).end();
       return;
@@ -196,8 +196,8 @@ async function handleResult(req: express.Request, res: express.Response) {
     case "reference-thumbnail":
       isThumbnail = true;
     case "reference":
-      let data = loadTestRecord(`${basePath}/data.json`);
-      let folder = referenceImagePath(group, name, hardware);
+      const data = loadTestRecord(`${basePath}/data.json`);
+      const folder = referenceImagePath(group, name, hardware);
       path = `${folder}/${data.referenceImage}`;
       break;
     case "candidate-thumbnail":
@@ -216,7 +216,7 @@ async function handleResult(req: express.Request, res: express.Response) {
   }
 
   if (isThumbnail) {
-    let thumbnailPath = thumbnailForImage(path);
+    const thumbnailPath = thumbnailForImage(path);
     if (!fs.existsSync(thumbnailPath)) {
       res.status(500).end();
       return;
@@ -320,9 +320,9 @@ function handleThreshold(req: express.Request, res: express.Response) {
  *   - `adminToken`: The admin token that was provided in the configuration file
  */
 async function handleChangeThreshold(req: express.Request, res: express.Response) {
-  let body = JSON.parse(req.body);
+  const body = JSON.parse(req.body);
 
-  if (body.adminToken != Config.adminToken) {
+  if (!body.adminToken || body.adminToken != Config.adminToken) {
     res.status(401).end();
     return;
   }
@@ -431,8 +431,8 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   try {
     const png = PNG.sync.read(file.buffer);
     if (png.width != Config.size.width || png.height != Config.size.height) {
-      let w = Config.size.width
-      let h = Config.size.height
+      const w = Config.size.width
+      const h = Config.size.height
       res.status(400).json({ error: `Image has the wrong size. Expected (${w}, ${h})`});
       return;
     }
@@ -452,20 +452,20 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     fs.mkdirSync(p, { recursive: true });
   }
 
-  let logPath = logFile(group, name, hardware, timeStamp);
+  const logPath = logFile(group, name, hardware, timeStamp);
   let logContent = log.buffer.toString();
   function removeEmptyLines(str: string) {
     return str.split("\n").filter(line => line.trim() !== "").join("\n");
   }
   logContent = removeEmptyLines(logContent);
-  let nLogLines = logContent.split("\n").length;
+  const nLogLines = logContent.split("\n").length;
   fs.writeFileSync(logPath, logContent);
 
 
   if (!hasReferenceImage(group, name, hardware)) {
     printAudit("  No reference image found");
     // We are either the first, or someone has marked the previous reference as not valid
-    let p = updateReferencePointer(group, name, hardware, timeStamp);
+    const p = updateReferencePointer(group, name, hardware, timeStamp);
     // Write the current candidate image as the reference image
     fs.writeFileSync(p, file.buffer);
     createThumbnail(p);
@@ -479,7 +479,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
 
   // Check if a previous test has already created this file. If that is the case, we don't
   // have to store it a second time
-  let candidateMatch = findMatchingCandidateImage(group, name, hardware, candidate);
+  const candidateMatch = findMatchingCandidateImage(group, name, hardware, candidate);
   if (candidateMatch) {
     // The candidate image we have received already exists, so we can remove the new one
     fs.unlinkSync(candidate);
@@ -491,11 +491,13 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     createThumbnail(candidate);
   }
 
-  let nPixels = await saveComparisonImage(reference, candidate, difference);
+  const nPixels = await saveComparisonImage(reference, candidate, difference);
   if (nPixels == null) {
     // The image comparison has failed, which means that the candidate image had the wrong
     // size
-    res.status(400).end();
+    res.status(400).json(
+      { error: "Could not compare images. Candidate image has wrong size" }
+    );
     return;
   }
 
@@ -570,8 +572,8 @@ function handleRunTest(req: express.Request, res: express.Response) {
   try {
     const png = PNG.sync.read(req.file.buffer);
     if (png.width != Config.size.width || png.height != Config.size.height) {
-      let w = Config.size.width
-      let h = Config.size.height
+      const w = Config.size.width
+      const h = Config.size.height
       res.status(400).json({ error: `Image has the wrong size. Expected (${w}, ${h})`});
       return;
     }
@@ -592,11 +594,13 @@ function handleRunTest(req: express.Request, res: express.Response) {
 
   fs.writeFileSync(candidate, req.file.buffer);
 
-  let nPixels = saveComparisonImage(reference, candidate, difference);
+  const nPixels = saveComparisonImage(reference, candidate, difference);
   if (nPixels == null) {
     // The image comparison has failed, which means that the candidate image had the wrong
     // size
-    res.status(400).end();
+    res.status(400).json(
+      { error: "Could not compare images. Candidate image has wrong size " }
+    );
     return;
   }
 
@@ -616,7 +620,7 @@ function handleRunTest(req: express.Request, res: express.Response) {
  *   - `name`: The name of the test for which to remove the refernce image
  */
 async function handleUpdateReference(req: express.Request, res: express.Response) {
-  let body = JSON.parse(req.body);
+  const body = JSON.parse(req.body);
   const adminToken = body.adminToken;
   if (adminToken == null || adminToken != Config.adminToken) {
     res.status(401).end();
@@ -644,7 +648,7 @@ async function handleUpdateReference(req: express.Request, res: express.Response
   // If we remove the reference, we want to take the latest candidate image available for
   // the test instead. We'll copy it over to the reference folder and then rewrite the
   // reference pointer to point at the most recent image instead
-  let testPath = latestTestPath(group, name, hardware);
+  const testPath = latestTestPath(group, name, hardware);
   if (testPath == null) {
     // There was no test for this, so why are we trying to update the reference?
     res.status(400).json({ error: `No test found for (${group}, ${name}, ${hardware})`});
@@ -653,17 +657,17 @@ async function handleUpdateReference(req: express.Request, res: express.Response
 
   printAudit(`Updating reference for (${group}, ${name}, ${hardware})`);
 
-  let dataPath = testDataPath(group, name, hardware);
-  let data: TestData = JSON.parse(fs.readFileSync(dataPath).toString());
+  const dataPath = testDataPath(group, name, hardware);
+  const data: TestData = JSON.parse(fs.readFileSync(dataPath).toString());
 
   // Get the new file name for the reference image. First get the old reference image,
   // extract the folder name from it, and create a new file name based on the timestamp
-  let currentReference = referenceImage(group, name, hardware);
-  let time = dateToPath(new Date(data.timeStamp));
-  let newReference = `${path.dirname(currentReference)}/${time}.png`;
+  const currentReference = referenceImage(group, name, hardware);
+  const time = dateToPath(new Date(data.timeStamp));
+  const newReference = `${path.dirname(currentReference)}/${time}.png`;
 
   // Make the last candidate image the new reference image by copying it over
-  let candidate = candidateImage(group, name, hardware, new Date(data.timeStamp));
+  const candidate = candidateImage(group, name, hardware, new Date(data.timeStamp));
   fs.copyFileSync(candidate, newReference)
   createThumbnail(newReference);
 
@@ -673,8 +677,8 @@ async function handleUpdateReference(req: express.Request, res: express.Response
 
   // Then we need to rerun the comparison image for the candidate image as it is now
   // out of date
-  let difference = differenceImage(group, name, hardware, new Date(data.timeStamp));
-  let diff = await saveComparisonImage(newReference, candidate, difference);
+  const difference = differenceImage(group, name, hardware, new Date(data.timeStamp));
+  const diff = await saveComparisonImage(newReference, candidate, difference);
 
   // The diff cannot be `null` as `newReference` and `candidate` are the same image
   data.pixelError = diff!;
