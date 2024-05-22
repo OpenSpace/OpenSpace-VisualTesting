@@ -1,5 +1,5 @@
 # VisualTesting
-The visual testing infrastructure is split into two components that are both described in this document. The goal for this infrastructure is to be able to consistently run regression tests against OpenSpace to ensure that the visual quality of the `master` branch does not change over time, thus preventing bugs. It is also useful as a respository of in-game images from OpenSpace that can be used to show what features OpenSpace has.
+The visual testing infrastructure is split into two components that are both described in this document. The goal for this infrastructure is to be able to consistently run regression tests against OpenSpace to ensure that the visual quality of the `master` branch does not change over time, thus preventing bugs. It is also useful as a repository of in-game images from OpenSpace that can be used to show what features OpenSpace has.
 
 Important terms to understand the testing results:
   - "Group": A group combines several tests into a logical unit where it makes sense that individual tests are collected. Groups, for example, can be individual profiles or usage scenarios, or describe the intended usecase for the generated images. The group names in general are extracted from the folder structure of the visual test files in the OpenSpace folder.
