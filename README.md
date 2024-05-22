@@ -30,6 +30,14 @@ If no `config.json` is found, all tests are run locally and are not submitted to
 
 If a `config.json` is provided, it requires the specification of the URL at which the regression server is located, the hardware string under which the test images are submitted, and a runner id that has to be provided by the administrator of the regression test server. If all these values are correct, test images are directly submitted to the regression server and be can used to compare against a reference image.
 
+### Helper scripts
+The runner folder also contains useful helper scripts that can be used to communicate with the image testing server.
+
+### copy_server
+This script can be used to copy the results from an existing image testing (source) server to a new instance (destination). The existing results will be submitted to the destination server as if they had been done by running a test, so the result will be indistinguishable for the destination server. The commandline arguments are `--source` for the URL of the server from which the results should be copied, `--destination` for the URL to which the results should be copied, and `--runner` which is a valid runner id for the **destination** server. No credentials for the source server are needed.
+
+Example: `python copy_server.py --source https://regression.openspaceproject.com --destination http://localhost:8000 --runner runner-id`
+
 
 ## Backend
 The _backend_ is a Typescript-based server that is receiving individual tests, creating comparison images, and making past tests available via a website. By default this server is located at [https://regression.openspaceproject.com](https://regression.openspaceproject.com), but it is also possible to run a local copy of it.

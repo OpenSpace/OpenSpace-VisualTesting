@@ -140,6 +140,23 @@ function createHeader(ul) {
 
 function createRows(record, ul) {
   function createHead(divHead, divBody, record, data) {
+    function createImageDiv(className, type, record) {
+      const div = document.createElement("div");
+      div.className = `cell ${className}`;
+
+      const a = document.createElement("a");
+      a.href = `/api/result/${type}/${record.group}/${record.name}/${record.hardware}`;
+      a.target = "_blank";
+      div.appendChild(a);
+
+      const img = document.createElement("img");
+      img.src = `/api/result/${type}-thumbnail/${record.group}/${record.name}/${record.hardware}`;
+      img.className = "overview";
+      img.loading = "lazy";
+      a.appendChild(img);
+      return div;
+    }
+
     divHead.className = "head";
     divHead.onclick = () => divBody.classList.toggle("hidden");
 
@@ -185,61 +202,30 @@ function createRows(record, ul) {
     );
     divHead.appendChild(timestamp);
 
-    {
-      const div = document.createElement("div");
-      div.className = "cell candidate";
-
-      const a = document.createElement("a");
-      a.href = `/api/result/candidate/${record.group}/${record.name}/${record.hardware}`;
-      a.target = "_blank";
-      div.appendChild(a);
-
-      const img = document.createElement("img");
-      img.src = `/api/result/candidate-thumbnail/${record.group}/${record.name}/${record.hardware}`;
-      img.className = "overview";
-      img.loading = "lazy";
-      a.appendChild(img);
-      divHead.appendChild(div);
-    }
-
-    {
-      const div = document.createElement("div");
-      div.className = "cell reference";
-
-      const a = document.createElement("a");
-      a.href = `/api/result/reference/${record.group}/${record.name}/${record.hardware}`;
-      a.target = "_blank";
-      div.appendChild(a);
-
-      const img = document.createElement("img");
-      img.src = `/api/result/reference-thumbnail/${record.group}/${record.name}/${record.hardware}`;
-      img.className = "overview";
-      img.loading = "lazy";
-      a.appendChild(img);
-      divHead.appendChild(div);
-    }
-
-    {
-      const div = document.createElement("div");
-      div.className = "cell difference";
-
-      const a = document.createElement("a");
-      a.href = `/api/result/difference/${record.group}/${record.name}/${record.hardware}`;
-      a.target = "_blank";
-      div.appendChild(a);
-
-      const img = document.createElement("img");
-      img.src = `/api/result/difference-thumbnail/${record.group}/${record.name}/${record.hardware}`;
-      img.className = "overview";
-      img.loading = "lazy";
-      a.appendChild(img);
-      divHead.appendChild(div);
-    }
+    divHead.appendChild(createImageDiv("candidate", "candidate", record));
+    divHead.appendChild(createImageDiv("reference", "reference", record));
+    divHead.appendChild(createImageDiv("difference", "difference", record));
 
     return divHead;
   } // function createHead(divHead, divBody, record, data)
 
   function createBody(divBody, record, testData) {
+    function createImageTd(className, type, record, timestamp) {
+      const td = document.createElement("td");
+      td.className = className;
+
+      const a = document.createElement("a");
+      a.href = `/api/result/${type}/${record.group}/${record.name}/${record.hardware}/${timestamp}`;
+      a.target = "_blank";
+      td.appendChild(a);
+
+      const img = document.createElement("img");
+      img.src = `/api/result/${type}-thumbnail/${record.group}/${record.name}/${record.hardware}/${timestamp}`;
+      img.loading = "lazy";
+      a.appendChild(img);
+      return td;
+    }
+
     divBody.className = "body hidden";
 
     const table = document.createElement("table");
@@ -324,19 +310,7 @@ function createRows(record, ul) {
       trCandidate.appendChild(td);
     }
     for (const data of testData) {
-      const td = document.createElement("td");
-      td.className = "candidate";
-      trCandidate.appendChild(td);
-
-      const a = document.createElement("a");
-      a.href = `/api/result/candidate/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
-      a.target = "_blank";
-      td.appendChild(a);
-
-      const img = document.createElement("img");
-      img.src = `/api/result/candidate-thumbnail/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
-      img.loading = "lazy";
-      a.appendChild(img);
+      trCandidate.appendChild(createImageTd("candidate", "candidate", record, data.timeStamp));
     }
     table.appendChild(trCandidate);
 
@@ -348,19 +322,7 @@ function createRows(record, ul) {
       trReference.appendChild(td);
     }
     for (const data of testData) {
-      const td = document.createElement("td");
-      td.className = "reference";
-      trReference.appendChild(td);
-
-      const a = document.createElement("a");
-      a.href = `/api/result/reference/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
-      a.target = "_blank";
-      td.appendChild(a);
-
-      const img = document.createElement("img");
-      img.src = `/api/result/reference-thumbnail/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
-      img.loading = "lazy";
-      a.appendChild(img);
+      trReference.appendChild(createImageTd("reference", "reference", record, data.timeStamp));
     }
     table.appendChild(trReference);
 
@@ -372,19 +334,7 @@ function createRows(record, ul) {
       trDifference.appendChild(td);
     }
     for (const data of testData) {
-      const td = document.createElement("td");
-      td.className = "difference";
-      trDifference.appendChild(td);
-
-      const a = document.createElement("a");
-      a.href = `/api/result/difference/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
-      a.target = "_blank";
-      td.appendChild(a);
-
-      const img = document.createElement("img");
-      img.src = `/api/result/difference-thumbnail/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
-      img.loading = "lazy";
-      a.appendChild(img);
+      trDifference.appendChild(createImageTd("difference", "difference", record, data.timeStamp));
     }
     table.appendChild(trDifference);
 
@@ -400,7 +350,7 @@ function createRows(record, ul) {
       trUpdate.appendChild(td);
       table.appendChild(trUpdate);
 
-      for (const i = 0; i < testData.length - 1; i++) {
+      for (let i = 0; i < testData.length - 1; i++) {
         trUpdate.appendChild(document.createElement("td"));
       }
     }

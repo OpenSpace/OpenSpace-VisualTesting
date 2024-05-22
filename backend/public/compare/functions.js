@@ -2,7 +2,7 @@ async function generateComparison() {
   const records = await fetch("/api/test-records").then(res => res.json());
 
   // Get a unique list of all hardwares used in the tests
-  const hardwares = []
+  let hardwares = []
   for (const record of records) {
     if (!hardwares.includes(record.hardware)) {
       hardwares.push(record.hardware);
@@ -30,31 +30,36 @@ async function generateComparison() {
     table.removeChild(table.lastElementChild);
   }
 
-  for (const i = 0; i < hardwares.length; i++) {
+  for (let i = 0; i < hardwares.length; i++) {
     const tr = document.createElement("tr");
 
     // First add the empty elements to the left of the diagonal
-    for (const j = 0; j < i; j++) {
+    for (let j = 0; j < i; j++) {
       tr.appendChild(document.createElement("td"));
     }
 
     // Second, add the diagonal element
-    const a = document.createElement("a");
-    a.href = `/api/result/${type}/${group}/${name}/${hardwares[i]}`;
-    a.target = "_blank";
-    td.appendChild(a);
+    {
+      const td = document.createElement("td");
+      td.className = "comparison";
+      const a = document.createElement("a");
+      a.href = `/api/result/${type}/${group}/${name}/${hardwares[i]}`;
+      a.target = "_blank";
+      td.appendChild(a);
 
-    const img = document.createElement("img");
-    img.src = `/api/result/${type}-thumbnail/${group}/${name}/${hardwares[i]}`;
-    a.appendChild(img);
+      const img = document.createElement("img");
+      img.src = `/api/result/${type}-thumbnail/${group}/${name}/${hardwares[i]}`;
+      a.appendChild(img);
 
-    const div = document.createElement("div");
-    div.className = "info";
-    div.appendChild(document.createTextNode(hardwares[i]));
-    td.appendChild(div);
+      const div = document.createElement("div");
+      div.className = "info";
+      div.appendChild(document.createTextNode(hardwares[i]));
+      td.appendChild(div);
+      tr.appendChild(td);
+    }
 
     // Third, add the comparison elements to the right of the diagonal
-    for (const j = i + 1; j < hardwares.length; j++) {
+    for (let j = i + 1; j < hardwares.length; j++) {
       const td = document.createElement("td");
       td.className = "comparison";
 
@@ -63,7 +68,7 @@ async function generateComparison() {
       const compareUrl = `/api/compare/${type}/${group}/${name}/${hardwares[i]}/${hardwares[j]}`;
       const response = await fetch(compareUrl);
       console.assert(response.status === 200);
-      const pixelError = response.headers.get("result");
+      const pixelError = Number(response.headers.get("result"));
 
       const a = document.createElement("a");
       a.href = compareUrl;
