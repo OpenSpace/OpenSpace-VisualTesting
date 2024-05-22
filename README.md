@@ -6,7 +6,7 @@ Important terms to understand the testing results:
   - "Name": The name of an individual test inside a group. The combination of "Group" + "Name" should be considered the full name of the test, so if the group mentioned "Apollo 11", there is no need to separately mention "Apollo 11" in the name of the test again. The name of a test has to be unique within a group but can be reused between groups. For example, there can only be one "landing" test inside the "Apollo 11" group, but there might be a "landing" test inside both the "Apollo 12" and the "Apollo 11" groups.
   - "Hardware": The description of a hardware setup that was used to run a specific test. For regular test runners, this name should be of the form "operating system"-"graphics card vendor", for example "windows-nvidia", "linux-nvidia", "windows-amd", etc.
   - "Reference image": A known, good image that has been vetted as a reference for future images. Any future deviation from this reference image will be considered an error. It is possible to update the reference image to the latest candidate image on the webpage using an administrative password. There is always at least one reference image for each group+name+hardware combination, but multiple reference are kept over time, if legitimate changes to the reference image had to be made.
-  - "Candidate image": A newly created image that is tested against the current reference image and from which a difference image and an error score is calculated.
+  - "Candidate image": A newly created image that is tested against the current reference image. This test generates a difference image and an error score.
   - "Difference image": An image that shows the pixel differences between the reference image and a candidate image.
 
 
