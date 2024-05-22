@@ -64,9 +64,9 @@ def write_configuration_overwrite(base_path, data_path):
 
 async def setup_test_run(openspace):
   """
-  Setup settings that a common to all test runs. This are, in general, setting that are
-  reasonably different between runs of OpenSpace, such as the local time, the commit hash,
-  and others
+  Setup settings that are common to all test runs. These are, in general, settings that
+  are reasonably different between runs of OpenSpace, such as the local time, the commit
+  hash, and others
   """
   # We always want to start paused to prevent some timing-related inconsistencies
   await openspace.time.setPause(True)
@@ -86,7 +86,7 @@ async def setup_test_run(openspace):
 async def internal_run(openspace, test):
   """
   This function runs the actual test with the library object passed into it. It first sets
-  up default values, then runs the individual instructions for the test, and retreives
+  up default values, then runs the individual instructions for the test, and retrieves
   other information such as the screenshot location, and the commit hash from OpenSpace.
 
   This function assumes that the `openspace` library object is already authenticated and
@@ -114,7 +114,7 @@ async def internal_run(openspace, test):
 def run_single_test(test_path, executable) -> TestResult:
   """
   Run the single test provided by `test_path` using the OpenSpace executable provided by
-  `executable`. This will include starting OpenSpace as subprocess using a known
+  `executable`. This will include starting OpenSpace as a subprocess using a known
   configuration file and the profile required by the profile, establishing a connection
   using the Python API to the OpenSpace instance, running the test's instructions and
   returning the results.

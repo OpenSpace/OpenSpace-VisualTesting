@@ -122,7 +122,7 @@ export function loadConfiguration(path: string) {
  * configuration.
  */
 export function saveConfiguration() {
-  let config = {
+  const config = {
     port: Config.port,
     slack: {
       token: Config.slackToken,

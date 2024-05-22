@@ -45,14 +45,14 @@ export function dateToPath(date: Date): string {
 
 
 /**
- * Returns the path used for stored the thumbnail for the provided image.
+ * Returns the path used for storing the thumbnail for the provided image.
  *
  * @param path The path to the image for which the thumbnail path should be returned
  * @returns The path to the thumbnail image
  */
 export function thumbnailForImage(path: string): string {
-  let ext = path.substring(path.lastIndexOf("."));
-  let base = path.substring(0, path.lastIndexOf("."));
+  const ext = path.substring(path.lastIndexOf("."));
+  const base = path.substring(0, path.lastIndexOf("."));
   return `${base}-thumbnail${ext}`;
 }
 
@@ -75,7 +75,7 @@ export function latestTestPath(group: string, name: string,
     return null;
   }
 
-  let tests = fs.readdirSync(path);
+  const tests = fs.readdirSync(path);
   if (tests.length == 0) {
     return null;
   }
@@ -112,14 +112,11 @@ export function testPath(group: string, name: string, hardware: string,
  * reference image and the next candidiate image will be upgraded to be the new reference
  * image.
  *
- * @param group The name of the group for which to return the file containing the file
- *              name that is the currently active reference image
- * @param name The name of the test for which to return the file containing the file name
- *             that is the currently active reference image
- * @param hardware The hardware for which to return the file containing the file name
- *           that is the currently active reference image
- * @returns The path to the file that contains the name of the current reference file for
- *          the test
+ * @param group The group name of the test for which to return the reference pointer file
+ * @param name The test name for which to return the reference pointer file
+ * @param hardware The hardware for which to return the reference pointer file
+ * @returns The path to the reference pointer file that contains the name of the current
+ *          reference file for the test
  */
 function referencePointer(group: string, name: string, hardware: string): string {
   return `${Config.data}/reference/${hardware}/${group}/${name}/ref.txt`;
@@ -292,7 +289,7 @@ export function logFile(group: string, name: string, hardware: string,
 
 /**
  * Returns the path to the test data file for the test identified by the `group`, `name`,
- * `hardware`, and `timestamp`. If the `timestamp` value is not provided, the lastest path
+ * `hardware`, and `timestamp`. If the `timestamp` value is not provided, the latest path
  * will be returned instead. Note that this path might not exist if no test has run for
  * these test parameters.
  *
@@ -317,13 +314,13 @@ export function testDataPath(group: string, name: string, hardware: string,
 
 
 /**
- * Returns a path the folder that contains all references images for the provided `group`,
- * `name`, and `hardware`.
+ * Returns a path to the folder that contains all references images for the provided
+ * `group`, `name`, and `hardware`.
  *
  * @param group The name of the group for which to return the reference folder path
  * @param name The name of the test for which to return the reference folder path
  * @param hardware The hardware for which to return the reference folder path
- * @returns The path to  reference folder path for the requested test
+ * @returns The path to the reference folder for the requested test
  */
 export function referenceImagePath(group: string, name: string, hardware: string): string
 {
@@ -334,6 +331,8 @@ export function referenceImagePath(group: string, name: string, hardware: string
 
 /**
  * Returns a path to a temporary file in which files can be stored for a short time.
+ *
+ * @returns A path to a temporary file in which files can be stored for a short time
  */
 export function temporaryPath(): string {
   return `${Config.data}/temporary/`;
@@ -344,7 +343,7 @@ export function temporaryPath(): string {
 /**
  * Inspects all available candidate images for the test identified by `group`, `name`, and
  * `hardware` and checks if any of the candidate images are identical to the image
- * provided by `image`. If that is the case, the timetsamp of the test in which the
+ * provided by `image`. If that is the case, the timestamp of the test in which the
  * already existing candidate image is located will be returned.
  *
  * @param group The name of the group for which to check all candidate images
@@ -378,7 +377,7 @@ export function findMatchingCandidateImage(group: string, name: string,
     }
   }
 
-  // If we get this far, we have tested all iamges and not found a match
+  // If we get this far, we have tested all images and not found a match
   return null;
 }
 
@@ -387,7 +386,7 @@ export function findMatchingCandidateImage(group: string, name: string,
 /**
  * Inspects all available difference images for the test identified by `group`, `name`,
  * and `hardware` and checks if any of the difference images are identical to the image
- * provided by `image`. If that is the case, the timetsamp of the test in which the
+ * provided by `image`. If that is the case, the timestamp of the test in which the
  * already existing difference image is located will be returned.
  *
  * @param group The name of the group for which to check all difference images

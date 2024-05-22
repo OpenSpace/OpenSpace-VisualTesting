@@ -143,7 +143,7 @@ export function addTestData(group: string, name: string, hardware: string, data:
 {
   printAudit(`Adding new record for (${group}/${name}/${hardware})`);
 
-  for (let record of TestRecords) {
+  for (const record of TestRecords) {
     if (record.group != group || record.name != name || record.hardware != hardware) {
       continue;
     }
@@ -154,7 +154,7 @@ export function addTestData(group: string, name: string, hardware: string, data:
     return;
   }
 
-  // if we get here, it's a new record
+  // If we get here, it's a new record
   printAudit("Creating new test record");
   TestRecords.push({
     group: group,
@@ -177,7 +177,7 @@ export function verifyDataFolder() {
 
   printAudit("  Reference pointers");
   const references = globSync(`${Config.data}/reference/**/ref.txt`);
-  for (let reference of references) {
+  for (const reference of references) {
     const content = fs.readFileSync(reference).toString();
     const dir = path.dirname(reference);
     const p = `${dir}/${content}`;
@@ -194,7 +194,7 @@ export function verifyDataFolder() {
       const names = fs.readdirSync(`${base}/${group}`);
       for (const name of names) {
         const runs = fs.readdirSync(`${base}/${group}/${name}`);
-        for (let run of runs) {
+        for (const run of runs) {
           const p = `${base}/${group}/${name}/${run}`;
           assert(fs.existsSync(`${p}/data.json`), `Missing 'data.json' in ${p}`);
 

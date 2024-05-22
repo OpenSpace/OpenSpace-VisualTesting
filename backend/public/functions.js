@@ -17,17 +17,17 @@ function classForDiff(diff) {
 
 
 function sortRows(column) {
-  let list = document.getElementById("list");
+  const list = document.getElementById("list");
   console.assert(list, "Not element 'list' found");
 
-  let lis = []
+  const lis = []
   // Starting a 1 as the first line (the header) should not participate in sorting
-  for (let i = 1; i < list.childNodes.length; i++) {
+  for (const i = 1; i < list.childNodes.length; i++) {
     console.assert(list.childNodes[i].nodeName === "LI");
     lis.push(list.childNodes[i]);
   }
 
-  // Sorts the two `li`s by the column that is captures in this lambda. There is probably
+  // Sorts the two `li`s by the column that is captured in this lambda. There is probably
   // a better way to write this, but it works for now and I don't foresee adding many
   // columns to the list for now that we'd want to sort on
   function sortFunc(a, b) {
@@ -53,13 +53,13 @@ function sortRows(column) {
 
       // These are values that exist in the individual records and we want to sort based
       // on the most recent value, which is at the front of the list
-      let aData = a.record.data[0];
-      let bData = b.record.data[0];
+      const aData = a.record.data[0];
+      const bData = b.record.data[0];
       console.assert(column in aData, `Missing column ${column} in a ${a}`);
       console.assert(column in bData, `Missing column ${column} in b ${b}`);
 
-      let aVal = aData[column];
-      let bVal = bData[column];
+      const aVal = aData[column];
+      const bVal = bData[column];
 
       if (column === "timeStamp") {
         // The time stamp gets passed to us as an ISO string, which we need to convert
@@ -78,10 +78,10 @@ function sortRows(column) {
   }
 
   lis.sort(sortFunc);
-  let newList = list.cloneNode(false);
+  const newList = list.cloneNode(false);
   // Add the header at the top again
   newList.appendChild(list.childNodes[0]);
-  for (let li of lis) {
+  for (const li of lis) {
     newList.appendChild(li);
   }
   list.parentNode.replaceChild(newList, list);
@@ -89,9 +89,9 @@ function sortRows(column) {
 
 
 async function updateReferenceImage(record) {
-  let authentication = document.getElementById("admin").value;
+  const authentication = document.getElementById("admin").value;
 
-  let response = await fetch(
+  const response = await fetch(
     "/api/update-reference",
     {
       method: "POST",
@@ -117,51 +117,25 @@ async function updateReferenceImage(record) {
 
 
 function createHeader(ul) {
-  let li = document.createElement("li");
+  function createDiv(className, sortName, header) {
+    const div = document.createElement("div");
+    div.className = `cell ${className}`;
+    div.onclick = () => sortRows(sortName);
+    div.appendChild(document.createTextNode(header));
+    return div;
+  } // createDiv(className, sortName, header)
+
+  const li = document.createElement("li");
   li.className = "heading";
   ul.appendChild(li);
 
-  let status = document.createElement("div");
-  status.className = "cell status";
-  status.onclick = () => sortRows("pixelError");
-  status.appendChild(document.createTextNode("Error"));
-  li.appendChild(status);
-
-  let group = document.createElement("div");
-  group.className = "cell group";
-  group.onclick = () => sortRows("group");
-  group.appendChild(document.createTextNode("Group"));
-  li.appendChild(group);
-
-  let name = document.createElement("div");
-  name.className = "cell name";
-  name.onclick = () => sortRows("name");
-  name.appendChild(document.createTextNode("Name"));
-  li.appendChild(name);
-
-  let hw = document.createElement("div");
-  hw.className = "cell hardware";
-  hw.onclick = () => sortRows("hardware");
-  hw.appendChild(document.createTextNode("Hardware"));
-  li.appendChild(hw);
-
-  let timing = document.createElement("div");
-  timing.className = "cell timing";
-  timing.onclick = () => sortRows("timing");
-  timing.appendChild(document.createTextNode("Timing"));
-  li.appendChild(timing);
-
-  let commit = document.createElement("div");
-  commit.className = "cell commit";
-  commit.onclick = () => sortRows("commitHash");
-  commit.appendChild(document.createTextNode("Commit"));
-  li.appendChild(commit);
-
-  let timestamp = document.createElement("div");
-  timestamp.className = "cell timestamp";
-  timestamp.onclick = () => sortRows("timeStamp");
-  timestamp.appendChild(document.createTextNode("Timestamp"));
-  li.appendChild(timestamp);
+  li.appendChild(createDiv("status", "pixelError", "Error"));
+  li.appendChild(createDiv("group", "group", "Group"));
+  li.appendChild(createDiv("name", "name", "Name"));
+  li.appendChild(createDiv("hardware", "hardware", "Hardware"));
+  li.appendChild(createDiv("timing", "timing", "Timing"));
+  li.appendChild(createDiv("commit", "commitHash", "Commit"));
+  li.appendChild(createDiv("timestamp", "timeStamp", "Timestamp"));
 } // function createHeader(ul)
 
 function createRows(record, ul) {
@@ -169,42 +143,42 @@ function createRows(record, ul) {
     divHead.className = "head";
     divHead.onclick = () => divBody.classList.toggle("hidden");
 
-    let status = document.createElement("div");
-    let errorClass = classForDiff(data.pixelError);
+    const status = document.createElement("div");
+    const errorClass = classForDiff(data.pixelError);
     status.className = `cell status ${errorClass}`;
     status.appendChild(document.createTextNode(diffDisplay(data.pixelError)));
     divHead.appendChild(status);
 
-    let group = document.createElement("div");
+    const group = document.createElement("div");
     group.className = "cell group";
     group.appendChild(document.createTextNode(record.group));
     divHead.appendChild(group);
 
-    let name = document.createElement("div");
+    const name = document.createElement("div");
     name.className = "cell name";
     name.appendChild(document.createTextNode(record.name));
     divHead.appendChild(name);
 
-    let hw = document.createElement("div");
+    const hw = document.createElement("div");
     hw.className = "cell hardware";
     hw.appendChild(document.createTextNode(record.hardware));
     divHead.appendChild(hw);
 
-    let timing = document.createElement("div");
+    const timing = document.createElement("div");
     timing.className = "cell timing";
     timing.appendChild(document.createTextNode(timingDisplay(data.timing)));
     divHead.appendChild(timing);
 
-    let commit = document.createElement("div");
+    const commit = document.createElement("div");
     commit.className = "cell commit";
-    let a = document.createElement("a");
+    const a = document.createElement("a");
     a.href = `https://github.com/OpenSpace/OpenSpace/commit/${data.commitHash}`;
     a.target = "_blank";
     a.appendChild(document.createTextNode(data.commitHash));
     commit.appendChild(a);
     divHead.appendChild(commit);
 
-    let timestamp = document.createElement("div");
+    const timestamp = document.createElement("div");
     timestamp.className = "cell timestamp";
     timestamp.appendChild(
       document.createTextNode(new Date(data.timeStamp).toISOString())
@@ -212,15 +186,15 @@ function createRows(record, ul) {
     divHead.appendChild(timestamp);
 
     {
-      let div = document.createElement("div");
+      const div = document.createElement("div");
       div.className = "cell candidate";
 
-      let a = document.createElement("a");
+      const a = document.createElement("a");
       a.href = `/api/result/candidate/${record.group}/${record.name}/${record.hardware}`;
       a.target = "_blank";
       div.appendChild(a);
 
-      let img = document.createElement("img");
+      const img = document.createElement("img");
       img.src = `/api/result/candidate-thumbnail/${record.group}/${record.name}/${record.hardware}`;
       img.className = "overview";
       img.loading = "lazy";
@@ -229,15 +203,15 @@ function createRows(record, ul) {
     }
 
     {
-      let div = document.createElement("div");
+      const div = document.createElement("div");
       div.className = "cell reference";
 
-      let a = document.createElement("a");
+      const a = document.createElement("a");
       a.href = `/api/result/reference/${record.group}/${record.name}/${record.hardware}`;
       a.target = "_blank";
       div.appendChild(a);
 
-      let img = document.createElement("img");
+      const img = document.createElement("img");
       img.src = `/api/result/reference-thumbnail/${record.group}/${record.name}/${record.hardware}`;
       img.className = "overview";
       img.loading = "lazy";
@@ -246,15 +220,15 @@ function createRows(record, ul) {
     }
 
     {
-      let div = document.createElement("div");
+      const div = document.createElement("div");
       div.className = "cell difference";
 
-      let a = document.createElement("a");
+      const a = document.createElement("a");
       a.href = `/api/result/difference/${record.group}/${record.name}/${record.hardware}`;
       a.target = "_blank";
       div.appendChild(a);
 
-      let img = document.createElement("img");
+      const img = document.createElement("img");
       img.src = `/api/result/difference-thumbnail/${record.group}/${record.name}/${record.hardware}`;
       img.className = "overview";
       img.loading = "lazy";
@@ -268,48 +242,48 @@ function createRows(record, ul) {
   function createBody(divBody, record, testData) {
     divBody.className = "body hidden";
 
-    let table = document.createElement("table");
+    const table = document.createElement("table");
     table.className = "history";
     divBody.appendChild(table);
 
 
     testData = testData.reverse();
-    let trStatus = document.createElement("tr");
+    const trStatus = document.createElement("tr");
     trStatus.appendChild(document.createElement("td"));
-    for (let data of testData) {
-      let td = document.createElement("td");
-      let errorClass = classForDiff(data.pixelError);
+    for (const data of testData) {
+      const td = document.createElement("td");
+      const errorClass = classForDiff(data.pixelError);
       td.className = `status-small ${errorClass}`;
       trStatus.appendChild(td);
     }
     table.appendChild(trStatus);
 
-    let trTimeStamp = document.createElement("tr");
+    const trTimeStamp = document.createElement("tr");
     trTimeStamp.appendChild(document.createElement("td"));
-    for (let data of testData) {
-      let td = document.createElement("td");
+    for (const data of testData) {
+      const td = document.createElement("td");
       td.className = "timestamp";
       td.appendChild(document.createTextNode(new Date(data.timeStamp).toUTCString()));
       trTimeStamp.appendChild(td);
     }
     table.appendChild(trTimeStamp);
 
-    let trDiff = document.createElement("tr");
+    const trDiff = document.createElement("tr");
     trDiff.appendChild(document.createElement("td"));
-    for (let data of testData) {
-      let td = document.createElement("td");
+    for (const data of testData) {
+      const td = document.createElement("td");
       td.className = "diff";
       td.appendChild(document.createTextNode(diffDisplay(data.pixelError)));
       trDiff.appendChild(td);
     }
     table.appendChild(trDiff);
 
-    let trCommit = document.createElement("tr");
+    const trCommit = document.createElement("tr");
     trCommit.appendChild(document.createElement("td"));
-    for (let data of testData) {
-      let td = document.createElement("td");
+    for (const data of testData) {
+      const td = document.createElement("td");
       td.className = "commit";
-      let a = document.createElement("a");
+      const a = document.createElement("a");
       a.href = `https://github.com/OpenSpace/OpenSpace/commit/${data.commitHash}`;
       a.target = "_blank";
       td.appendChild(a);
@@ -318,22 +292,22 @@ function createRows(record, ul) {
     }
     table.appendChild(trCommit);
 
-    let trTiming = document.createElement("tr");
+    const trTiming = document.createElement("tr");
     trTiming.appendChild(document.createElement("td"));
-    for (let data of testData) {
-      let td = document.createElement("td");
+    for (const data of testData) {
+      const td = document.createElement("td");
       td.className = "timing";
       td.appendChild(document.createTextNode(timingDisplay(data.timing)));
       trTiming.appendChild(td);
     }
     table.appendChild(trTiming);
 
-    let trLog = document.createElement("tr");
+    const trLog = document.createElement("tr");
     trLog.appendChild(document.createElement("td"));
-    for (let data of testData) {
-      let td = document.createElement("td");
+    for (const data of testData) {
+      const td = document.createElement("td");
       td.className = "log";
-      let a = document.createElement("a");
+      const a = document.createElement("a");
       a.href = `/api/result/log/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
@@ -342,72 +316,72 @@ function createRows(record, ul) {
     }
     table.appendChild(trLog);
 
-    let trCandidate = document.createElement("tr");
+    const trCandidate = document.createElement("tr");
     {
-      let td = document.createElement("td");
+      const td = document.createElement("td");
       td.className = "table-label";
       td.appendChild(document.createTextNode("Candidate"));
       trCandidate.appendChild(td);
     }
-    for (let data of testData) {
-      let td = document.createElement("td");
+    for (const data of testData) {
+      const td = document.createElement("td");
       td.className = "candidate";
       trCandidate.appendChild(td);
 
-      let a = document.createElement("a");
+      const a = document.createElement("a");
       a.href = `/api/result/candidate/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
-      let img = document.createElement("img");
+      const img = document.createElement("img");
       img.src = `/api/result/candidate-thumbnail/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
     }
     table.appendChild(trCandidate);
 
-    let trReference = document.createElement("tr");
+    const trReference = document.createElement("tr");
     {
-      let td = document.createElement("td");
+      const td = document.createElement("td");
       td.className = "table-label";
       td.appendChild(document.createTextNode("Reference"));
       trReference.appendChild(td);
     }
-    for (let data of testData) {
-      let td = document.createElement("td");
+    for (const data of testData) {
+      const td = document.createElement("td");
       td.className = "reference";
       trReference.appendChild(td);
 
-      let a = document.createElement("a");
+      const a = document.createElement("a");
       a.href = `/api/result/reference/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
-      let img = document.createElement("img");
+      const img = document.createElement("img");
       img.src = `/api/result/reference-thumbnail/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
     }
     table.appendChild(trReference);
 
-    let trDifference = document.createElement("tr");
+    const trDifference = document.createElement("tr");
     {
-      let td = document.createElement("td");
+      const td = document.createElement("td");
       td.className = "table-label";
       td.appendChild(document.createTextNode("Difference"));
       trDifference.appendChild(td);
     }
-    for (let data of testData) {
-      let td = document.createElement("td");
+    for (const data of testData) {
+      const td = document.createElement("td");
       td.className = "difference";
       trDifference.appendChild(td);
 
-      let a = document.createElement("a");
+      const a = document.createElement("a");
       a.href = `/api/result/difference/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       a.target = "_blank";
       td.appendChild(a);
 
-      let img = document.createElement("img");
+      const img = document.createElement("img");
       img.src = `/api/result/difference-thumbnail/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`;
       img.loading = "lazy";
       a.appendChild(img);
@@ -415,31 +389,31 @@ function createRows(record, ul) {
     table.appendChild(trDifference);
 
     {
-      let trUpdate = document.createElement("tr");
+      const trUpdate = document.createElement("tr");
       trUpdate.appendChild(document.createElement("td"));
       // We can only use the more recent image as a new reference image
-      let td = document.createElement("td");
-      let button = document.createElement("button");
+      const td = document.createElement("td");
+      const button = document.createElement("button");
       button.onclick = () => updateReferenceImage(record)
       button.appendChild(document.createTextNode("Upgrade Candidate to Reference"));
       td.appendChild(button);
       trUpdate.appendChild(td);
       table.appendChild(trUpdate);
 
-      for (let i = 0; i < testData.length - 1; i++) {
+      for (const i = 0; i < testData.length - 1; i++) {
         trUpdate.appendChild(document.createElement("td"));
       }
     }
   } // function createBody(divBody, record, testData)
 
 
-  let li = document.createElement("li");
+  const li = document.createElement("li");
   li.className = "row";
   li.record = record;
   ul.appendChild(li);
 
-  let divHead = document.createElement("div");
-  let divBody = document.createElement("div");
+  const divHead = document.createElement("div");
+  const divBody = document.createElement("div");
 
   createHead(divHead, divBody, record, record.data[record.data.length - 1]);
   li.appendChild(divHead);
@@ -451,19 +425,19 @@ function createRows(record, ul) {
 
 function updateHardwareVisibility() {
   // Collect all selected hardware values
-  let hardwareElements = document.getElementsByClassName("hardware-checkbox");
-  let hardware = [];
-  for (let element of hardwareElements) {
+  const hardwareElements = document.getElementsByClassName("hardware-checkbox");
+  const hardware = [];
+  for (const element of hardwareElements) {
     if (element.checked) {
       hardware.push(element.value);
     }
   }
 
 
-  let ul = document.getElementById("list");
+  const ul = document.getElementById("list");
   // Skipping the first entry as it is the header
-  for (let i = 1; i < ul.childNodes.length; i++) {
-    let li = ul.childNodes[i];
+  for (const i = 1; i < ul.childNodes.length; i++) {
+    const li = ul.childNodes[i];
     if (hardware.includes(li.record.hardware)) {
       li.style.display = "";
     }
@@ -477,16 +451,16 @@ function updateHardwareVisibility() {
 function createHardware(ul, hardwares) {
   //
   // Create the dropdown menu
-  let select = document.createElement("select");
+  const select = document.createElement("select");
   select.id = "hardware-select";
   ul.appendChild(select);
 
   // The option to show all
-  let allOption = document.createElement("option");
+  const allOption = document.createElement("option");
   allOption.value = "all";
   allOption.onclick = function() {
-    let checkboxes = document.getElementsByClassName("hardware-checkbox");
-    for (let checkbox of checkboxes) {
+    const checkboxes = document.getElementsByClassName("hardware-checkbox");
+    for (const checkbox of checkboxes) {
       checkbox.checked = true;
     }
     updateHardwareVisibility();
@@ -495,14 +469,14 @@ function createHardware(ul, hardwares) {
   select.appendChild(allOption);
 
   // Add the rest of the options
-  for (let hardware of hardwares) {
-    let hardwareOption = document.createElement("option");
+  for (const hardware of hardwares) {
+    const hardwareOption = document.createElement("option");
     hardwareOption.value = hardware;
     hardwareOption.appendChild(document.createTextNode(hardware));
 
     hardwareOption.onclick = function() {
-      let checkboxes = document.getElementsByClassName("hardware-checkbox");
-      for (let checkbox of checkboxes) {
+      const checkboxes = document.getElementsByClassName("hardware-checkbox");
+      for (const checkbox of checkboxes) {
         checkbox.checked = (checkbox.value === hardwareOption.value);
       }
       updateHardwareVisibility();
@@ -513,10 +487,10 @@ function createHardware(ul, hardwares) {
 
   //
   // Create the checkboxes
-  for (let hardware of hardwares) {
-    let li = document.createElement("li");
+  for (const hardware of hardwares) {
+    const li = document.createElement("li");
 
-    let input = document.createElement("input");
+    const input = document.createElement("input");
     input.type = "checkbox";
     input.className = "hardware-checkbox";
     input.id = `hardware-${hardware}`;
@@ -524,7 +498,7 @@ function createHardware(ul, hardwares) {
     input.value = hardware;
     input.checked = true;
     li.appendChild(input);
-    let label = document.createElement("label");
+    const label = document.createElement("label");
     label.for = input.id;
     label.appendChild(document.createTextNode(hardware));
     li.appendChild(label);
@@ -535,15 +509,15 @@ function createHardware(ul, hardwares) {
 
 
 async function main() {
-  let records = await fetch("/api/test-records").then(res => res.json());
+  const records = await fetch("/api/test-records").then(res => res.json());
 
-  let hardwares = []
-  for (let record of records) {
+  const hardwares = []
+  for (const record of records) {
     if (!hardwares.includes(record.hardware)) {
       hardwares.push(record.hardware);
     }
   }
-  let hardwareList = document.getElementById("hardware-list");
+  const hardwareList = document.getElementById("hardware-list");
   console.assert(hardwareList, "No element 'hardware-list' found");
   createHardware(hardwareList, hardwares);
 
@@ -552,11 +526,11 @@ async function main() {
     (a, b) => a.data[a.data.length - 1].pixelError < b.data[b.data.length - 1].pixelError
   );
 
-  let list = document.getElementById("list");
+  const list = document.getElementById("list");
   console.assert(hardwareList, "No element 'list' found");
   createHeader(list);
 
-  for (let record of records) {
+  for (const record of records) {
     console.assert(record.data.length > 0);
     createRows(record, list);
   }

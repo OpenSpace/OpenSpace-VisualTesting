@@ -25,8 +25,8 @@ parser.add_argument(
   "-r", "--runner",
   dest="runner",
   type=str,
-  help="A valid runner ID for the destination server to be allowed to submit the existing"
-    "test records as new tests",
+  help="A valid runner ID for the destination server to be allowed to submit the "
+    "existing test records as new tests",
   required=True
 )
 args = parser.parse_args()

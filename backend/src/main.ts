@@ -49,7 +49,7 @@ export function main() {
   verifyDataFolder();
   loadTestResults();
 
-  let app = express();
+  const app = express();
   app.use(cors({ origin: "*" }));
 
   registerRoutes(app);

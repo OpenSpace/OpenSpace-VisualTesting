@@ -35,16 +35,16 @@ import resizeImg from "resize-img";
 
 /**
  * Runs an image comparison to compare the `reference` image with the `candidate` image.
- * The result returned as a Buffer and the percentage of pixels that are different between
- * the two images. The `reference` and `candidate` images must have the same size.
+ * The result is returned as a Buffer and the percentage of pixels that are different
+ * between the two images. The `reference` and `candidate` images must have the same size.
  *
  * @param reference The path to the reference image. This path must exist and be a valid
  *                  PNG file
  * @param candidate The path to the candidate image. This path must exist and be a valid
  *                  PNG file
  * @returns A buffer containing the difference image and the percentage of pixels that are
- *          changed between the reference and the candidate image or. Returns `null` if
- *          the images had the wrong size
+ *          changed between the reference and the candidate image. Returns `null` if the
+ *          images had the wrong size
  */
 export function generateComparisonImage(reference: string,
                                         candidate: string): [PNG, number] | null
@@ -102,7 +102,7 @@ export function imagesAreEqual(path1: string, path2: string): boolean {
     return false;
   }
 
-  let diff = pixelmatch(i1.data, i2.data, null, i1.width, i1.height, { threshold: 0 });
+  const diff = pixelmatch(i1.data, i2.data, null, i1.width, i1.height, { threshold: 0 });
   return diff == 0;
 }
 

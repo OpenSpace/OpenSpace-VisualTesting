@@ -54,7 +54,7 @@ export function registerRoutes(app: express.Application) {
   app.get("/api/diff-threshold", handleThreshold);
   app.post(
     "/api/update-diff-threshold",
-    bodyParser.raw({ type: [ "application/json"] }),
+    bodyParser.raw({ type: [ "application/json" ] }),
     handleChangeThreshold
   );
   app.post(
@@ -279,13 +279,14 @@ async function handleCompare(req: express.Request, res: express.Response) {
   printAudit(
     `Generating temporary comparison for ${group}/${name}   ${hardware1} <-> ${hardware2}`
   );
-  let r = await generateComparisonImage(img1, img2);
+  const r = await generateComparisonImage(img1, img2);
   if (r == null) {
     res.status(500).end();
     return;
   }
-  let [img, nPixels] = r;
-  let diff = `${temporaryPath()}/compare/${group}-${name}-${hardware1}-${hardware2}.png`;
+  const [img, nPixels] = r;
+  const tmp = temporaryPath();
+  const diff = `${tmp}/compare/${group}-${name}-${hardware1}-${hardware2}.png`;
   fs.writeFileSync(diff, PNG.sync.write(img));
   res.sendFile(diff, { root: ".", headers: { Result: nPixels } });
 }
@@ -315,8 +316,8 @@ function handleThreshold(req: express.Request, res: express.Response) {
  * This API call updates the threshold value used to determine which pixels of a candidate
  * image have changed. Setting this value will cause all difference images and test
  * results to be recalculated immediately. The changed threshold value is then also used
- * for all upcoming tests. This API call requires elevated priviledges. The payload of
- * this call must be a JSON object with the following values:
+ * for all upcoming tests. This API call requires elevated privileges. The payload of this
+ * call must be a JSON object with the following values:
  *   - `adminToken`: The admin token that was provided in the configuration file
  */
 async function handleChangeThreshold(req: express.Request, res: express.Response) {
@@ -413,18 +414,18 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     return;
   }
 
-  let files: any = req.files!;
+  const files: any = req.files!;
   if (files.file == null || files.file.length == 0) {
     res.status(400).json({ error: "Missing field 'file'" });
     return;
   }
-  let file = files.file[0];
+  const file = files.file[0];
 
   if (files.log == null || files.log.length == 0) {
     res.status(400).json({ error: "Missing field 'log'" });
     return;
   }
-  let log = files.log[0];
+  const log = files.log[0];
 
 
 
@@ -453,11 +454,8 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   }
 
   const logPath = logFile(group, name, hardware, timeStamp);
-  let logContent = log.buffer.toString();
-  function removeEmptyLines(str: string) {
-    return str.split("\n").filter(line => line.trim() !== "").join("\n");
-  }
-  logContent = removeEmptyLines(logContent);
+  let logContent: string = log.buffer.toString();
+  logContent = logContent.split("\n").filter(line => line.trim() !== "").join("\n");
   const nLogLines = logContent.split("\n").length;
   fs.writeFileSync(logPath, logContent);
 
@@ -501,7 +499,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     return;
   }
 
-  let differenceMatch = findMatchingDifferenceImage(group, name, hardware, difference);
+  const differenceMatch = findMatchingDifferenceImage(group, name, hardware, difference);
   if (differenceMatch) {
     // The difference image we calculated already existed, so we can remove this one. The
     // `saveComparisonImage` will also generate a thumbnail already, so we have to delete
@@ -513,7 +511,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   }
 
 
-  let testData: TestData = {
+  const testData: TestData = {
     pixelError: nPixels,
     timeStamp: timeStamp,
     timing: Number(timing),
@@ -543,7 +541,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
  *   - `name`: The name of the test for which a candidate is submitted
  *
  * For the files, the following are needed:
- *   - file: The generated candidate file
+ *   - `file`: The generated candidate file
  */
 function handleRunTest(req: express.Request, res: express.Response) {
   const hardware = req.body.hardware;
@@ -589,8 +587,8 @@ function handleRunTest(req: express.Request, res: express.Response) {
   }
 
   const reference = referenceImage(group, name, hardware);
-  const candidate = temporaryPath() + "/candidate.png";
-  const difference = temporaryPath() + "/difference.png";
+  const candidate = `${temporaryPath()}/candidate.png`;
+  const difference = `${temporaryPath()}/difference.png`;
 
   fs.writeFileSync(candidate, req.file.buffer);
 
@@ -650,7 +648,7 @@ async function handleUpdateReference(req: express.Request, res: express.Response
   // reference pointer to point at the most recent image instead
   const testPath = latestTestPath(group, name, hardware);
   if (testPath == null) {
-    // There was no test for this, so why are we trying to update the reference?
+    // We tried to update the reference image for a test that did not exist
     res.status(400).json({ error: `No test found for (${group}, ${name}, ${hardware})`});
     return;
   }
