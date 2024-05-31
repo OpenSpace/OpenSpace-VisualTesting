@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+  <head>
+    <title>OpenSpace Visual Tests - Compare</title>
+    <link rel="icon" type="image/x-icon" href="/common/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto" />
+    <link rel="stylesheet" type="text/css" href="/common/style.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+
+    <script src="/common/functions.js"></script>
+    <script src="functions.js"></script>
+  </head>
+  <body onload="main()">
+    <h1 id="header"><a href="/">OpenSpace Image Testing</a></h1>
+    <div class="input-fields">
+      <div>
+        Group: <input type="text" id="group">
+      </div>
+      <div>
+        Name: <input type="text" id="name">
+      </div>
+      <div>
+        Type:
+        <select id="type">
+          <option value="reference">Reference</option>
+          <option value="candidate">Candidate</option>
+        </select>
+      </div>
+      <div>
+        <button id="compare" onclick="generateComparison()" autofocus>Generate</button>
+      </div>
+    </div>
+
+    <a id="url"></a>
+
+    <table id="splom"></table>
+  </body>
+</html>

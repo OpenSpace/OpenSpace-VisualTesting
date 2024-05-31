@@ -1,44 +1,70 @@
-# OpenSpaceVisualTesting
+# VisualTesting
+The visual testing infrastructure is split into two components that are both described in this document. The goal for this infrastructure is to be able to consistently run regression tests against OpenSpace to ensure that the visual quality of the `master` branch does not change over time, thus preventing bugs. It is also useful as a repository of in-game images from OpenSpace that can be used to show what features OpenSpace has.
 
-## Description
-The OpenSpaceVisualTesting code is used to run OpenSpace in a variety of profiles, and generate a screenshot image from a specific setup. A setup can specify the camera position, date/time, and property settings in order to render the exact screenshot. This screenshot will be compared to a standard result using an image difference tool. The intention is for developers to be alerted to any significant differences in the rendering.
+Important terms to understand the testing results:
 
-Before it can be considered a standard, a screenshot must be approved by at least one developer. Standards are stored in TargetImages/{platform}, where platform is either "windows" or "linux". The filename convention is Target{profile}testname.png, where the profile name is in lowercase.
-Each time a new rendering is generated, it is stored in ResultImages/{platform}.
+| Term | Description |
+| ---- | ----------- |
+| Group | A group combines several tests into a logical unit where it makes sense that individual tests are collected. Groups, for example, can be individual profiles or usage scenarios, or describe the intended usecase for the generated images. The group names in general are extracted from the folder structure of the visual test files in the OpenSpace folder. |
+| Name | The name of an individual test inside a group. The combination of "Group" + "Name" should be considered the full name of the test, so if the group mentioned "Apollo 11", there is no need to separately mention "Apollo 11" in the name of the test again. The name of a test has to be unique within a group but can be reused between groups. For example, there can only be one "landing" test inside the "Apollo 11" group, but there might be a "landing" test inside both the "Apollo 12" and the "Apollo 11" groups. |
+| Hardware | The description of a hardware setup that was used to run a specific test. For regular test runners, this name should be of the form "operating system"-"graphics card vendor", for example "windows-nvidia", "linux-nvidia", "windows-amd", etc. |
+| Reference image | A known, good image that has been vetted as a reference for future images. Any future deviation from this reference image will be considered an error. It is possible to update the reference image to the latest candidate image on the webpage using an administrative password. There is always at least one reference image for each group+name+hardware combination, but multiple reference are kept over time, if legitimate changes to the reference image had to be made. |
+| Candidate image | A newly created image that is tested against the current reference image. This test generates a difference image and an error score. |
+| Difference image | An image that shows the pixel differences between the reference image and a candidate image. |
 
-## Usage for both Windows and Linux:
-There are two modes of use:
 
-### Automated Mode
-`python3 testRun.py`
+## Runner
+The _Runner_ is a Python script that will execute and possibly submit test results to a regression server. To execute the _Runner_, the `requests` and `openspace-api` PIP packages need to be installed, for example using `pip install requests && pip install openspace-api`. The `main.py` inside the `runner` folder can then be called to run individual tests. Executing `main.py --help` will return all commandline parameters that can be used to customize the program execution. The available commandline arguments are as follows:
 
-The test script will wait for the file specified by BuildFlag to be written to (the file is initially empty). When a Jenkins build is complete, the Jenkinsfile script will write the path of the built OpenSpace instance to this file. At that point, the sequence of running the tests will begin.
+| Parameter | Description |
+| --------- | ----------- |
+| `--dir` | Points to the base folder of the OpenSpace version that is used to execute the tests. There needs to be a compiled version of OpenSpace available in that folder such that `bin/RelWithDebInfo/OpenSpace.exe` (on Windows) or `bin/OpenSpace` (on Linux) exists and is executable. The base test folder will also be taken from this parameter as `tests/visual`. |
+| `--test` | A comma-separated list of the group/name combination of the tests that should be run. The group of a test is all of the folders relative to the `tests/visual` server concatenated with the name of the test being the filename. For example a test in `tests/visual/mars/insight/landing.ostest` would have the group "mars/insight" and the name "landing". |
+| `--overwrite` | This path can be provided to store commonly used files that can be useful to keep between test runs. Right now, this is only used for the Sync folder and the MRF cache used by OpenSpace.|
 
-### Manual Mode
-`python3 testRun.py -d /path/to/custom_directory/ [-t single_test_filename]`
+Example: `python main.py --dir C:/Development/OpenSpace --test default/earth,rosetta/model default --overwrite C:/Development/TestCache`
 
-If the absolute path to an OpenSpace directory is provided (the base dir not build subdir), then the script will immediately begin the sequence of image tests using that directory. If an optional .ostest filename is provided, then the script will run only that test.
+Additionally, a `config.json` must be provided if tests are to be submitted to the regression server. The `config.sample.json` provides a stub that can be used as the starting point for configuring the JSON file.
 
-## Configuration for running tests on a server:
-### Jenkins
-Configuring a Jenkins node to run this script is a necessary step, but is beyond the scope of this readme. Once Jenkins is configured with access to the node, it simply needs to run the Jenkinsfile script in the base directory of this repo. The 'test' stage in the Jenkinsfile writes the cloned OpenSpace base directory to the file which is specified by the environment variable `buildFlag`. This variable can be set in the Jenkins configuration page for the server node.
-  
-### Settings in testRun.py
-The variables that need to be set for a specific server are at the top of **testRun.py**.
-- `BuildFlag` specifies the absolute path of the file that Jenkins will write to in order to trigger a test. This file is normally blank (it will be cleared it once an image test run is complete). On startup, this script polls the file and only begins a test once the file contains the absolute path of an OpenSpace directory.
-- `OsSyncDir` contains the absolute path of an OpenSpace SYNC directory that test runs will use. This prevents each new build from having to download all of the SYNC data.
-- `OpenSpaceExeInOs` is the relative path to the executable from the base path.
-- `Platform` must be either "windows" or "linux"
+If no `config.json` is found, all tests are run locally and are not submitted to the regression server. Instead all resulting images are stored in a `tests` folder whose subfolders mimick the folder structure found in the `tests/visual` folder, resulting in images that can be manually inspected.
 
-## Post-Run Steps
-After completion of a test run, the image comparison operations will be performed. This basically involves running the **targetcompare.py** script on either all files (if a full run), or the individual test file specified.
+If a `config.json` is provided, it requires the specification of the URL at which the regression server is located, the hardware string under which the test images are submitted, and a runner id that has to be provided by the administrator of the regression test server. If all these values are correct, test images are directly submitted to the regression server and be can used to compare against a reference image.
 
-Finally, the result image, diff image, and comparison score are updated in the web server location for the test summary page. This is where the current script is very specific to the individual server. Currently, the **linkResultsFromWorkingDir.sh** script runs (only on linux), and is specific to a particular linux server.
+### Helper scripts
+The runner folder also contains useful helper scripts that can be used to communicate with the image testing server.
 
-### Previous notes:
-- installed nuget.exe and added to path
-- installed WinAppDriver.exe
-- added OPENSPACE_FILES to env variables
-- added msbuild.exe and vstest.console.exe to path
-- added nohup.exe to path (c:/pf/git/usr/bin)
-- need .net 4.6.1 development mack
+### copy_server
+This script can be used to copy the results from an existing image testing (source) server to a new instance (destination). The existing results will be submitted to the destination server as if they had been done by running a test, so the result will be indistinguishable for the destination server. The commandline arguments are `--source` for the URL of the server from which the results should be copied, `--destination` for the URL to which the results should be copied, and `--runner` which is a valid runner id for the **destination** server. No credentials for the source server are needed.
+
+Example: `python copy_server.py --source https://regression.openspaceproject.com --destination http://localhost:8000 --runner runner-id`
+
+
+## Backend
+The _backend_ is a Typescript-based server that is receiving individual tests, creating comparison images, and making past tests available via a website. By default this server is located at [https://regression.openspaceproject.com](https://regression.openspaceproject.com), but it is also possible to run a local copy of it.
+
+To run the regression server locally:
+
+  1. Run `npm install` in the `backend` folder to install all required packages
+  1. Run `tsc` in the `backend` folder to compile Typescript into Javascript
+  1. Duplicate the `config.sample.json` into `config.json`
+  1. Run `npm run server` to start the hosting of the regression server
+  1. Visit `localhost:8000` (or whichever port was configured in the `config.json`) and an empty webpage should be visible
+
+To be able to receive test images, at least one `runners` id in the `config.json` has to be configured, which then also has to be provided in the _Runner_'s `config.json`.
+
+The webpage provides access to the previous test results. The main panel is the table view in the center that shows all tests that have been run sorted by their error score. For each test, the latest score, group, name, hardware, how long it took to run the test, which commit of OpenSpace was used to generated the test, the timestamp at which the test was run, and the reference, candidate, and difference images for the latest test are shown. By clicking on an entry, the entire test history is available. In this detail view the most recent image (on the left) also has an "Upgrade Candidate to Reference" image button, which will set the latest Candidate Image to be the new Reference image. **Note**: This should only be done when it is clear that a change in OpenSpace _improved_ the rendering. It should not be done just to silence an error message. Also note that this action can only be done after entering the "Admin" password in the header at the top of the site.
+
+The "Hardware Compare" link in the top right gives the ability to compare either the latest reference or candidate images between hardware setups. On that page, the "Group" and the "Name" of a test is entered, and the server will then generate pairwise comparison images for each hardware setup that has run that specific test. This can be useful to ensure not only a temporal stability for individual hardware setups, but also that, for example, the Windows version of OpenSpace generates the same result as the Linux version.
+
+
+### API
+The backend has a number of API calls available that can be used to query the previous tests, submit new tests, or just run tests manually. A full list and explanations of all API calls is available at the `/api` endpoint (see [API](https://regression.openspaceproject.com/api)).
+
+
+### Folder structure
+The server stores all of the test results inside a folder whose location is specified by the `data` value in the `config.json`. In the `config.sample.json`, this folder is also called `data`. The server will create three folders and one text file inside the `data` folder.
+
+  - `audit.txt`: This file contains a list of all of the high-level functions that the server has been asked to perform. These entries are time-stamped and are stored to reason about the changes that have been made to the server, for example by submitting a new test, upgrading a candidate image to a reference image, etc.
+  - `temporary`: This temporary folder will contain files that are only valid for a limited time and include, for example, comparison images between different hardware setups, that are generated, returned, and then cached for a short time. In general it is always safe to delete any file inside this folder and the server will continue to function.
+  - `reference`: This folder contains all of the reference images for the different tests. Each test is stored in subfolders according to their group and their name, with the reference images stored in the leaf folder with the timestamp as a filename. For example for the "apollo-8" group and the "earthrise" name, a potential reference image would be `data/reference/apollo-8/earthrise/20240101T120000Z.png` and a later reference image would be `data/reference/apollo-8/earthrise/20240102T120000Z.png`. Additionally this folder contains a `ref.txt` which contains the name of the reference file that is currently used as the "active" reference image used to compare candidate images to. Lastly, each reference image also has a `-thumbnail` version that is a reduced-size version of the reference image that the server utilizes in overview pages, where a full resolution is not required. The scale factor used for the thumbnail images is configured in the `config.json`.
+  - `tests`: This folder contains all of the candidate images and derived data products. Subfolders here are of the form `hardware/group/name/timestamp`, which is a folder that then contains all of the necessary files for that specific test run. In general this folder contains between 2 and 5 different files. At a minimum, the folder contains a `data.json` file which stores information about the test run. This information can for example be the pixel error, the timestamp, how long the test took to run, the commit hash, the candidate image, the resulting difference image from the test, and the name of the reference image that was the active image at the time when the test was submitted. The `candidate.png` is the submitted candidate picture, a `candidate-thumbnail.png` is a reduced-size version of the submitted image. The `difference.png` is an image that shows the pixel difference between the candidate image and the reference image. The image is grayscale where two pixels are the same, and red where the pixels disagree. Similarly, the `difference-thumbnail.png` is a reduced-size version of the `difference.png`. In case the candidate image is a duplicate of a previous image (for example if a test run results in exactly the same result multiple times), the `candidate.png` is not stored multiple times, but a newer test instead will refer to the first instance the candidate image was submitted. Similarly, the difference image is not stored if it is pixel-identical to an already existing difference image.

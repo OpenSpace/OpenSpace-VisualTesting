@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <title>OpenSpace Visual Tests</title>
+    <link rel="icon" type="image/x-icon" href="/common/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto" />
+    <link rel="stylesheet" type="text/css" href="/common/style.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body onload="main()">
+    <h1 id="header"><a href="/">OpenSpace Image Testing</a></h1>
+    <a href="/compare" class="compare-panel">Hardware Compare</a>
+    <div class="control">
+      <ul id="hardware-list" class="hardware-list">
+        <li>Hardware Filtering:</li>
+      </ul>
+      <ul class="admin-list">
+        <li>Admin:</li>
+        <li><input type="password" id="admin"></li>
+      </ul>
+    </div>
+    <ul id="list"></ul>
+  </body>
+
+  <script src="/common/functions.js"></script>
+  <script src="functions.js"></script>
+</html>
