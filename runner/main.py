@@ -201,9 +201,10 @@ else:
 
     result = run_single_test(path, executable)
     for file in result.files:
-      submit_image(result, hardware, timestamp, file, runner_id, submit_url)
-    else:
-      store_image(result, file)
+      if submit_images:
+        submit_image(result, hardware, timestamp, file, runner_id, submit_url)
+      else:
+        store_image(result, file)
     time.sleep(0.5)
 
 global_end = time.perf_counter()
