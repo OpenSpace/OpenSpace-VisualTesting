@@ -28,6 +28,7 @@ import time
 
 Allowed_Types = [
   "action",
+  "asset",
   "deltatime",
   "navigationstate",
   "pause",
@@ -93,6 +94,10 @@ class Instruction:
       case "action":
         print(f"    Action: {self.value}")
         await openspace.action.triggerAction(self.value)
+
+      case "asset":
+        print(f"    Asset: {self.value}")
+        await openspace.asset.add(self.value)
 
       case "deltatime":
         print(f"    Deltatime: {self.value}")
