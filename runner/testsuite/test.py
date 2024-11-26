@@ -81,8 +81,8 @@ class Test:
 
     if number_screenshot_instruction == 0:
       raise Exception(f"Error loading test {path}: No screenshot instruction")
-    if number_screenshot_instruction != 1:
-      raise Exception(f"Error loading test {path}: Only a single screenshot supported")
+    #if number_screenshot_instruction != 1:
+    #  raise Exception(f"Error loading test {path}: Only a single screenshot supported")
 
 
     # Get the testname by removing everything before (and including) "test/visual" and
