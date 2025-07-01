@@ -1,1 +1,1 @@
-test_base_dir = "tests/visual"
+test_base_dir = "visualtests"
