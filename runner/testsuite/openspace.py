@@ -48,9 +48,6 @@ def write_configuration_overwrite(base_path, data_path):
     f.write("ModuleConfigurations.GlobeBrowsing.MRFCacheEnabled = true\n")
     f.write(f"ModuleConfigurations.GlobeBrowsing.MRFCacheLocation = [[{mrf_location}]]\n")
 
-    # Disable the UI as it contains different time-dependent content
-    f.write(f"ModuleConfigurations.CefWebGui.Enabled = false\n")
-
     # Remove the version checking URL as it would otherwise count as a "user"
     f.write("VersionCheckUrl = [[]]\n")
 
@@ -72,10 +69,12 @@ async def setup_test_run(openspace):
   await openspace.time.setPause(True)
 
   # Unless explicitly added, we don't want display elements that show variable content
+  #  User Interface: Making the screenshots nicer to look at
   #  Dashboard: Framerate
   #  ScreenLog: Log message retention
   #  Version: Contains the commit hash
-  #  Camera: Not technically needed, but results in a cleaner time
+  #  Camera: Not technically needed, but results in a cleaner screenshot
+  await openspace.setPropertyValueSingle("Modules.CefWebGui.Enabled", False)
   await openspace.setPropertyValueSingle("Dashboard.IsEnabled", False)
   await openspace.setPropertyValueSingle("RenderEngine.ShowLog", False)
   await openspace.setPropertyValueSingle("RenderEngine.ShowVersion", False)
