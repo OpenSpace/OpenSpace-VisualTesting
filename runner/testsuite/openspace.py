@@ -128,12 +128,12 @@ def run_single_test(test_path, executable) -> TestResult:
   print("  Starting OpenSpace")
   process = subprocess.Popen(
     [
-      executable,
+      os.path.abspath(executable),
       "--config", f"{os.getcwd()}/1920-1080.json",
       "--profile", test.profile,
       "--bypassLauncher"
     ],
-    cwd=os.path.dirname(executable),
+    cwd=os.path.dirname(os.path.abspath(executable)),
     stdout=subprocess.DEVNULL,
     stderr=subprocess.PIPE
   )
