@@ -103,4 +103,4 @@ class Test:
     """
     for instruction in self.instructions:
       await instruction.run(openspace)
-      time.sleep(1)
+      time.sleep(0.25)
