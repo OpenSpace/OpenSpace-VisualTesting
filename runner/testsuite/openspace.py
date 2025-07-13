@@ -140,7 +140,7 @@ def run_single_test(test_path, executable) -> TestResult:
 
   # Add a sleeping time instead of repeatedly trying to reconnect. Starting up OpenSpace
   # in general takes longer than this, so we don't actually lose any time
-  time.sleep(10)
+  time.sleep(30)
 
 
   async def mainLoop():
