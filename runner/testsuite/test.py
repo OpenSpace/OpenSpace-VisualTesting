@@ -99,8 +99,8 @@ class Test:
   async def run(self, openspace):
     """
     Runs the actual instructions on the provided OpenSpace API instance. There is a
-    mandatory 250ms wait time between every instructions
+    mandatory 1s wait time between every instructions
     """
     for instruction in self.instructions:
       await instruction.run(openspace)
-      time.sleep(0.25)
+      time.sleep(1)
