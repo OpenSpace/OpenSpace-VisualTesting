@@ -184,7 +184,7 @@ if args.test is None:
         submit_image(result, hardware, timestamp, file, runner_id, submit_url)
       else:
         store_image(result, file)
-    time.sleep(2.5)
+    time.sleep(5.0)
 else:
   tests = args.test.split(",")
   print(f"Running tests: {tests}")
@@ -205,7 +205,7 @@ else:
         submit_image(result, hardware, timestamp, file, runner_id, submit_url)
       else:
         store_image(result, file)
-    time.sleep(2.5)
+    time.sleep(5.0)
 
 global_end = time.perf_counter()
 print(f"Total time for all tests: {global_end - global_start}")
