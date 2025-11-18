@@ -125,7 +125,7 @@ def run_single_test(test_path, executable) -> TestResult:
   test = Test(test_path)
 
   start_time = time.perf_counter()
-  print("  Starting OpenSpace")
+  print(f"  Starting OpenSpace (Profile: {test.profile})")
   process = subprocess.Popen(
     [
       os.path.abspath(executable),
