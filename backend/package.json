@@ -13,7 +13,7 @@
     "@types/pngjs": "^6.0.4",
     "body-parser": "^2.2.1",
     "cors": "^2.8.5",
-    "express": "^5.1.0",
+    "express": "^5.2.0",
     "fs": "^0.0.1-security",
     "glob": "^11.1.0",
     "multer": "^1.4.5-lts.1",
