@@ -1,19 +1,15 @@
 body {
   background-color: #101010;
   color: #fdfdfd;
-
   font-family: "Roboto";
   font-size: 16px;
 }
-
 
 h1 {
   text-align: center;
   font-variant: small-caps;
   font-size: 36px;
-
   line-height: 30px;
-
   padding-top: 15px;
   padding-bottom: 15px;
   margin-top: 0px;
@@ -21,20 +17,16 @@ h1 {
   background-color: #333333;
   color: #ffffff;
   width: 100%;
-
   text-shadow: 0px 4px 5px #000000;
 }
-
 
 h1 a {
   text-decoration: none;
 }
 
-
 a {
   color: #fdfdfd;
 }
-
 
 ul {
   list-style: none;
@@ -43,13 +35,23 @@ ul {
   padding: 0px;
 }
 
-
 img {
   width: 250px;
   height: 140.625px;
 }
 
-
 table {
   border-spacing: 5px;
 }
+
+/* Error colors used for status reporting */
+.error-0 { background-color: #eeeeee; color: #111111; }
+.error-1 { background-color: #4ce600; color: #111111; }
+.error-2 { background-color: #55cc00; color: #111111; }
+.error-3 { background-color: #66cc00; color: #111111; }
+.error-4 { background-color: #ede621; color: #111111; }
+.error-5 { background-color: #edc421; color: #111111; }
+.error-6 { background-color: #cc5000; color: #050505; }
+.error-7 { background-color: #cc4400; }
+.error-8 { background-color: #cc2200; }
+.error-9 { background-color: #cc0000; }

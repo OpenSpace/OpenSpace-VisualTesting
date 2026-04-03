@@ -6,3 +6,4 @@ backend/config.json
 runner/config.json
 runner/testsuite/__pycache__
 runner/tests
+backend/frontend/node_modules

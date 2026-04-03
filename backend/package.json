@@ -4,7 +4,10 @@
   "description": "This service is running the backend of the visual testing server, which is receiving rendered images, generates comparison images and collates the result into a form usable by the frontend. The backend is accessible through a limited set of HTTP/HTTP APIs.",
   "main": "index.cjs",
   "scripts": {
-    "server": "node index.cjs"
+    "server": "node index.cjs",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:backend": "tsc",
+    "build": "npm run build:frontend && npm run build:backend"
   },
   "author": "",
   "license": "ISC",

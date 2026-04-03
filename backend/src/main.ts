@@ -29,6 +29,7 @@ import { loadTestResults, verifyDataFolder } from "./testrecords";
 import cors from "cors";
 import express from "express";
 import fs from "fs";
+import path from "path";
 
 
 
@@ -53,9 +54,11 @@ export function main() {
   app.use(cors({ origin: "*" }));
 
   registerRoutes(app);
-  app.use("/", express.static("public"));
-  app.use("/admin", express.static("public/admin"));
-  app.use("/compare", express.static("public/compare"));
+  app.use("/common", express.static("public/common"));
+  app.use(express.static("dist"));
+  app.use((_req, res) => {
+    res.sendFile(path.join(process.cwd(), "dist", "index.html"));
+  });
 
   console.log(`Listening on port: ${Config.port}`);
   app.listen(Config.port);
