@@ -47,8 +47,10 @@ def submit_image(result: TestResult, hardware: str, timestamp: str, file: str,
   Submits a new candidate image to the provided URL. This function logs a method
   indicating whether the image submission succeeded
   """
+  f = open(file, "rb")
   res = requests.post(
     url,
+    timeout=30,
     data = {
       "group": result.group,
       "name": result.name,
@@ -59,7 +61,7 @@ def submit_image(result: TestResult, hardware: str, timestamp: str, file: str,
       "commitHash": result.commit
     },
     files = {
-      "file": open(file, "rb"),
+      "file": f,
       "log": result.error
     }
   )
@@ -68,6 +70,7 @@ def submit_image(result: TestResult, hardware: str, timestamp: str, file: str,
     print(res.text)
   else:
     print("Image submitted successfully")
+  f.close()
 
 
 
@@ -132,80 +135,88 @@ def setup_argparse():
   return args
 
 
-
-global_start = time.perf_counter()
-if os.path.exists("config.json"):
-  submit_images = True
-  with open("config.json") as f:
-    config = json.load(f)
-    url = config["url"]
-    submit_url = f"{url}/api/submit-test"
-    hardware = config["hardware"]
-    runner_id = config["id"]
-else:
-  print("No 'config.json' provided. Test results will be stored locally instead")
-  submit_images = False
-
-
-args = setup_argparse()
-
-# Find the executable location and its name
-if os.name == "nt":
-  # Windows
-  executable = f"{args.dir}/bin/RelWithDebInfo/OpenSpace.exe"
-else:
-  # Linux/Mac
-  executable = f"{args.dir}/bin/OpenSpace"
-
-if not os.path.exists(executable):
-  raise Exception(f"Could not find executable '{executable}'")
+if __name__ == "__main__":
+  global_start = time.perf_counter()
+  if os.path.exists("config.json"):
+    submit_images = True
+    with open("config.json") as f:
+      config = json.load(f)
+      url = config["url"]
+      submit_url = f"{url}/api/submit-test"
+      hardware = config["hardware"]
+      runner_id = config["id"]
+  else:
+    print("No 'config.json' provided. Test results will be stored locally instead")
+    submit_images = False
 
 
-if args.overwrite_path != None:
-  write_configuration_overwrite(args.dir, args.overwrite_path)
+  args = setup_argparse()
+
+  # Find the executable location and its name
+  if os.name == "nt":
+    # Windows
+    executable = f"{args.dir}/bin/RelWithDebInfo/OpenSpace.exe"
+  else:
+    # Linux
+    executable = f"{args.dir}/bin/OpenSpace"
+
+  if not os.path.exists(executable):
+    raise Exception(f"Could not find executable '{executable}'")
+
+
+  if args.overwrite_path != None:
+    write_configuration_overwrite(args.dir, args.overwrite_path)
 
 
 
-# Running the tests
-if args.test is None:
-  print("Running all tests in OpenSpace folder")
-  files = glob.glob(f"{args.dir}/{test_base_dir}/**/*.ostest", recursive=True)
-  for file in files:
-    # Normalize the path endings to always do forward slashes
-    file = file.replace(os.sep, "/")
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    if args.dry_run:
-      print(f"Test: '{file}' run against executable '{executable}'")
-      continue
+  # Running the tests
+  if args.test is None:
+    print("Running all tests in OpenSpace folder")
+    files = glob.glob(f"{args.dir}/{test_base_dir}/**/*.ostest", recursive=True)
+    for file in files:
+      # Normalize the path endings to always do forward slashes
+      file = file.replace(os.sep, "/")
+      timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+      if args.dry_run:
+        print(f"Test: '{file}' run against executable '{executable}'")
+        continue
 
-    result = run_single_test(file, executable)
-    for file in result.files:
-      if submit_images:
-        submit_image(result, hardware, timestamp, file, runner_id, submit_url)
-      else:
-        store_image(result, file)
-    time.sleep(5.0)
-else:
-  tests = args.test.split(",")
-  print(f"Running tests: {tests}")
-  for test in tests:
-    path = f"{args.dir}/{test_base_dir}/{test}.ostest"
-    if not os.path.isfile(path):
-      raise Exception(f"Could not find test '{path}'")
+      try:
+        result = run_single_test(file, executable)
+      except Exception as e:
+        print(f"Test '{file}' failed with error: {e}")
+        continue
+      for img in result.files:
+        if submit_images:
+          submit_image(result, hardware, timestamp, img, runner_id, submit_url)
+        else:
+          store_image(result, img)
+      time.sleep(5.0)
+  else:
+    tests = args.test.split(",")
+    print(f"Running tests: {tests}")
+    for test in tests:
+      path = f"{args.dir}/{test_base_dir}/{test}.ostest"
+      if not os.path.isfile(path):
+        raise Exception(f"Could not find test '{path}'")
 
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+      timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-    if args.dry_run:
-      print(f"Test: '{path}' run against executable '{executable}'")
-      continue
+      if args.dry_run:
+        print(f"Test: '{path}' run against executable '{executable}'")
+        continue
 
-    result = run_single_test(path, executable)
-    for file in result.files:
-      if submit_images:
-        submit_image(result, hardware, timestamp, file, runner_id, submit_url)
-      else:
-        store_image(result, file)
-    time.sleep(5.0)
+      try:
+        result = run_single_test(path, executable)
+      except Exception as e:
+        print(f"Test '{path}' failed with error: {e}")
+        continue
+      for file in result.files:
+        if submit_images:
+          submit_image(result, hardware, timestamp, file, runner_id, submit_url)
+        else:
+          store_image(result, file)
+      time.sleep(5.0)
 
-global_end = time.perf_counter()
-print(f"Total time for all tests: {global_end - global_start}")
+  global_end = time.perf_counter()
+  print(f"Total time for all tests: {global_end - global_start}")

@@ -22,7 +22,7 @@
 # OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                          #
 ##########################################################################################
 
-import time
+import asyncio
 
 
 
@@ -57,7 +57,7 @@ class Instruction:
 
     if not obj["type"] in Allowed_Types:
       type = obj["type"]
-      raise Exception(f"Invalid type '{type}")
+      raise Exception(f"Invalid type '{type}'")
 
     self.type = obj["type"]
 
@@ -142,7 +142,7 @@ class Instruction:
         print("    Take Screenshot")
         # We'll wait an extra 5 seconds before taking a screenshot just to be sure that
         # everything is finished
-        time.sleep(5)
+        await asyncio.sleep(5)
 
         # Take the screenshot
         await openspace.takeScreenshot()
@@ -152,7 +152,7 @@ class Instruction:
         # screenshot. The writing should be on the order of 100 ms + about 35 ms for two
         # frames get us to 135 ms. Lets be on the safe side with a 35x margin and go for
         # a wait of 5 seconds
-        time.sleep(5)
+        await asyncio.sleep(5)
 
       case "script":
         print(f"    Script: {self.value}")
@@ -164,7 +164,7 @@ class Instruction:
 
       case "wait":
         print(f"    Wait: {self.value}")
-        time.sleep(int(self.value))
+        await asyncio.sleep(int(self.value))
 
       case _:
-        raise Exception(f"Unrecognized instruction type '{type}'")
+        raise Exception(f"Unrecognized instruction type '{self.type}'")

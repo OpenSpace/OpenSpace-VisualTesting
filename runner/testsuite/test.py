@@ -22,6 +22,7 @@
 # OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                          #
 ##########################################################################################
 
+import asyncio
 import json
 import os
 import time
@@ -41,7 +42,7 @@ class TestResult:
   """
   group: str
   name: str
-  files = list[str]
+  files: list[str]
   timing: float
   commit: str
   error: str
@@ -55,13 +56,13 @@ class Test:
   """
   def __init__(self, path: str):
     assert(os.path.isfile(path))
-    self.test_path = path
+    self.test_path = path.replace(os.sep, "/")
 
     with open(path) as f:
       content = json.load(f)
 
     if content["profile"] is None:
-      raise f"Missing 'profile' in test {path}'"
+      raise Exception(f"Missing 'profile' in test {path}'")
     self.profile = content["profile"]
 
     if content["commands"] is None:
@@ -103,4 +104,4 @@ class Test:
     """
     for instruction in self.instructions:
       await instruction.run(openspace)
-      time.sleep(1.0)
+      await asyncio.sleep(1.0)

@@ -51,7 +51,7 @@ def write_configuration_overwrite(base_path, data_path):
     # Remove the version checking URL as it would otherwise count as a "user"
     f.write("VersionCheckUrl = [[]]\n")
 
-    # Checking the OpenGL state will cause OpenGL errors to appear in the log
+    # Setting this to true will cause OpenGL errors to appear in the log
     f.write("CheckOpenGLState = true\n")
 
     # We can reduce the amount of time that we have to wait for OpenSpace to shut down
@@ -91,7 +91,7 @@ async def internal_run(openspace, test):
   This function assumes that the `openspace` library object is already authenticated and
   connected to the OpenSpace instance and is ready to take commands.
   """
-  print(f"  Starting test")
+  print("  Starting test")
   await setup_test_run(openspace)
   await test.run(openspace)
   print("  Finished test")
@@ -137,11 +137,6 @@ def run_single_test(test_path, executable) -> TestResult:
     stdout=subprocess.DEVNULL,
     stderr=subprocess.PIPE
   )
-
-  # Add a sleeping time instead of repeatedly trying to reconnect. Starting up OpenSpace
-  # in general takes longer than this, so we don't actually lose any time
-  time.sleep(45)
-
 
   async def mainLoop():
     """
