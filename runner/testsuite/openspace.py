@@ -138,6 +138,10 @@ def run_single_test(test_path, executable) -> TestResult:
     stderr=subprocess.PIPE
   )
 
+  # Add a sleeping time instead of repeatedly trying to reconnect. Starting up OpenSpace
+  # in general takes longer than this, so we don't actually lose any time
+  time.sleep(15)
+
   async def mainLoop():
     """
     The main loop of an async event loop that is needed for the OpenSpace Python API to
