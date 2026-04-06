@@ -70,7 +70,7 @@ export default function Home() {
     <Box>
       {/* Header */}
       <Box py="md" style={{ textAlign: 'center', backgroundColor: 'var(--mantine-color-dark-7)' }}>
-        <Title order={1} style={{ fontVariant: 'small-caps' }}>
+        <Title order={1} style={{ fontVariant: 'small-caps', fontFamily: 'Roboto, sans-serif' }}>
           <Link to="/" style={{ textDecoration: 'none', color: 'white' }}>
             OpenSpace Image Testing
           </Link>

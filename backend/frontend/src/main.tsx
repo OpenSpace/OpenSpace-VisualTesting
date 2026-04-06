@@ -10,5 +10,5 @@ createRoot(document.getElementById('root')!).render(
     <MantineProvider defaultColorScheme="dark">
       <App />
     </MantineProvider>
-  </StrictMode>,
+  </StrictMode>
 )

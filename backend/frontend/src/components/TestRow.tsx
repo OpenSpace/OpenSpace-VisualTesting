@@ -3,19 +3,18 @@ import { TestRecord } from '../types'
 import { diffDisplay, diffStyle, timingDisplay } from '../utils'
 import { ImageThumbnail } from './ImageThumbnail'
 
-export function TestRow({
-  record,
-  onOpen,
-}: {
+interface Props {
   record: TestRecord
   onOpen: (record: TestRecord) => void
-}) {
+};
+
+export function TestRow({ record, onOpen }: Props) {
   const latestData = record.data[record.data.length - 1]
   if (!latestData) return null
 
   return (
     <Table.Tr style={{ cursor: 'pointer' }} onClick={() => onOpen(record)}>
-      <Table.Td>
+      <Table.Td style={{ width: 90 }}>
         <Box
           px={6}
           py={2}

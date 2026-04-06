@@ -3,13 +3,12 @@ import { TestRecord, TestData } from '../types'
 import { diffDisplay, diffStyle, timingDisplay } from '../utils'
 import { ImageThumbnail } from './ImageThumbnail'
 
-export function TestHistory({
-  record,
-  onUpdateReference,
-}: {
+interface Props {
   record: TestRecord
   onUpdateReference: (record: TestRecord) => void
-}) {
+};
+
+export function TestHistory({ record, onUpdateReference }: Props) {
   const testData = [...record.data].reverse()
 
   return (
@@ -32,16 +31,15 @@ export function TestHistory({
           {testData.map((d: TestData, i: number) => (
             <Table.Tr key={d.timeStamp}>
               <Table.Td>
-                <Text size="xs" c="dimmed">{new Date(d.timeStamp).toUTCString()}</Text>
+                <Text size="sm" c="dimmed">{new Date(d.timeStamp).toUTCString()}</Text>
               </Table.Td>
               <Table.Td>
-                <Box px={4} style={{ borderRadius: 4, display: 'inline-block', ...diffStyle(d.pixelError) }}>
-                  <Text size="sm">{diffDisplay(d.pixelError)}</Text>
+                <Box px={4} style={{ borderRadius: 4, display: 'inline-block', width: 70, textAlign: 'center', ...diffStyle(d.pixelError) }}>
+                  <Text>{diffDisplay(d.pixelError)}</Text>
                 </Box>
               </Table.Td>
               <Table.Td>
                 <Anchor
-                  size="xs"
                   href={`https://github.com/OpenSpace/OpenSpace/commit/${d.commitHash}`}
                   target="_blank"
                 >
@@ -49,11 +47,10 @@ export function TestHistory({
                 </Anchor>
               </Table.Td>
               <Table.Td>
-                <Text size="sm">{timingDisplay(d.timing)}</Text>
+                <Text>{timingDisplay(d.timing)}</Text>
               </Table.Td>
               <Table.Td>
                 <Anchor
-                  size="xs"
                   href={`/api/result/log/${record.group}/${record.name}/${record.hardware}/${d.timeStamp}`}
                   target="_blank"
                 >
@@ -74,7 +71,7 @@ export function TestHistory({
               </Table.Td>
               <Table.Td>
                 {i === 0 && (
-                  <Button size="xs" variant="default" onClick={() => onUpdateReference(record)}>
+                  <Button variant="default" onClick={() => onUpdateReference(record)}>
                     Upgrade Candidate to Reference
                   </Button>
                 )}

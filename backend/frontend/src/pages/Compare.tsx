@@ -8,19 +8,15 @@ import { diffDisplay, diffStyle } from '../utils'
 
 type ImageType = 'reference' | 'candidate'
 
-function CompareCell({
-  type,
-  group,
-  name,
-  hardware1,
-  hardware2,
-}: {
+interface Props {
   type: string
   group: string
   name: string
   hardware1: string
   hardware2: string
-}) {
+};
+
+function CompareCell({ type, group, name, hardware1, hardware2, }: Props) {
   const [pixelError, setPixelError] = useState<number | null>(null)
   const compareUrl = `/api/compare/${type}/${group}/${name}/${hardware1}/${hardware2}`
 
