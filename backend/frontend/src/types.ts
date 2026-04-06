@@ -12,3 +12,12 @@ export interface TestRecord {
   hardware: string
   data: TestData[]
 }
+
+export type SortColumn =
+  | 'pixelError'
+  | 'timing'
+  | 'commitHash'
+  | 'timeStamp'
+  | 'group'
+  | 'name'
+  | 'hardware'
