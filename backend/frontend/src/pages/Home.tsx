@@ -145,7 +145,7 @@ export default function Home() {
       </Group>
 
       {/* Test records table */}
-      <Table striped highlightOnHover withColumnBorders stickyHeader>
+      <Table striped highlightOnHover withColumnBorders stickyHeader fz={'md'}>
         <Table.Thead>
           <Table.Tr>
             <SortableHeader sortKey={'pixelError'} label={'Error'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
