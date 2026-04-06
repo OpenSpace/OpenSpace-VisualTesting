@@ -14,6 +14,8 @@ export function TestRow({ record, onOpen }: Props) {
   const latestData = record.data[record.data.length - 1];
   if (!latestData) return null;
 
+  const ImageWidth = 250;
+
   return (
     <Table.Tr style={{ cursor: 'pointer' }} onClick={() => onOpen(record)}>
       <Table.Td style={{ width: 90 }}>
@@ -47,31 +49,34 @@ export function TestRow({ record, onOpen }: Props) {
       <Table.Td>
         <Text size={'sm'}>{new Date(latestData.timeStamp).toISOString()}</Text>
       </Table.Td>
-      <Table.Td>
+      <Table.Td style={{ width: ImageWidth }}>
         <ImageThumbnail
           type={'candidate'}
           group={record.group}
           name={record.name}
           hardware={record.hardware}
           stopPropagation
+          width={ImageWidth}
         />
       </Table.Td>
-      <Table.Td>
+      <Table.Td style={{ width: ImageWidth }}>
         <ImageThumbnail
           type={'reference'}
           group={record.group}
           name={record.name}
           hardware={record.hardware}
           stopPropagation
+          width={ImageWidth}
         />
       </Table.Td>
-      <Table.Td>
+      <Table.Td style={{ width: ImageWidth }}>
         <ImageThumbnail
           type={'difference'}
           group={record.group}
           name={record.name}
           hardware={record.hardware}
           stopPropagation
+          width={ImageWidth}
         />
       </Table.Td>
     </Table.Tr>

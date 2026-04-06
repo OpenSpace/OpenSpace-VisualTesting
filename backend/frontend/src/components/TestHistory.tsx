@@ -13,6 +13,8 @@ interface Props {
 export function TestHistory({ record, onUpdateReference }: Props) {
   const testData = [...record.data].reverse();
 
+  const ImageWidth = 250;
+
   return (
     <Box p={'md'} bg={'dark.8'}>
       <Table
@@ -82,6 +84,7 @@ export function TestHistory({ record, onUpdateReference }: Props) {
                   name={record.name}
                   hardware={record.hardware}
                   timestamp={d.timeStamp}
+                  width={ImageWidth}
                 />
               </Table.Td>
               <Table.Td>
@@ -91,6 +94,7 @@ export function TestHistory({ record, onUpdateReference }: Props) {
                   name={record.name}
                   hardware={record.hardware}
                   timestamp={d.timeStamp}
+                  width={ImageWidth}
                 />
               </Table.Td>
               <Table.Td>
@@ -100,6 +104,7 @@ export function TestHistory({ record, onUpdateReference }: Props) {
                   name={record.name}
                   hardware={record.hardware}
                   timestamp={d.timeStamp}
+                  width={ImageWidth}
                 />
               </Table.Td>
               <Table.Td>

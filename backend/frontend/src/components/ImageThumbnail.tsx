@@ -7,6 +7,7 @@ interface Props {
   hardware: string;
   timestamp?: string;
   stopPropagation?: boolean;
+  width: number;
 }
 
 export function ImageThumbnail({
@@ -15,7 +16,8 @@ export function ImageThumbnail({
   name,
   hardware,
   timestamp,
-  stopPropagation = false
+  stopPropagation = false,
+  width
 }: Props) {
   const timePart = timestamp ? `/${timestamp}` : '';
   return (
@@ -26,7 +28,7 @@ export function ImageThumbnail({
     >
       <img
         src={`/api/result/${type}-thumbnail/${group}/${name}/${hardware}${timePart}`}
-        style={{ width: 170, height: 95.625 }}
+        style={{ width }}
         loading={'lazy'}
         alt={type}
       />
