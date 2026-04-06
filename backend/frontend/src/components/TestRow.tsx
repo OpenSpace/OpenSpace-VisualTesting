@@ -25,7 +25,7 @@ export function TestRow({ record, onOpen }: Props) {
           style={{
             borderRadius: 4,
             textAlign: 'center',
-            fontSize: 13,
+            fontSize: 18,
             ...diffStyle(latestData.pixelError)
           }}
         >
@@ -38,7 +38,6 @@ export function TestRow({ record, onOpen }: Props) {
       <Table.Td>{timingDisplay(latestData.timing)}</Table.Td>
       <Table.Td>
         <Anchor
-          size={'sm'}
           href={`https://github.com/OpenSpace/OpenSpace/commit/${latestData.commitHash}`}
           target={'_blank'}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
@@ -47,7 +46,8 @@ export function TestRow({ record, onOpen }: Props) {
         </Anchor>
       </Table.Td>
       <Table.Td>
-        <Text size={'sm'}>{new Date(latestData.timeStamp).toISOString().replace('T', ' ').replace('Z', ' ')}</Text>
+        <Text>{new Date(latestData.timeStamp).toISOString().split('T')[0]}<br />{new Date(latestData.timeStamp).toISOString().split('T')[1]?.replace('Z', '')}
+        </Text>
       </Table.Td>
       <Table.Td style={{ width: ImageWidth }}>
         <ImageThumbnail
