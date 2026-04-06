@@ -41,7 +41,7 @@ export function TestHistory({ record, onUpdateReference }: Props) {
             <Table.Tr key={d.timeStamp}>
               <Table.Td>
                 <Text size={'sm'} c={'dimmed'}>
-                  {new Date(d.timeStamp).toUTCString()}
+                  {new Date(d.timeStamp).toISOString().replace('T', ' ').replace('Z', ' ')}
                 </Text>
               </Table.Td>
               <Table.Td>

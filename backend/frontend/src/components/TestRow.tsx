@@ -47,7 +47,7 @@ export function TestRow({ record, onOpen }: Props) {
         </Anchor>
       </Table.Td>
       <Table.Td>
-        <Text size={'sm'}>{new Date(latestData.timeStamp).toISOString()}</Text>
+        <Text size={'sm'}>{new Date(latestData.timeStamp).toISOString().replace('T', ' ').replace('Z', ' ')}</Text>
       </Table.Td>
       <Table.Td style={{ width: ImageWidth }}>
         <ImageThumbnail
