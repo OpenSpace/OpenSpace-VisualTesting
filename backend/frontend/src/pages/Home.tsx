@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Anchor,
@@ -17,7 +17,7 @@ import {
 import { SortableHeader } from '../components/SortableHeader';
 import { TestHistory } from '../components/TestHistory';
 import { TestRow } from '../components/TestRow';
-import { SortColumn, TestRecord } from '../types';
+import { SortColumn, SortDirection, TestRecord } from '../types';
 import { sortRecords } from '../utils';
 
 export default function Home() {
@@ -26,6 +26,8 @@ export default function Home() {
   const [selectedHardware, setSelectedHardware] = useState<Set<string>>(new Set());
   const [adminToken, setAdminToken] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<TestRecord | null>(null);
+  const [sortCol, setSortCol] = useState<SortColumn>('pixelError');
+  const [sortDir, setSortDir] = useState<SortDirection>('desc');
 
   useEffect(() => {
     fetch('/api/test-records')
@@ -34,12 +36,13 @@ export default function Home() {
         const hardwares = [...new Set(data.map((r) => r.hardware))].sort();
         setAllHardware(hardwares);
         setSelectedHardware(new Set(hardwares));
-        setRecords(sortRecords(data, 'pixelError'));
+        setRecords(data);
       });
   }, []);
 
   function handleSort(column: SortColumn) {
-    setRecords((prev) => sortRecords(prev, column));
+    setSortDir((prev) => (column === sortCol ? (prev === 'asc' ? 'desc' : 'asc') : 'asc'));
+    setSortCol(column);
   }
 
   function toggleHardware(hw: string) {
@@ -74,7 +77,10 @@ export default function Home() {
     }
   }
 
-  const visibleRecords = records.filter((r) => selectedHardware.has(r.hardware));
+  const visibleRecords = useMemo(
+    () => sortRecords(records, sortCol, sortDir).filter((r) => selectedHardware.has(r.hardware)),
+    [records, sortCol, sortDir, selectedHardware]
+  );
 
   return (
     <Box>
@@ -142,16 +148,18 @@ export default function Home() {
       <Table striped highlightOnHover withColumnBorders stickyHeader>
         <Table.Thead>
           <Table.Tr>
-            <SortableHeader sortKey={'pixelError'} label={'Error'} onSort={handleSort} />
-            <SortableHeader sortKey={'group'} label={'Group'} onSort={handleSort} />
-            <SortableHeader sortKey={'name'} label={'Name'} onSort={handleSort} />
-            <SortableHeader sortKey={'hardware'} label={'Hardware'} onSort={handleSort} />
-            <SortableHeader sortKey={'timing'} label={'Timing'} onSort={handleSort} />
-            <SortableHeader sortKey={'commitHash'} label={'Commit'} onSort={handleSort} />
+            <SortableHeader sortKey={'pixelError'} label={'Error'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
+            <SortableHeader sortKey={'group'} label={'Group'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
+            <SortableHeader sortKey={'name'} label={'Name'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
+            <SortableHeader sortKey={'hardware'} label={'Hardware'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
+            <SortableHeader sortKey={'timing'} label={'Timing'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
+            <SortableHeader sortKey={'commitHash'} label={'Commit'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
             <SortableHeader
               sortKey={'timeStamp'}
               label={'Timestamp'}
               onSort={handleSort}
+              activeColumn={sortCol}
+              direction={sortDir}
             />
             <Table.Th>Candidate</Table.Th>
             <Table.Th>Reference</Table.Th>

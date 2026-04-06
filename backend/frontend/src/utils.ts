@@ -1,4 +1,4 @@
-import { SortColumn, TestRecord } from './types';
+import { SortColumn, SortDirection, TestRecord } from './types';
 
 export function diffDisplay(diff: number): string {
   return `${Math.round(diff * 100000) / 1000}%`;
@@ -34,20 +34,22 @@ export function diffStyle(diff: number): { backgroundColor: string; color: strin
   else return { backgroundColor: '#cc0000', color: '#ffffff' };
 }
 
-export function sortRecords(records: TestRecord[], column: SortColumn): TestRecord[] {
+export function sortRecords(
+  records: TestRecord[],
+  column: SortColumn,
+  direction: SortDirection = 'asc'
+): TestRecord[] {
+  const sign = direction === 'asc' ? 1 : -1;
   return [...records].sort((a, b) => {
     if (column === 'group' || column === 'name' || column === 'hardware') {
-      return a[column] > b[column] ? 1 : -1;
+      return (a[column] > b[column] ? 1 : -1) * sign;
     }
     const aData = a.data[a.data.length - 1];
     const bData = b.data[b.data.length - 1];
     if (!aData || !bData) return 0;
     if (column === 'timeStamp') {
-      return new Date(aData.timeStamp) > new Date(bData.timeStamp) ? 1 : -1;
+      return (new Date(aData.timeStamp) > new Date(bData.timeStamp) ? 1 : -1) * sign;
     }
-    if (column === 'pixelError') {
-      return aData.pixelError < bData.pixelError ? 1 : -1;
-    }
-    return aData[column] > bData[column] ? 1 : -1;
+    return (aData[column] > bData[column] ? 1 : -1) * sign;
   });
 }

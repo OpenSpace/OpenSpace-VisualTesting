@@ -21,3 +21,5 @@ export type SortColumn =
   | 'group'
   | 'name'
   | 'hardware';
+
+export type SortDirection = 'asc' | 'desc';
