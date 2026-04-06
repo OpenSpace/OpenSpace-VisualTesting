@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import {
+  Anchor, Box, Button, Group, Select, Table, Text, TextInput, Title,
+} from '@mantine/core'
 import { TestRecord } from '../types'
-import { classForDiff, diffDisplay } from '../utils'
-import '../styles/compare.css'
+import { diffDisplay, diffStyle } from '../utils'
 
 type ImageType = 'reference' | 'candidate'
 
@@ -29,16 +31,20 @@ function CompareCell({
   }, [compareUrl])
 
   return (
-    <td className="comparison">
-      <a href={compareUrl} target="_blank" rel="noreferrer">
-        <img src={compareUrl} alt={`${hardware1} vs ${hardware2}`} />
-      </a>
+    <Table.Td style={{ backgroundColor: '#252525', border: '0.5px solid #eeeeee', textAlign: 'center' }}>
+      <Anchor href={compareUrl} target="_blank">
+        <img
+          src={compareUrl}
+          alt={`${hardware1} vs ${hardware2}`}
+          style={{ width: 150, height: 84.375 }}
+        />
+      </Anchor>
       {pixelError !== null && (
-        <div className={`info ${classForDiff(pixelError)}`}>
-          {diffDisplay(pixelError)}
-        </div>
+        <Box px={4} mt={2} style={{ borderRadius: 4, display: 'inline-block', ...diffStyle(pixelError) }}>
+          <Text size="sm">{diffDisplay(pixelError)}</Text>
+        </Box>
       )}
-    </td>
+    </Table.Td>
   )
 }
 
@@ -89,73 +95,75 @@ export default function Compare() {
   const { group: rGroup, name: rName, type: rType } = resultParams.current
 
   return (
-    <div>
-      <h1>
-        <Link to="/">OpenSpace Image Testing</Link>
-      </h1>
-      <div className="input-fields">
-        <div>
-          Group:{' '}
-          <input
-            type="text"
-            value={group}
-            onChange={e => setGroup(e.target.value)}
-          />
-        </div>
-        <div>
-          Name:{' '}
-          <input
-            type="text"
-            value={name}
-            onChange={e => setName(e.target.value)}
-          />
-        </div>
-        <div>
-          Type:{' '}
-          <select
-            value={type}
-            onChange={e => setType(e.target.value as ImageType)}
-          >
-            <option value="reference">Reference</option>
-            <option value="candidate">Candidate</option>
-          </select>
-        </div>
-        <div>
-          <button onClick={handleGenerate} autoFocus>
-            Generate
-          </button>
-        </div>
-      </div>
+    <Box>
+      {/* Header */}
+      <Box py="md" style={{ textAlign: 'center', backgroundColor: 'var(--mantine-color-dark-7)' }}>
+        <Title order={1} style={{ fontVariant: 'small-caps' }}>
+          <Link to="/" style={{ textDecoration: 'none', color: 'white' }}>
+            OpenSpace Image Testing
+          </Link>
+        </Title>
+      </Box>
+
+      {/* Input fields */}
+      <Group p="sm" align="flex-end" style={{ backgroundColor: 'var(--mantine-color-dark-6)' }}>
+        <TextInput
+          label="Group"
+          size="sm"
+          value={group}
+          onChange={e => setGroup(e.target.value)}
+        />
+        <TextInput
+          label="Name"
+          size="sm"
+          value={name}
+          onChange={e => setName(e.target.value)}
+        />
+        <Select
+          label="Type"
+          size="sm"
+          w={160}
+          value={type}
+          onChange={val => setType((val ?? 'reference') as ImageType)}
+          data={[
+            { value: 'reference', label: 'Reference' },
+            { value: 'candidate', label: 'Candidate' },
+          ]}
+        />
+        <Button onClick={handleGenerate} autoFocus>
+          Generate
+        </Button>
+      </Group>
 
       {shareUrl && (
-        <a href={shareUrl} className="url">
-          {shareUrl}
-        </a>
+        <Box px="sm" py="xs">
+          <Anchor href={shareUrl} size="sm">{shareUrl}</Anchor>
+        </Box>
       )}
 
       {hasResult && (
-        <table id="splom">
-          <tbody>
+        <Table id="splom" withColumnBorders withTableBorder>
+          <Table.Tbody>
             {hardwares.map((hw, i) => (
-              <tr key={hw}>
+              <Table.Tr key={hw}>
                 {/* Lower triangle: empty cells */}
                 {hardwares.slice(0, i).map((_, j) => (
-                  <td key={j} />
+                  <Table.Td key={j} />
                 ))}
                 {/* Diagonal: single hardware image */}
-                <td className="comparison">
-                  <a
+                <Table.Td style={{ backgroundColor: '#252525', border: '0.5px solid #eeeeee', textAlign: 'center' }}>
+                  <Anchor
                     href={`/api/result/${rType}/${rGroup}/${rName}/${hw}`}
                     target="_blank"
-                    rel="noreferrer"
                   >
                     <img
                       src={`/api/result/${rType}-thumbnail/${rGroup}/${rName}/${hw}`}
                       alt={hw}
+                      style={{ width: 150, height: 84.375 }}
                     />
-                  </a>
-                  <div className="info">{hw}</div>
-                </td>
+                  </Anchor>
+                  <Text size="sm" ta="center">{hw}</Text>
+                </Table.Td>
                 {/* Upper triangle: cross-hardware comparisons */}
                 {hardwares.slice(i + 1).map(hw2 => (
                   <CompareCell
@@ -167,11 +175,11 @@ export default function Compare() {
                     hardware2={hw2}
                   />
                 ))}
-              </tr>
+              </Table.Tr>
             ))}
-          </tbody>
-        </table>
+          </Table.Tbody>
+        </Table>
       )}
-    </div>
+    </Box>
   )
 }

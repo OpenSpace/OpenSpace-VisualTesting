@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  Anchor, Box, Button, Checkbox, Group, PasswordInput,
+  Select, Table, Text, Title,
+} from '@mantine/core'
 import { TestRecord, TestData } from '../types'
-import { classForDiff, diffDisplay, timingDisplay } from '../utils'
-import '../styles/home.css'
+import { diffDisplay, diffStyle, timingDisplay } from '../utils'
 
 type SortColumn =
   | 'pixelError'
@@ -32,23 +35,30 @@ function sortRecords(records: TestRecord[], column: SortColumn): TestRecord[] {
   })
 }
 
-function ImageCell({ type, record }: { type: string; record: TestRecord }) {
+function ImageThumbnail({
+  type, group, name, hardware, timestamp, stopPropagation = false,
+}: {
+  type: string
+  group: string
+  name: string
+  hardware: string
+  timestamp?: string
+  stopPropagation?: boolean
+}) {
+  const timePart = timestamp ? `/${timestamp}` : ''
   return (
-    <div className={`cell ${type}`}>
-      <a
-        href={`/api/result/${type}/${record.group}/${record.name}/${record.hardware}`}
-        target="_blank"
-        rel="noreferrer"
-        onClick={e => e.stopPropagation()}
-      >
-        <img
-          src={`/api/result/${type}-thumbnail/${record.group}/${record.name}/${record.hardware}`}
-          className="overview"
-          loading="lazy"
-          alt={type}
-        />
-      </a>
-    </div>
+    <Anchor
+      href={`/api/result/${type}/${group}/${name}/${hardware}${timePart}`}
+      target="_blank"
+      onClick={stopPropagation ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
+    >
+      <img
+        src={`/api/result/${type}-thumbnail/${group}/${name}/${hardware}${timePart}`}
+        style={{ width: 85, height: 47.8125 }}
+        loading="lazy"
+        alt={type}
+      />
+    </Anchor>
   )
 }
 
@@ -61,112 +71,115 @@ function TestHistory({
 }) {
   const testData = [...record.data].reverse()
 
-  function imageCell(type: string, data: TestData) {
+  function imageRow(type: string) {
     return (
-      <td key={data.timeStamp} className={type}>
-        <a
-          href={`/api/result/${type}/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <img
-            src={`/api/result/${type}-thumbnail/${record.group}/${record.name}/${record.hardware}/${data.timeStamp}`}
-            loading="lazy"
-            alt={type}
-          />
-        </a>
-      </td>
+      <Table.Tr key={type}>
+        <Table.Td style={{ transform: 'rotate(270deg)', whiteSpace: 'nowrap', width: 20 }}>
+          {type.charAt(0).toUpperCase() + type.slice(1)}
+        </Table.Td>
+        {testData.map((d: TestData) => (
+          <Table.Td key={d.timeStamp}>
+            <ImageThumbnail
+              type={type}
+              group={record.group}
+              name={record.name}
+              hardware={record.hardware}
+              timestamp={d.timeStamp}
+            />
+          </Table.Td>
+        ))}
+      </Table.Tr>
     )
   }
 
   return (
-    <table className="history">
-      <tbody>
-        <tr>
-          <td />
-          {testData.map(d => (
-            <td key={d.timeStamp} className={`status-small ${classForDiff(d.pixelError)}`} />
-          ))}
-        </tr>
-        <tr>
-          <td />
-          {testData.map(d => (
-            <td key={d.timeStamp} className="timestamp">
-              {new Date(d.timeStamp).toUTCString()}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td />
-          {testData.map(d => (
-            <td key={d.timeStamp} className="diff">
-              {diffDisplay(d.pixelError)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td />
-          {testData.map(d => (
-            <td key={d.timeStamp} className="commit">
-              <a
-                href={`https://github.com/OpenSpace/OpenSpace/commit/${d.commitHash}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {d.commitHash}
-              </a>
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td />
-          {testData.map(d => (
-            <td key={d.timeStamp} className="timing">
-              {timingDisplay(d.timing)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td />
-          {testData.map(d => (
-            <td key={d.timeStamp} className="log">
-              <a
-                href={`/api/result/log/${record.group}/${record.name}/${record.hardware}/${d.timeStamp}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Log file ({d.nErrors} errors)
-              </a>
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td className="table-label">Candidate</td>
-          {testData.map(d => imageCell('candidate', d))}
-        </tr>
-        <tr>
-          <td className="table-label">Reference</td>
-          {testData.map(d => imageCell('reference', d))}
-        </tr>
-        <tr>
-          <td className="table-label">Difference</td>
-          {testData.map(d => imageCell('difference', d))}
-        </tr>
-        <tr>
-          <td />
-          <td>
-            <button onClick={() => onUpdateReference(record)}>
-              Upgrade Candidate to Reference
-            </button>
-          </td>
-          {testData.slice(1).map(d => (
-            <td key={d.timeStamp} />
-          ))}
-        </tr>
-      </tbody>
-    </table>
+    <Box p="md" bg="dark.8">
+      <Table horizontalSpacing="xs" verticalSpacing={4}>
+        <Table.Tbody>
+          <Table.Tr>
+            <Table.Td />
+            {testData.map((d: TestData) => (
+              <Table.Td
+                key={d.timeStamp}
+                style={{ ...diffStyle(d.pixelError), width: 20, height: 15, padding: 0 }}
+              />
+            ))}
+          </Table.Tr>
+          <Table.Tr>
+            <Table.Td />
+            {testData.map((d: TestData) => (
+              <Table.Td key={d.timeStamp}>
+                <Text size="xs" c="dimmed">{new Date(d.timeStamp).toUTCString()}</Text>
+              </Table.Td>
+            ))}
+          </Table.Tr>
+          <Table.Tr>
+            <Table.Td />
+            {testData.map((d: TestData) => (
+              <Table.Td key={d.timeStamp}>
+                <Box px={4} style={{ borderRadius: 4, display: 'inline-block', ...diffStyle(d.pixelError) }}>
+                  <Text size="sm">{diffDisplay(d.pixelError)}</Text>
+                </Box>
+              </Table.Td>
+            ))}
+          </Table.Tr>
+          <Table.Tr>
+            <Table.Td />
+            {testData.map((d: TestData) => (
+              <Table.Td key={d.timeStamp}>
+                <Anchor
+                  size="xs"
+                  href={`https://github.com/OpenSpace/OpenSpace/commit/${d.commitHash}`}
+                  target="_blank"
+                >
+                  {d.commitHash.substring(0, 8)}
+                </Anchor>
+              </Table.Td>
+            ))}
+          </Table.Tr>
+          <Table.Tr>
+            <Table.Td />
+            {testData.map((d: TestData) => (
+              <Table.Td key={d.timeStamp}>
+                <Text size="sm">{timingDisplay(d.timing)}</Text>
+              </Table.Td>
+            ))}
+          </Table.Tr>
+          <Table.Tr>
+            <Table.Td />
+            {testData.map((d: TestData) => (
+              <Table.Td key={d.timeStamp}>
+                <Anchor
+                  size="xs"
+                  href={`/api/result/log/${record.group}/${record.name}/${record.hardware}/${d.timeStamp}`}
+                  target="_blank"
+                >
+                  Log ({d.nErrors} errors)
+                </Anchor>
+              </Table.Td>
+            ))}
+          </Table.Tr>
+          {imageRow('candidate')}
+          {imageRow('reference')}
+          {imageRow('difference')}
+          <Table.Tr>
+            <Table.Td />
+            <Table.Td>
+              <Button size="xs" variant="default" onClick={() => onUpdateReference(record)}>
+                Upgrade Candidate to Reference
+              </Button>
+            </Table.Td>
+            {testData.slice(1).map((d: TestData) => (
+              <Table.Td key={d.timeStamp} />
+            ))}
+          </Table.Tr>
+        </Table.Tbody>
+      </Table>
+    </Box>
   )
 }
+
+const COL_SPAN = 10
 
 function TestRow({
   record,
@@ -180,106 +193,77 @@ function TestRow({
   if (!latestData) return null
 
   return (
-    <li className="row">
-      <div className="head" onClick={() => setExpanded(e => !e)}>
-        <div className={`cell status ${classForDiff(latestData.pixelError)}`}>
-          {diffDisplay(latestData.pixelError)}
-        </div>
-        <div className="cell group">{record.group}</div>
-        <div className="cell name">{record.name}</div>
-        <div className="cell hardware">{record.hardware}</div>
-        <div className="cell timing">{timingDisplay(latestData.timing)}</div>
-        <div className="cell commit">
-          <a
+    <>
+      <Table.Tr style={{ cursor: 'pointer' }} onClick={() => setExpanded(e => !e)}>
+        <Table.Td>
+          <Box
+            px={6}
+            py={2}
+            style={{ borderRadius: 4, textAlign: 'center', fontSize: 13, ...diffStyle(latestData.pixelError) }}
+          >
+            {diffDisplay(latestData.pixelError)}
+          </Box>
+        </Table.Td>
+        <Table.Td>{record.group}</Table.Td>
+        <Table.Td>{record.name}</Table.Td>
+        <Table.Td>{record.hardware}</Table.Td>
+        <Table.Td>{timingDisplay(latestData.timing)}</Table.Td>
+        <Table.Td>
+          <Anchor
+            size="sm"
             href={`https://github.com/OpenSpace/OpenSpace/commit/${latestData.commitHash}`}
             target="_blank"
-            rel="noreferrer"
-            onClick={e => e.stopPropagation()}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
-            {latestData.commitHash}
-          </a>
-        </div>
-        <div className="cell timestamp">
-          {new Date(latestData.timeStamp).toISOString()}
-        </div>
-        <ImageCell type="candidate" record={record} />
-        <ImageCell type="reference" record={record} />
-        <ImageCell type="difference" record={record} />
-      </div>
-      {expanded && (
-        <div className="body">
-          <TestHistory record={record} onUpdateReference={onUpdateReference} />
-        </div>
-      )}
-    </li>
-  )
-}
-
-function HardwareFilter({
-  allHardware,
-  selectedHardware,
-  onToggle,
-  onSelectAll,
-  onSelectOnly,
-}: {
-  allHardware: string[]
-  selectedHardware: Set<string>
-  onToggle: (hw: string) => void
-  onSelectAll: () => void
-  onSelectOnly: (hw: string) => void
-}) {
-  function handleSelectChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    if (e.target.value === 'all') {
-      onSelectAll()
-    } else {
-      onSelectOnly(e.target.value)
-    }
-  }
-
-  return (
-    <>
-      <li>
-        <select onChange={handleSelectChange} defaultValue="all">
-          <option value="all">All</option>
-          {allHardware.map(hw => (
-            <option key={hw} value={hw}>
-              {hw}
-            </option>
-          ))}
-        </select>
-      </li>
-      {allHardware.map(hw => (
-        <li key={hw}>
-          <input
-            type="checkbox"
-            id={`hardware-${hw}`}
-            className="hardware-checkbox"
-            checked={selectedHardware.has(hw)}
-            onChange={() => onToggle(hw)}
-            value={hw}
+            {latestData.commitHash.substring(0, 8)}
+          </Anchor>
+        </Table.Td>
+        <Table.Td>
+          <Text size="sm">{new Date(latestData.timeStamp).toISOString()}</Text>
+        </Table.Td>
+        <Table.Td>
+          <ImageThumbnail
+            type="candidate" group={record.group} name={record.name}
+            hardware={record.hardware} stopPropagation
           />
-          <label htmlFor={`hardware-${hw}`}>{hw}</label>
-        </li>
-      ))}
+        </Table.Td>
+        <Table.Td>
+          <ImageThumbnail
+            type="reference" group={record.group} name={record.name}
+            hardware={record.hardware} stopPropagation
+          />
+        </Table.Td>
+        <Table.Td>
+          <ImageThumbnail
+            type="difference" group={record.group} name={record.name}
+            hardware={record.hardware} stopPropagation
+          />
+        </Table.Td>
+      </Table.Tr>
+      {expanded && (
+        <Table.Tr>
+          <Table.Td colSpan={COL_SPAN} style={{ padding: 0 }}>
+            <TestHistory record={record} onUpdateReference={onUpdateReference} />
+          </Table.Td>
+        </Table.Tr>
+      )}
     </>
   )
 }
 
 function SortableHeader({
-  className,
   sortKey,
   label,
   onSort,
 }: {
-  className: string
   sortKey: SortColumn
   label: string
   onSort: (col: SortColumn) => void
 }) {
   return (
-    <div className={`cell ${className}`} onClick={() => onSort(sortKey)}>
+    <Table.Th style={{ cursor: 'pointer' }} onClick={() => onSort(sortKey)}>
       {label}
-    </div>
+    </Table.Th>
   )
 }
 
@@ -339,88 +323,87 @@ export default function Home() {
   const visibleRecords = records.filter(r => selectedHardware.has(r.hardware))
 
   return (
-    <div>
-      <h1>
-        <Link to="/">OpenSpace Image Testing</Link>
-      </h1>
-      <Link to="/compare" className="compare-panel">
-        Hardware Compare
-      </Link>
-      <div className="control">
-        <ul className="hardware-list">
-          <li>Hardware Filtering:</li>
-          <HardwareFilter
-            allHardware={allHardware}
-            selectedHardware={selectedHardware}
-            onToggle={toggleHardware}
-            onSelectAll={() => setSelectedHardware(new Set(allHardware))}
-            onSelectOnly={hw => setSelectedHardware(new Set([hw]))}
+    <Box>
+      {/* Header */}
+      <Box py="md" style={{ textAlign: 'center', backgroundColor: 'var(--mantine-color-dark-7)' }}>
+        <Title order={1} style={{ fontVariant: 'small-caps' }}>
+          <Link to="/" style={{ textDecoration: 'none', color: 'white' }}>
+            OpenSpace Image Testing
+          </Link>
+        </Title>
+      </Box>
+
+      {/* Controls */}
+      <Group
+        p="sm"
+        align="flex-start"
+        justify="space-between"
+        style={{ backgroundColor: 'var(--mantine-color-dark-6)' }}
+      >
+        <Group gap="sm" align="center" wrap="wrap">
+          <Text fw={600}>Hardware:</Text>
+          <Select
+            size="xs"
+            w={200}
+            data={[
+              { value: 'all', label: 'All' },
+              ...allHardware.map(hw => ({ value: hw, label: hw })),
+            ]}
+            defaultValue="all"
+            onChange={val => {
+              if (val === 'all') setSelectedHardware(new Set(allHardware))
+              else if (val) setSelectedHardware(new Set([val]))
+            }}
           />
-        </ul>
-        <ul className="admin-list">
-          <li>Admin:</li>
-          <li>
-            <input
-              type="password"
-              value={adminToken}
-              onChange={e => setAdminToken(e.target.value)}
+          {allHardware.map(hw => (
+            <Checkbox
+              key={hw}
+              label={hw}
+              checked={selectedHardware.has(hw)}
+              onChange={() => toggleHardware(hw)}
             />
-          </li>
-        </ul>
-      </div>
-      <ul>
-        <li className="heading">
-          <SortableHeader
-            className="status"
-            sortKey="pixelError"
-            label="Error"
-            onSort={handleSort}
+          ))}
+          <Anchor component={Link as any} to="/compare" size="sm">
+            Hardware Compare
+          </Anchor>
+        </Group>
+        <Group gap="xs">
+          <Text fw={600}>Admin:</Text>
+          <PasswordInput
+            size="xs"
+            w={180}
+            value={adminToken}
+            onChange={e => setAdminToken(e.target.value)}
           />
-          <SortableHeader
-            className="group"
-            sortKey="group"
-            label="Group"
-            onSort={handleSort}
-          />
-          <SortableHeader
-            className="name"
-            sortKey="name"
-            label="Name"
-            onSort={handleSort}
-          />
-          <SortableHeader
-            className="hardware"
-            sortKey="hardware"
-            label="Hardware"
-            onSort={handleSort}
-          />
-          <SortableHeader
-            className="timing"
-            sortKey="timing"
-            label="Timing"
-            onSort={handleSort}
-          />
-          <SortableHeader
-            className="commit"
-            sortKey="commitHash"
-            label="Commit"
-            onSort={handleSort}
-          />
-          <SortableHeader
-            className="timestamp"
-            sortKey="timeStamp"
-            label="Timestamp"
-            onSort={handleSort}
-          />
-        </li>
-        {visibleRecords.map(record => (
-          <TestRow
-            key={`${record.group}-${record.name}-${record.hardware}`}
-            record={record}
-            onUpdateReference={updateReference}
-          />
-        ))}
-      </ul>
-    </div>
+        </Group>
+      </Group>
+
+      {/* Test records table */}
+      <Table striped highlightOnHover withColumnBorders stickyHeader>
+        <Table.Thead>
+          <Table.Tr>
+            <SortableHeader sortKey="pixelError" label="Error" onSort={handleSort} />
+            <SortableHeader sortKey="group" label="Group" onSort={handleSort} />
+            <SortableHeader sortKey="name" label="Name" onSort={handleSort} />
+            <SortableHeader sortKey="hardware" label="Hardware" onSort={handleSort} />
+            <SortableHeader sortKey="timing" label="Timing" onSort={handleSort} />
+            <SortableHeader sortKey="commitHash" label="Commit" onSort={handleSort} />
+            <SortableHeader sortKey="timeStamp" label="Timestamp" onSort={handleSort} />
+            <Table.Th>Candidate</Table.Th>
+            <Table.Th>Reference</Table.Th>
+            <Table.Th>Difference</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {visibleRecords.map(record => (
+            <TestRow
+              key={`${record.group}-${record.name}-${record.hardware}`}
+              record={record}
+              onUpdateReference={updateReference}
+            />
+          ))}
+        </Table.Tbody>
+      </Table>
+    </Box>
   )
 }
