@@ -78,13 +78,13 @@ def submit_image(result: TestResult, hardware: str, timestamp: str, file: str,
         print(res.text)
         return
     except requests.exceptions.Timeout:
-      print(f"Image submission attempt {attempt}/{retries} timed out, retrying...")
+      print(f"Image submission attempt {attempt}/{nRetries} timed out, retrying...")
     except requests.exceptions.RequestException as e:
-      print(f"Image submission attempt {attempt}/{retries} failed with error: {e}")
+      print(f"Image submission attempt {attempt}/{nRetries} failed with error: {e}")
       return
-    if attempt < retries:
+    if attempt < nRetries:
       time.sleep(5)
-  print(f"Image submission failed after {retries} attempts")
+  print(f"Image submission failed after {nRetries} attempts")
 
 
 

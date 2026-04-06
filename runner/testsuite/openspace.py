@@ -48,6 +48,12 @@ def write_configuration_overwrite(base_path, data_path):
     f.write("ModuleConfigurations.GlobeBrowsing.MRFCacheEnabled = true\n")
     f.write(f"ModuleConfigurations.GlobeBrowsing.MRFCacheLocation = [[{mrf_location}]]\n")
 
+    # Disable CEF WebGUI
+    f.write("ModuleConfigurations.CefWebGui.Enabled = false\n")
+
+    # Disable the WebSocket as it is throwing error messages that pollute the log
+    f.write("Server.Interfaces[2].Enabled = false\n")
+
     # Remove the version checking URL as it would otherwise count as a "user"
     f.write("VersionCheckUrl = [[]]\n")
 
@@ -74,7 +80,6 @@ async def setup_test_run(openspace):
   #  ScreenLog: Log message retention
   #  Version: Contains the commit hash
   #  Camera: Not technically needed, but results in a cleaner screenshot
-  await openspace.setPropertyValueSingle("Modules.CefWebGui.Enabled", False)
   await openspace.setPropertyValueSingle("Dashboard.IsEnabled", False)
   await openspace.setPropertyValueSingle("RenderEngine.ShowLog", False)
   await openspace.setPropertyValueSingle("RenderEngine.ShowVersion", False)
