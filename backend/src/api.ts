@@ -48,7 +48,7 @@ import { PNG } from "pngjs";
  */
 export function registerRoutes(app: express.Application) {
   app.get("/api", handleApi);
-  app.get("/api/result/:type/:group/:name/:hardware/:timestamp?", handleResult);
+  app.get("/api/result/:type/:group/:name/:hardware{/:timestamp}", handleResult);
   app.get("/api/compare/:type/:group/:name/:hardware1/:hardware2", handleCompare);
   app.get("/api/test-records", handleTestRecords);
   app.get("/api/diff-threshold", handleThreshold);
