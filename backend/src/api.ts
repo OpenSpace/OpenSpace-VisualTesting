@@ -177,14 +177,15 @@ async function handleResult(req: express.Request, res: express.Response) {
     'log'
   ] as const;
 
-  const p: any = req.params;
-  const { type } = p;
-  const { group } = p;
-  const { name } = p;
-  const { hardware } = p;
-  const { timestamp } = p;
+  const { type, group, name, hardware, timestamp } = req.params as {
+    type: string;
+    group: string;
+    name: string;
+    hardware: string;
+    timestamp?: string;
+  };
 
-  if (!types.includes(type)) {
+  if (!types.includes(type as (typeof types)[number])) {
     res.status(400).json({ error: `Invalid type ${type} provided` });
     return;
   }
@@ -214,13 +215,16 @@ async function handleResult(req: express.Request, res: express.Response) {
   switch (type) {
     case 'reference-thumbnail':
       isThumbnail = true;
-    case 'reference':
+    // falls through
+    case 'reference': {
       const data = loadTestRecord(`${basePath}/data.json`);
       const folder = referenceImagePath(group, name, hardware);
       path = `${folder}/${data.referenceImage}`;
       break;
+    }
     case 'candidate-thumbnail':
       isThumbnail = true;
+    // falls through
     case 'candidate':
       path = candidateImage(
         group,
@@ -231,6 +235,7 @@ async function handleResult(req: express.Request, res: express.Response) {
       break;
     case 'difference-thumbnail':
       isThumbnail = true;
+    // falls through
     case 'difference':
       path = differenceImage(
         group,
@@ -240,7 +245,9 @@ async function handleResult(req: express.Request, res: express.Response) {
       );
       break;
     case 'log':
-      path = logFile(group, name, hardware, new Date(timestamp));
+      path = logFile(group, name, hardware, new Date(timestamp!));
+      break;
+    default:
       break;
   }
 
@@ -273,12 +280,13 @@ async function handleResult(req: express.Request, res: express.Response) {
  *  - `hardware2`: The second hardware for which to return the comparison
  */
 async function handleCompare(req: express.Request, res: express.Response) {
-  const p: any = req.params;
-  const { type } = p;
-  const { group } = p;
-  const { name } = p;
-  const { hardware1 } = p;
-  const { hardware2 } = p;
+  const { type, group, name, hardware1, hardware2 } = req.params as {
+    type: string;
+    group: string;
+    name: string;
+    hardware1: string;
+    hardware2: string;
+  };
 
   if (!['reference', 'candidate'].includes(type)) {
     res.status(400).json({ error: `Invalid type ${type} provided` });
@@ -430,18 +438,18 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     return;
   }
 
-  const files: any = req.files!;
-  if (files.file == null || files.file.length == 0) {
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  if (files['file'] == null || files['file'].length == 0) {
     res.status(400).json({ error: "Missing field 'file'" });
     return;
   }
-  const file = files.file[0];
+  const [file] = files['file'] as [Express.Multer.File];
 
-  if (files.log == null || files.log.length == 0) {
+  if (files['log'] == null || files['log'].length == 0) {
     res.status(400).json({ error: "Missing field 'log'" });
     return;
   }
-  const log = files.log[0];
+  const [log] = files['log'] as [Express.Multer.File];
 
   try {
     const png = PNG.sync.read(file.buffer);
@@ -451,7 +459,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
       res.status(400).json({ error: `Image has the wrong size. Expected (${w}, ${h})` });
       return;
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.status(400).json({ error: `Error loading image: ${e}` });
     return;
   }
@@ -585,7 +593,7 @@ function handleRunTest(req: express.Request, res: express.Response) {
       res.status(400).json({ error: `Image has the wrong size. Expected (${w}, ${h})` });
       return;
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.status(400).json({ error: `Error loading image: ${e}` });
     return;
   }

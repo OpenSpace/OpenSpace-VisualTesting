@@ -123,7 +123,7 @@ export default function Home() {
               onChange={() => toggleHardware(hw)}
             />
           ))}
-          <Anchor component={Link as any} to={'/compare'} size={'sm'}>
+          <Anchor component={Link} to={'/compare'} size={'sm'}>
             Hardware Compare
           </Anchor>
         </Group>
