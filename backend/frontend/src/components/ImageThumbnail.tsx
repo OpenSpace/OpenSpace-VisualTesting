@@ -1,18 +1,23 @@
-import { Anchor } from '@mantine/core'
+import { Anchor } from '@mantine/core';
 
 interface Props {
-  type: string
-  group: string
-  name: string
-  hardware: string
-  timestamp?: string
-  stopPropagation?: boolean
-};
+  type: string;
+  group: string;
+  name: string;
+  hardware: string;
+  timestamp?: string;
+  stopPropagation?: boolean;
+}
 
 export function ImageThumbnail({
-  type, group, name, hardware, timestamp, stopPropagation = false,
+  type,
+  group,
+  name,
+  hardware,
+  timestamp,
+  stopPropagation = false
 }: Props) {
-  const timePart = timestamp ? `/${timestamp}` : ''
+  const timePart = timestamp ? `/${timestamp}` : '';
   return (
     <Anchor
       href={`/api/result/${type}/${group}/${name}/${hardware}${timePart}`}
@@ -26,5 +31,5 @@ export function ImageThumbnail({
         alt={type}
       />
     </Anchor>
-  )
+  );
 }

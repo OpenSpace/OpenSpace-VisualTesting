@@ -22,16 +22,14 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import { assert } from "./assert";
-import { printAudit } from "./audit";
-import { Config } from "./configuration";
-import { thumbnailForImage } from "./globals";
-import fs from "fs";
-import pixelmatch from "pixelmatch";
-import { PNG } from "pngjs";
-import resizeImg from "resize-img";
-
-
+import { assert } from './assert';
+import { printAudit } from './audit';
+import { Config } from './configuration';
+import { thumbnailForImage } from './globals';
+import fs from 'fs';
+import pixelmatch from 'pixelmatch';
+import { PNG } from 'pngjs';
+import resizeImg from 'resize-img';
 
 /**
  * Runs an image comparison to compare the `reference` image with the `candidate` image.
@@ -46,9 +44,10 @@ import resizeImg from "resize-img";
  *          changed between the reference and the candidate image. Returns `null` if the
  *          images had the wrong size
  */
-export function generateComparisonImage(reference: string,
-                                        candidate: string): [PNG, number] | null
-{
+export function generateComparisonImage(
+  reference: string,
+  candidate: string
+): [PNG, number] | null {
   assert(fs.existsSync(reference), `No reference ${reference}`);
   assert(fs.existsSync(candidate), `No candidate ${candidate}`);
 
@@ -65,22 +64,15 @@ export function generateComparisonImage(reference: string,
   }
 
   const width = Config.size.width;
-  const height = Config.size.height
+  const height = Config.size.height;
   const diffImg = new PNG({ width, height });
-  const nPixels = pixelmatch(
-    refImg.data,
-    testImg.data,
-    diffImg.data,
-    width,
-    height,
-    { threshold: Config.comparisonThreshold }
-  );
+  const nPixels = pixelmatch(refImg.data, testImg.data, diffImg.data, width, height, {
+    threshold: Config.comparisonThreshold
+  });
 
   const diff = nPixels / (width * height);
-  return [ diffImg, diff ];
+  return [diffImg, diff];
 }
-
-
 
 /**
  * Runs an image comparison to compare the `path1` image with the `path2` image and return
@@ -106,7 +98,6 @@ export function imagesAreEqual(path1: string, path2: string): boolean {
   return diff == 0;
 }
 
-
 /**
  * Runs an image comparison to compare the `reference` image with the `candidate` image.
  * The result is stored in the `difference` image. Both the `reference` and `candidate`
@@ -123,9 +114,11 @@ export function imagesAreEqual(path1: string, path2: string): boolean {
  * @returns The percentage of pixels that are changed between the reference and the
  *          candidate image or `null` if the images had the wrong size
  */
-export async function saveComparisonImage(reference: string, candidate: string,
-                                          difference: string): Promise<number | null>
-{
+export async function saveComparisonImage(
+  reference: string,
+  candidate: string,
+  difference: string
+): Promise<number | null> {
   const res = await generateComparisonImage(reference, candidate);
   if (res == null) {
     return null;
@@ -137,8 +130,6 @@ export async function saveComparisonImage(reference: string, candidate: string,
   await createThumbnail(difference);
   return nPixels;
 }
-
-
 
 /**
  * Creates a thumbnail for the image provided by the `path`. The path has to be a valid
@@ -153,7 +144,7 @@ export async function createThumbnail(path: string) {
 
   const thumbnailPath = thumbnailForImage(path);
   const width = Config.size.width / Config.thumbnailScale;
-  const height = Config.size.height / Config.thumbnailScale
+  const height = Config.size.height / Config.thumbnailScale;
   const image = await resizeImg(fs.readFileSync(path), { width: width, height: height });
   fs.writeFileSync(thumbnailPath, image);
 }

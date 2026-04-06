@@ -1,33 +1,47 @@
-import { useState, useEffect, useRef } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
-  Anchor, Box, Button, Group, Select, Table, Text, TextInput, Title,
-} from '@mantine/core'
-import { TestRecord } from '../types'
-import { diffDisplay, diffStyle } from '../utils'
+  Anchor,
+  Box,
+  Button,
+  Group,
+  Select,
+  Table,
+  Text,
+  TextInput,
+  Title
+} from '@mantine/core';
+import { TestRecord } from '../types';
+import { diffDisplay, diffStyle } from '../utils';
 
-type ImageType = 'reference' | 'candidate'
+type ImageType = 'reference' | 'candidate';
 
 interface Props {
-  type: string
-  group: string
-  name: string
-  hardware1: string
-  hardware2: string
-};
+  type: string;
+  group: string;
+  name: string;
+  hardware1: string;
+  hardware2: string;
+}
 
-function CompareCell({ type, group, name, hardware1, hardware2, }: Props) {
-  const [pixelError, setPixelError] = useState<number | null>(null)
-  const compareUrl = `/api/compare/${type}/${group}/${name}/${hardware1}/${hardware2}`
+function CompareCell({ type, group, name, hardware1, hardware2 }: Props) {
+  const [pixelError, setPixelError] = useState<number | null>(null);
+  const compareUrl = `/api/compare/${type}/${group}/${name}/${hardware1}/${hardware2}`;
 
   useEffect(() => {
-    fetch(compareUrl).then(res => {
-      setPixelError(Number(res.headers.get('result')))
-    })
-  }, [compareUrl])
+    fetch(compareUrl).then((res) => {
+      setPixelError(Number(res.headers.get('result')));
+    });
+  }, [compareUrl]);
 
   return (
-    <Table.Td style={{ backgroundColor: '#252525', border: '0.5px solid #eeeeee', textAlign: 'center' }}>
+    <Table.Td
+      style={{
+        backgroundColor: '#252525',
+        border: '0.5px solid #eeeeee',
+        textAlign: 'center'
+      }}
+    >
       <Anchor href={compareUrl} target="_blank">
         <img
           src={compareUrl}
@@ -36,64 +50,70 @@ function CompareCell({ type, group, name, hardware1, hardware2, }: Props) {
         />
       </Anchor>
       {pixelError !== null && (
-        <Box px={4} mt={2} style={{ borderRadius: 4, display: 'inline-block', ...diffStyle(pixelError) }}>
+        <Box
+          px={4}
+          mt={2}
+          style={{ borderRadius: 4, display: 'inline-block', ...diffStyle(pixelError) }}
+        >
           <Text size="sm">{diffDisplay(pixelError)}</Text>
         </Box>
       )}
     </Table.Td>
-  )
+  );
 }
 
 export default function Compare() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [group, setGroup] = useState(searchParams.get('group') ?? '')
-  const [name, setName] = useState(searchParams.get('name') ?? '')
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [group, setGroup] = useState(searchParams.get('group') ?? '');
+  const [name, setName] = useState(searchParams.get('name') ?? '');
   const [type, setType] = useState<ImageType>(
-    (searchParams.get('type') as ImageType | null) ?? 'reference',
-  )
-  const [hardwares, setHardwares] = useState<string[]>([])
-  const [hasResult, setHasResult] = useState(false)
-  const [shareUrl, setShareUrl] = useState('')
+    (searchParams.get('type') as ImageType | null) ?? 'reference'
+  );
+  const [hardwares, setHardwares] = useState<string[]>([]);
+  const [hasResult, setHasResult] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
 
   // Track current generation params (separate from input state)
-  const resultParams = useRef({ group, name, type })
+  const resultParams = useRef({ group, name, type });
 
   async function generateComparison(g: string, n: string, t: ImageType) {
-    const records: TestRecord[] = await fetch('/api/test-records').then(res =>
-      res.json(),
-    )
-    const hwList = [...new Set(records.map(r => r.hardware))].sort()
-    resultParams.current = { group: g, name: n, type: t }
-    setHardwares(hwList)
-    setHasResult(true)
-    const loc = `${location.protocol}//${location.host}${location.pathname}`
-    setShareUrl(`${loc}?group=${g}&name=${n}&type=${t}`)
+    const records: TestRecord[] = await fetch('/api/test-records').then((res) =>
+      res.json()
+    );
+    const hwList = [...new Set(records.map((r) => r.hardware))].sort();
+    resultParams.current = { group: g, name: n, type: t };
+    setHardwares(hwList);
+    setHasResult(true);
+    const loc = `${location.protocol}//${location.host}${location.pathname}`;
+    setShareUrl(`${loc}?group=${g}&name=${n}&type=${t}`);
   }
 
   // Auto-generate if URL params are present on mount
   useEffect(() => {
-    const urlGroup = searchParams.get('group')
-    const urlName = searchParams.get('name')
-    const urlType =
-      (searchParams.get('type') as ImageType | null) ?? 'reference'
+    const urlGroup = searchParams.get('group');
+    const urlName = searchParams.get('name');
+    const urlType = (searchParams.get('type') as ImageType | null) ?? 'reference';
     if (urlGroup && urlName) {
-      generateComparison(urlGroup, urlName, urlType)
+      generateComparison(urlGroup, urlName, urlType);
     }
     // Intentionally run only once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   function handleGenerate() {
-    setSearchParams({ group, name, type })
-    generateComparison(group, name, type)
+    setSearchParams({ group, name, type });
+    generateComparison(group, name, type);
   }
 
-  const { group: rGroup, name: rName, type: rType } = resultParams.current
+  const { group: rGroup, name: rName, type: rType } = resultParams.current;
 
   return (
     <Box>
       {/* Header */}
-      <Box py="md" style={{ textAlign: 'center', backgroundColor: 'var(--mantine-color-dark-7)' }}>
+      <Box
+        py="md"
+        style={{ textAlign: 'center', backgroundColor: 'var(--mantine-color-dark-7)' }}
+      >
         <Title order={1} style={{ fontVariant: 'small-caps' }}>
           <Link to="/" style={{ textDecoration: 'none', color: 'white' }}>
             OpenSpace Image Testing
@@ -102,28 +122,32 @@ export default function Compare() {
       </Box>
 
       {/* Input fields */}
-      <Group p="sm" align="flex-end" style={{ backgroundColor: 'var(--mantine-color-dark-6)' }}>
+      <Group
+        p="sm"
+        align="flex-end"
+        style={{ backgroundColor: 'var(--mantine-color-dark-6)' }}
+      >
         <TextInput
           label="Group"
           size="sm"
           value={group}
-          onChange={e => setGroup(e.target.value)}
+          onChange={(e) => setGroup(e.target.value)}
         />
         <TextInput
           label="Name"
           size="sm"
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={(e) => setName(e.target.value)}
         />
         <Select
           label="Type"
           size="sm"
           w={160}
           value={type}
-          onChange={val => setType((val ?? 'reference') as ImageType)}
+          onChange={(val) => setType((val ?? 'reference') as ImageType)}
           data={[
             { value: 'reference', label: 'Reference' },
-            { value: 'candidate', label: 'Candidate' },
+            { value: 'candidate', label: 'Candidate' }
           ]}
         />
         <Button onClick={handleGenerate} autoFocus>
@@ -133,7 +157,9 @@ export default function Compare() {
 
       {shareUrl && (
         <Box px="sm" py="xs">
-          <Anchor href={shareUrl} size="sm">{shareUrl}</Anchor>
+          <Anchor href={shareUrl} size="sm">
+            {shareUrl}
+          </Anchor>
         </Box>
       )}
 
@@ -147,7 +173,13 @@ export default function Compare() {
                   <Table.Td key={j} />
                 ))}
                 {/* Diagonal: single hardware image */}
-                <Table.Td style={{ backgroundColor: '#252525', border: '0.5px solid #eeeeee', textAlign: 'center' }}>
+                <Table.Td
+                  style={{
+                    backgroundColor: '#252525',
+                    border: '0.5px solid #eeeeee',
+                    textAlign: 'center'
+                  }}
+                >
                   <Anchor
                     href={`/api/result/${rType}/${rGroup}/${rName}/${hw}`}
                     target="_blank"
@@ -158,10 +190,12 @@ export default function Compare() {
                       style={{ width: 150, height: 84.375 }}
                     />
                   </Anchor>
-                  <Text size="sm" ta="center">{hw}</Text>
+                  <Text size="sm" ta="center">
+                    {hw}
+                  </Text>
                 </Table.Td>
                 {/* Upper triangle: cross-hardware comparisons */}
-                {hardwares.slice(i + 1).map(hw2 => (
+                {hardwares.slice(i + 1).map((hw2) => (
                   <CompareCell
                     key={hw2}
                     type={rType}
@@ -177,5 +211,5 @@ export default function Compare() {
         </Table>
       )}
     </Box>
-  )
+  );
 }

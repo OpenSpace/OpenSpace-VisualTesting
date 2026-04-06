@@ -22,22 +22,20 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import { registerRoutes } from "./api";
-import { initializeAudit } from "./audit";
-import { Config, loadConfiguration } from "./configuration";
-import { loadTestResults, verifyDataFolder } from "./testrecords";
-import cors from "cors";
-import express from "express";
-import fs from "fs";
-import path from "path";
-
-
+import { registerRoutes } from './api';
+import { initializeAudit } from './audit';
+import { Config, loadConfiguration } from './configuration';
+import { loadTestResults, verifyDataFolder } from './testrecords';
+import cors from 'cors';
+import express from 'express';
+import fs from 'fs';
+import path from 'path';
 
 // @TODO: Add graphs showing timing information
 // @TODO: Add repeating task to clean the files in the temporary folder
 // @TODO: Use <dialog> instead of alert() when reporting status
 export function main() {
-  loadConfiguration("config.json");
+  loadConfiguration('config.json');
 
   // Create the data folder infrastructure
   fs.mkdirSync(Config.data, { recursive: true });
@@ -51,13 +49,13 @@ export function main() {
   loadTestResults();
 
   const app = express();
-  app.use(cors({ origin: "*" }));
+  app.use(cors({ origin: '*' }));
 
   registerRoutes(app);
-  app.use("/common", express.static("public/common"));
-  app.use(express.static("dist"));
+  app.use('/common', express.static('public/common'));
+  app.use(express.static('dist'));
   app.use((_req, res) => {
-    res.sendFile(path.join(process.cwd(), "dist", "index.html"));
+    res.sendFile(path.join(process.cwd(), 'dist', 'index.html'));
   });
 
   console.log(`Listening on port: ${Config.port}`);

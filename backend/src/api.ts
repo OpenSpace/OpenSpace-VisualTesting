@@ -22,24 +22,42 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import { printAudit } from "./audit";
-import { Config, saveConfiguration } from "./configuration";
+import { printAudit } from './audit';
+import { Config, saveConfiguration } from './configuration';
 import {
-  candidateImage, clearReferencePointer, dateToPath, differenceImage,
-  findMatchingCandidateImage, findMatchingDifferenceImage, hasReferenceImage,
-  latestTestPath, logFile, referenceImage, referenceImagePath, temporaryPath,
-  testDataPath, testPath, thumbnailForImage, updateReferencePointer } from "./globals";
-import { createThumbnail, generateComparisonImage, saveComparisonImage } from "./image";
-import { addTestData, loadTestRecord, regenerateTestResults, reloadTestResults,
-  saveTestData, TestData, TestRecords } from "./testrecords";
-import bodyParser from "body-parser";
-import express from "express";
-import fs from "fs";
-import multer from "multer";
-import path from "path";
-import { PNG } from "pngjs";
-
-
+  candidateImage,
+  clearReferencePointer,
+  dateToPath,
+  differenceImage,
+  findMatchingCandidateImage,
+  findMatchingDifferenceImage,
+  hasReferenceImage,
+  latestTestPath,
+  logFile,
+  referenceImage,
+  referenceImagePath,
+  temporaryPath,
+  testDataPath,
+  testPath,
+  thumbnailForImage,
+  updateReferencePointer
+} from './globals';
+import { createThumbnail, generateComparisonImage, saveComparisonImage } from './image';
+import {
+  addTestData,
+  loadTestRecord,
+  regenerateTestResults,
+  reloadTestResults,
+  saveTestData,
+  TestData,
+  TestRecords
+} from './testrecords';
+import bodyParser from 'body-parser';
+import express from 'express';
+import fs from 'fs';
+import multer from 'multer';
+import path from 'path';
+import { PNG } from 'pngjs';
 
 /**
  * Registers the routes for the available API calls.
@@ -47,42 +65,40 @@ import { PNG } from "pngjs";
  * @param app The express application to which the routes should be registered
  */
 export function registerRoutes(app: express.Application) {
-  app.get("/api", handleApi);
-  app.get("/api/result/:type/:group/:name/:hardware{/:timestamp}", handleResult);
-  app.get("/api/compare/:type/:group/:name/:hardware1/:hardware2", handleCompare);
-  app.get("/api/test-records", handleTestRecords);
-  app.get("/api/diff-threshold", handleThreshold);
+  app.get('/api', handleApi);
+  app.get('/api/result/:type/:group/:name/:hardware{/:timestamp}', handleResult);
+  app.get('/api/compare/:type/:group/:name/:hardware1/:hardware2', handleCompare);
+  app.get('/api/test-records', handleTestRecords);
+  app.get('/api/diff-threshold', handleThreshold);
   app.post(
-    "/api/update-diff-threshold",
-    bodyParser.raw({ type: [ "application/json" ] }),
+    '/api/update-diff-threshold',
+    bodyParser.raw({ type: ['application/json'] }),
     handleChangeThreshold
   );
   app.post(
-    "/api/submit-test",
+    '/api/submit-test',
     multer().fields([
-      { name: "file", maxCount: 1 },
-      { name: "log", maxCount: 1 }
+      { name: 'file', maxCount: 1 },
+      { name: 'log', maxCount: 1 }
     ]),
     handleSubmitTest
   );
-  app.post("/api/run-test", multer().single("file"), handleRunTest);
+  app.post('/api/run-test', multer().single('file'), handleRunTest);
   app.post(
-    "/api/update-reference",
-    bodyParser.raw({ type: [ "application/json"] }),
+    '/api/update-reference',
+    bodyParser.raw({ type: ['application/json'] }),
     handleUpdateReference
   );
 }
-
-
 
 /**
  * Returns a list of all available API endpoints.
  */
 function handleApi(req: express.Request, res: express.Response) {
   res.status(200).json([
-    { path: "/api", description: "This page describing all available API calls" },
+    { path: '/api', description: 'This page describing all available API calls' },
     {
-      path: "/api/result/:type/:group/:name/:hardware/:timestamp?",
+      path: '/api/result/:type/:group/:name/:hardware/:timestamp?',
       description: `Returns the result for a specific 'type', 'group', 'name', and
         'hardware'. The 'timestamp' parameter is optional and if it is omitted, the latest
         image is used. The type must be either 'reference', 'candidate', 'difference',
@@ -91,7 +107,7 @@ function handleApi(req: express.Request, res: express.Response) {
         option, the result will be a text file.`
     },
     {
-      path: "/api/compare/:type/:group/:name/:hardware1/:hardware2",
+      path: '/api/compare/:type/:group/:name/:hardware1/:hardware2',
       description: `Generates a new comparison image that takes either the reference
         images or the candidate images for two hardware setups for the same test and runs
         a comparison image on those. These images will generally not be cached and thus
@@ -99,22 +115,22 @@ function handleApi(req: express.Request, res: express.Response) {
         "reference" or "candidate".`
     },
     {
-      path: "/api/test-records",
-      description: "Returns all of the tests results as a JSON object"
+      path: '/api/test-records',
+      description: 'Returns all of the tests results as a JSON object'
     },
     {
-      path: "/api/diff-threshold",
-      description: "Returns the current difference threshold used for image comparisons"
+      path: '/api/diff-threshold',
+      description: 'Returns the current difference threshold used for image comparisons'
     },
     {
-      path: "/api/update-diff-threshold",
+      path: '/api/update-diff-threshold',
       description: `(Requires admin) This will recalculate all of the difference images
         with the new threshold that is passed to this function. The JSON object in the
         body must contain the 'threshold' value as a number between 0 and 1 that is the
         new error threshold`
     },
     {
-      path: "/api/submit-test",
+      path: '/api/submit-test',
       description: `(Requires runner) This will submit a new test to the image testing
         server. The body of message must contain a 'runnerID', 'hardware', 'group',
         'name', 'timestamp', 'timing', and 'commitHash'. The 'runnerID' must be one of the
@@ -122,14 +138,14 @@ function handleApi(req: express.Request, res: express.Response) {
         candidate file as a multipart encoded file`
     },
     {
-      path: "/api/run-test",
+      path: '/api/run-test',
       description: `This will run a comparison against the current reference image on the
         server without storing the results. The body of message must contain a 'hardware',
         'group', and 'name'. Furthermore, there needs to be the candidate file as a
         multipart encoded file. The API returns the difference image.`
     },
     {
-      path: "/api/update-reference",
+      path: '/api/update-reference',
       description: `(Requires admin) Marks the current reference image for a specific test
         as invalid and instead use the latest test as a reference instead. In addition to
         the admin token, the JSON object contained in the body must provide the
@@ -137,8 +153,6 @@ function handleApi(req: express.Request, res: express.Response) {
     }
   ]);
 }
-
-
 
 /**
  * Returns a single requested result. The URL parameters used for this function are:
@@ -153,8 +167,13 @@ function handleApi(req: express.Request, res: express.Response) {
  */
 async function handleResult(req: express.Request, res: express.Response) {
   const types = [
-    "reference", "candidate", "difference", "reference-thumbnail", "candidate-thumbnail",
-    "difference-thumbnail", "log"
+    'reference',
+    'candidate',
+    'difference',
+    'reference-thumbnail',
+    'candidate-thumbnail',
+    'difference-thumbnail',
+    'log'
   ] as const;
 
   const p: any = req.params;
@@ -169,7 +188,7 @@ async function handleResult(req: express.Request, res: express.Response) {
     return;
   }
 
-  let basePath = "";
+  let basePath = '';
   if (!timestamp) {
     // If the request did not have any timestamp we are interested in the latest test
     const p = latestTestPath(group, name, hardware);
@@ -179,8 +198,7 @@ async function handleResult(req: express.Request, res: express.Response) {
     }
 
     basePath = p;
-  }
-  else {
+  } else {
     // If there is a timestamp, we are trying to find that specific test instead
     basePath = testPath(group, name, hardware, new Date(timestamp));
 
@@ -190,27 +208,37 @@ async function handleResult(req: express.Request, res: express.Response) {
     }
   }
 
-  let path = "";
+  let path = '';
   let isThumbnail = false;
   switch (type) {
-    case "reference-thumbnail":
+    case 'reference-thumbnail':
       isThumbnail = true;
-    case "reference":
+    case 'reference':
       const data = loadTestRecord(`${basePath}/data.json`);
       const folder = referenceImagePath(group, name, hardware);
       path = `${folder}/${data.referenceImage}`;
       break;
-    case "candidate-thumbnail":
+    case 'candidate-thumbnail':
       isThumbnail = true;
-    case "candidate":
-      path = candidateImage(group, name, hardware, timestamp ? new Date(timestamp) : undefined);
+    case 'candidate':
+      path = candidateImage(
+        group,
+        name,
+        hardware,
+        timestamp ? new Date(timestamp) : undefined
+      );
       break;
-    case "difference-thumbnail":
+    case 'difference-thumbnail':
       isThumbnail = true;
-    case "difference":
-      path = differenceImage(group, name, hardware, timestamp ? new Date(timestamp) : undefined);
+    case 'difference':
+      path = differenceImage(
+        group,
+        name,
+        hardware,
+        timestamp ? new Date(timestamp) : undefined
+      );
       break;
-    case "log":
+    case 'log':
       path = logFile(group, name, hardware, new Date(timestamp));
       break;
   }
@@ -222,18 +250,15 @@ async function handleResult(req: express.Request, res: express.Response) {
       return;
     }
 
-    res.sendFile(thumbnailPath, { root: "." });
-  }
-  else {
+    res.sendFile(thumbnailPath, { root: '.' });
+  } else {
     if (!fs.existsSync(path)) {
       res.status(404).end();
       return;
     }
-    res.sendFile(path, { root: "." });
+    res.sendFile(path, { root: '.' });
   }
 }
-
-
 
 /**
  * Generates a new comparison image that takes either the reference images or the
@@ -254,27 +279,25 @@ async function handleCompare(req: express.Request, res: express.Response) {
   const hardware1 = p.hardware1;
   const hardware2 = p.hardware2;
 
-  if (![ "reference", "candidate" ].includes(type)) {
+  if (!['reference', 'candidate'].includes(type)) {
     res.status(400).json({ error: `Invalid type ${type} provided` });
     return;
   }
 
   let img1;
   let img2;
-  if (type == "reference") {
+  if (type == 'reference') {
     img1 = referenceImage(group, name, hardware1);
     img2 = referenceImage(group, name, hardware2);
-  }
-  else {
+  } else {
     img1 = candidateImage(group, name, hardware1);
     img2 = candidateImage(group, name, hardware2);
   }
 
   if (!fs.existsSync(img1) || !fs.existsSync(img2)) {
-    res.status(400).json({ error: `Unknown image ${img1} or ${img2}`});
+    res.status(400).json({ error: `Unknown image ${img1} or ${img2}` });
     return;
   }
-
 
   printAudit(
     `Generating temporary comparison for ${group}/${name}   ${hardware1} <-> ${hardware2}`
@@ -288,10 +311,8 @@ async function handleCompare(req: express.Request, res: express.Response) {
   const tmp = temporaryPath();
   const diff = `${tmp}/compare/${group}-${name}-${hardware1}-${hardware2}.png`;
   fs.writeFileSync(diff, PNG.sync.write(img));
-  res.sendFile(diff, { root: ".", headers: { Result: nPixels } });
+  res.sendFile(diff, { root: '.', headers: { Result: nPixels } });
 }
-
-
 
 /**
  * Returns a full list of the test records to the API caller. This API call has no further
@@ -301,16 +322,12 @@ function handleTestRecords(req: express.Request, res: express.Response) {
   res.status(200).json(TestRecords);
 }
 
-
-
 /**
  * Returns the current threshold value used for image comparisons
  */
 function handleThreshold(req: express.Request, res: express.Response) {
   res.status(200).json({ value: Config.comparisonThreshold });
 }
-
-
 
 /**
  * This API call updates the threshold value used to determine which pixels of a candidate
@@ -329,8 +346,8 @@ async function handleChangeThreshold(req: express.Request, res: express.Response
   }
 
   const threshold = body.threshold;
-  if (threshold == null || typeof threshold !== "number") {
-    res.status(400).json({ error: "Threshold must be provided and be a number" });
+  if (threshold == null || typeof threshold !== 'number') {
+    res.status(400).json({ error: 'Threshold must be provided and be a number' });
     return;
   }
 
@@ -341,8 +358,6 @@ async function handleChangeThreshold(req: express.Request, res: express.Response
   await regenerateTestResults();
   res.status(200).end();
 }
-
-
 
 /**
  * This API call is made when a new test result is submitted. The necessary test
@@ -410,7 +425,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   }
 
   if (req.files == null) {
-    res.status(400).json({ error: "Missing files" });
+    res.status(400).json({ error: 'Missing files' });
     return;
   }
 
@@ -427,22 +442,18 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   }
   const log = files.log[0];
 
-
-
   try {
     const png = PNG.sync.read(file.buffer);
     if (png.width != Config.size.width || png.height != Config.size.height) {
-      const w = Config.size.width
-      const h = Config.size.height
-      res.status(400).json({ error: `Image has the wrong size. Expected (${w}, ${h})`});
+      const w = Config.size.width;
+      const h = Config.size.height;
+      res.status(400).json({ error: `Image has the wrong size. Expected (${w}, ${h})` });
       return;
     }
-  }
-  catch (e: any) {
-    res.status(400).json({ error: `Error loading image: ${e}`});
+  } catch (e: any) {
+    res.status(400).json({ error: `Error loading image: ${e}` });
     return;
   }
-
 
   printAudit(
     `Submitting result for (${group}/${name}/${hardware}/${timeStamp.toISOString()})`
@@ -455,13 +466,15 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
 
   const logPath = logFile(group, name, hardware, timeStamp);
   let logContent: string = log.buffer.toString();
-  logContent = logContent.split("\n").filter(line => line.trim() !== "").join("\n");
-  const nLogLines = logContent.split("\n").length;
+  logContent = logContent
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .join('\n');
+  const nLogLines = logContent.split('\n').length;
   fs.writeFileSync(logPath, logContent);
 
-
   if (!hasReferenceImage(group, name, hardware)) {
-    printAudit("  No reference image found");
+    printAudit('  No reference image found');
     // We are either the first, or someone has marked the previous reference as not valid
     const p = updateReferencePointer(group, name, hardware, timeStamp);
     // Write the current candidate image as the reference image
@@ -483,8 +496,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     fs.unlinkSync(candidate);
     // and use the old one instead
     candidate = candidateImage(group, name, hardware, candidateMatch);
-  }
-  else {
+  } else {
     // The candidate image is new and thus doesn't have a thumbnail yet
     createThumbnail(candidate);
   }
@@ -493,9 +505,9 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   if (nPixels == null) {
     // The image comparison has failed, which means that the candidate image had the wrong
     // size
-    res.status(400).json(
-      { error: "Could not compare images. Candidate image has wrong size" }
-    );
+    res
+      .status(400)
+      .json({ error: 'Could not compare images. Candidate image has wrong size' });
     return;
   }
 
@@ -509,7 +521,6 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     // and use the old one instead
     difference = differenceImage(group, name, hardware, differenceMatch);
   }
-
 
   const testData: TestData = {
     pixelError: nPixels,
@@ -526,8 +537,6 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   addTestData(group, name, hardware, testData);
   res.status(200).end();
 }
-
-
 
 /**
  * This API call runs a single test against the current reference image and returns the
@@ -570,19 +579,18 @@ function handleRunTest(req: express.Request, res: express.Response) {
   try {
     const png = PNG.sync.read(req.file.buffer);
     if (png.width != Config.size.width || png.height != Config.size.height) {
-      const w = Config.size.width
-      const h = Config.size.height
-      res.status(400).json({ error: `Image has the wrong size. Expected (${w}, ${h})`});
+      const w = Config.size.width;
+      const h = Config.size.height;
+      res.status(400).json({ error: `Image has the wrong size. Expected (${w}, ${h})` });
       return;
     }
-  }
-  catch (e: any) {
-    res.status(400).json({ error: `Error loading image: ${e}`});
+  } catch (e: any) {
+    res.status(400).json({ error: `Error loading image: ${e}` });
     return;
   }
 
   if (!hasReferenceImage(group, name, hardware)) {
-    res.status(400).json({ error: "Error comparing, no reference image found" });
+    res.status(400).json({ error: 'Error comparing, no reference image found' });
     return;
   }
 
@@ -596,16 +604,14 @@ function handleRunTest(req: express.Request, res: express.Response) {
   if (nPixels == null) {
     // The image comparison has failed, which means that the candidate image had the wrong
     // size
-    res.status(400).json(
-      { error: "Could not compare images. Candidate image has wrong size " }
-    );
+    res
+      .status(400)
+      .json({ error: 'Could not compare images. Candidate image has wrong size ' });
     return;
   }
 
-  res.sendFile(difference, { root: ".", headers: { Result: nPixels } });
+  res.sendFile(difference, { root: '.', headers: { Result: nPixels } });
 }
-
-
 
 /**
  * Updates the current reference for a specific test. The latest candidate image will be
@@ -649,7 +655,7 @@ async function handleUpdateReference(req: express.Request, res: express.Response
   const testPath = latestTestPath(group, name, hardware);
   if (testPath == null) {
     // We tried to update the reference image for a test that did not exist
-    res.status(400).json({ error: `No test found for (${group}, ${name}, ${hardware})`});
+    res.status(400).json({ error: `No test found for (${group}, ${name}, ${hardware})` });
     return;
   }
 
@@ -666,7 +672,7 @@ async function handleUpdateReference(req: express.Request, res: express.Response
 
   // Make the last candidate image the new reference image by copying it over
   const candidate = candidateImage(group, name, hardware, new Date(data.timeStamp));
-  fs.copyFileSync(candidate, newReference)
+  fs.copyFileSync(candidate, newReference);
   createThumbnail(newReference);
 
   // And updating the reference pointer

@@ -22,29 +22,27 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import fs from "fs";
-import { z } from "zod";
-
-
+import fs from 'fs';
+import { z } from 'zod';
 
 /**
  * The schema describing the structure of the main configuration file.
  */
-const ConfigurationSchema = z.object({
-  port: z.number().int().min(1000).max(65535),
-  slack: z.object({
-    token: z.string(),
-    channel: z.string()
-  }),
-  comparisonThreshold: z.number().min(0).max(1),
-  imageSize: z.object({ width: z.number().min(1), height: z.number().min(1) }),
-  thumbnailScale: z.number().min(1),
-  adminToken: z.string().min(1),
-  data: z.string().min(1),
-  runners: z.array(z.string().min(1))
-}).strict();
-
-
+const ConfigurationSchema = z
+  .object({
+    port: z.number().int().min(1000).max(65535),
+    slack: z.object({
+      token: z.string(),
+      channel: z.string()
+    }),
+    comparisonThreshold: z.number().min(0).max(1),
+    imageSize: z.object({ width: z.number().min(1), height: z.number().min(1) }),
+    thumbnailScale: z.number().min(1),
+    adminToken: z.string().min(1),
+    data: z.string().min(1),
+    runners: z.array(z.string().min(1))
+  })
+  .strict();
 
 class Configuration {
   constructor(configFile: string) {
@@ -83,8 +81,8 @@ class Configuration {
 
   /// The image size that all of the images must have
   size: {
-    width: number,
-    height: number
+    width: number;
+    height: number;
   };
 
   /// The scaling factor by which the image is reduced to produce a thumbnail
@@ -103,8 +101,6 @@ class Configuration {
   path: string;
 }
 
-
-
 /**
  * Loads the configuration file from the provided `path` and stores the results into the
  * global configuration object.
@@ -114,8 +110,6 @@ class Configuration {
 export function loadConfiguration(path: string) {
   Config = new Configuration(path);
 }
-
-
 
 /**
  * Updates the configuration file on disk that was used to originally load the global
@@ -134,11 +128,9 @@ export function saveConfiguration() {
     adminToken: Config.adminToken,
     data: Config.data,
     runners: Config.runners
-  }
+  };
   fs.writeFileSync(Config.path, JSON.stringify(config, null, 2));
 }
-
-
 
 /**
  * The global configuration object that stores general configuration option that are used

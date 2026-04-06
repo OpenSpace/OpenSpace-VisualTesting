@@ -1,47 +1,56 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  Anchor, Box, Checkbox, Group, Modal, PasswordInput,
-  ScrollArea, Select, Table, Text, Title,
-} from '@mantine/core'
-import { TestRecord, SortColumn } from '../types'
-import { sortRecords } from '../utils'
-import { TestHistory } from '../components/TestHistory'
-import { TestRow } from '../components/TestRow'
-import { SortableHeader } from '../components/SortableHeader'
+  Anchor,
+  Box,
+  Checkbox,
+  Group,
+  Modal,
+  PasswordInput,
+  ScrollArea,
+  Select,
+  Table,
+  Text,
+  Title
+} from '@mantine/core';
+import { TestRecord, SortColumn } from '../types';
+import { sortRecords } from '../utils';
+import { TestHistory } from '../components/TestHistory';
+import { TestRow } from '../components/TestRow';
+import { SortableHeader } from '../components/SortableHeader';
 
 export default function Home() {
-  const [records, setRecords] = useState<TestRecord[]>([])
-  const [allHardware, setAllHardware] = useState<string[]>([])
-  const [selectedHardware, setSelectedHardware] = useState<Set<string>>(new Set())
-  const [adminToken, setAdminToken] = useState('')
-  const [selectedRecord, setSelectedRecord] = useState<TestRecord | null>(null)
+  const [records, setRecords] = useState<TestRecord[]>([]);
+  const [allHardware, setAllHardware] = useState<string[]>([]);
+  const [selectedHardware, setSelectedHardware] = useState<Set<string>>(new Set());
+  const [adminToken, setAdminToken] = useState('');
+  const [selectedRecord, setSelectedRecord] = useState<TestRecord | null>(null);
 
   useEffect(() => {
     fetch('/api/test-records')
-      .then(res => res.json())
+      .then((res) => res.json())
       .then((data: TestRecord[]) => {
-        const hardwares = [...new Set(data.map(r => r.hardware))].sort()
-        setAllHardware(hardwares)
-        setSelectedHardware(new Set(hardwares))
-        setRecords(sortRecords(data, 'pixelError'))
-      })
-  }, [])
+        const hardwares = [...new Set(data.map((r) => r.hardware))].sort();
+        setAllHardware(hardwares);
+        setSelectedHardware(new Set(hardwares));
+        setRecords(sortRecords(data, 'pixelError'));
+      });
+  }, []);
 
   function handleSort(column: SortColumn) {
-    setRecords(prev => sortRecords(prev, column))
+    setRecords((prev) => sortRecords(prev, column));
   }
 
   function toggleHardware(hw: string) {
-    setSelectedHardware(prev => {
-      const next = new Set(prev)
+    setSelectedHardware((prev) => {
+      const next = new Set(prev);
       if (next.has(hw)) {
-        next.delete(hw)
+        next.delete(hw);
       } else {
-        next.add(hw)
+        next.add(hw);
       }
-      return next
-    })
+      return next;
+    });
   }
 
   async function updateReference(record: TestRecord) {
@@ -52,25 +61,31 @@ export default function Home() {
         adminToken,
         group: record.group,
         name: record.name,
-        hardware: record.hardware,
-      }),
-    })
+        hardware: record.hardware
+      })
+    });
     if (response.status === 200) {
-      alert('Successfully updated reference image')
+      alert('Successfully updated reference image');
     } else {
       alert(
-        `Error updating reference\n${response.status}\nError: ${response.statusText}`,
-      )
+        `Error updating reference\n${response.status}\nError: ${response.statusText}`
+      );
     }
   }
 
-  const visibleRecords = records.filter(r => selectedHardware.has(r.hardware))
+  const visibleRecords = records.filter((r) => selectedHardware.has(r.hardware));
 
   return (
     <Box>
       {/* Header */}
-      <Box py="md" style={{ textAlign: 'center', backgroundColor: 'var(--mantine-color-dark-7)' }}>
-        <Title order={1} style={{ fontVariant: 'small-caps', fontFamily: 'Roboto, sans-serif' }}>
+      <Box
+        py="md"
+        style={{ textAlign: 'center', backgroundColor: 'var(--mantine-color-dark-7)' }}
+      >
+        <Title
+          order={1}
+          style={{ fontVariant: 'small-caps', fontFamily: 'Roboto, sans-serif' }}
+        >
           <Link to="/" style={{ textDecoration: 'none', color: 'white' }}>
             OpenSpace Image Testing
           </Link>
@@ -91,15 +106,15 @@ export default function Home() {
             w={200}
             data={[
               { value: 'all', label: 'All' },
-              ...allHardware.map(hw => ({ value: hw, label: hw })),
+              ...allHardware.map((hw) => ({ value: hw, label: hw }))
             ]}
             defaultValue="all"
-            onChange={val => {
-              if (val === 'all') setSelectedHardware(new Set(allHardware))
-              else if (val) setSelectedHardware(new Set([val]))
+            onChange={(val) => {
+              if (val === 'all') setSelectedHardware(new Set(allHardware));
+              else if (val) setSelectedHardware(new Set([val]));
             }}
           />
-          {allHardware.map(hw => (
+          {allHardware.map((hw) => (
             <Checkbox
               key={hw}
               label={hw}
@@ -117,7 +132,7 @@ export default function Home() {
             size="xs"
             w={180}
             value={adminToken}
-            onChange={e => setAdminToken(e.target.value)}
+            onChange={(e) => setAdminToken(e.target.value)}
           />
         </Group>
       </Group>
@@ -139,7 +154,7 @@ export default function Home() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {visibleRecords.map(record => (
+          {visibleRecords.map((record) => (
             <TestRow
               key={`${record.group}-${record.name}-${record.hardware}`}
               onOpen={setSelectedRecord}
@@ -152,7 +167,11 @@ export default function Home() {
       <Modal
         opened={selectedRecord !== null}
         onClose={() => setSelectedRecord(null)}
-        title={selectedRecord ? `${selectedRecord.group} / ${selectedRecord.name} — ${selectedRecord.hardware}` : ''}
+        title={
+          selectedRecord
+            ? `${selectedRecord.group} / ${selectedRecord.name} — ${selectedRecord.hardware}`
+            : ''
+        }
         size="auto"
         scrollAreaComponent={ScrollArea.Autosize}
       >
@@ -161,5 +180,5 @@ export default function Home() {
         )}
       </Modal>
     </Box>
-  )
+  );
 }

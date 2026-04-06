@@ -1,16 +1,16 @@
 export interface TestData {
-  pixelError: number
-  timing: number
-  commitHash: string
-  timeStamp: string
-  nErrors: number
+  pixelError: number;
+  timing: number;
+  commitHash: string;
+  timeStamp: string;
+  nErrors: number;
 }
 
 export interface TestRecord {
-  group: string
-  name: string
-  hardware: string
-  data: TestData[]
+  group: string;
+  name: string;
+  hardware: string;
+  data: TestData[];
 }
 
 export type SortColumn =
@@ -20,4 +20,4 @@ export type SortColumn =
   | 'timeStamp'
   | 'group'
   | 'name'
-  | 'hardware'
+  | 'hardware';

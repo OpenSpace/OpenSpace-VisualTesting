@@ -22,10 +22,8 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import { Config } from "./configuration";
-import { WebClient } from "@slack/web-api";
-
-
+import { Config } from './configuration';
+import { WebClient } from '@slack/web-api';
 
 /**
  * A more sophisticated version of console.assert. It checks the state of the provided
@@ -37,11 +35,11 @@ import { WebClient } from "@slack/web-api";
  * @param message The message that will be printed if the @param condition is `false`
  */
 export function assert(condition: boolean, message: string) {
-  if (condition)  return;
+  if (condition) return;
 
   console.error(`Assertion failed: ${message}`);
 
-  if (Config.slackToken != "") {
+  if (Config.slackToken != '') {
     const web = new WebClient(Config.slackToken);
 
     (async () => {

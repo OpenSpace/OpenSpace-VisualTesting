@@ -22,18 +22,20 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import { assert } from "./assert";
-import { printAudit } from "./audit";
-import { Config } from "./configuration";
-import { candidateImage, differenceImage, referenceImagePath,
-  thumbnailForImage } from "./globals";
-import { createThumbnail, saveComparisonImage } from "./image";
-import fs from "fs";
-import { globSync } from "glob";
-import path from "path";
-import { z } from "zod";
-
-
+import { assert } from './assert';
+import { printAudit } from './audit';
+import { Config } from './configuration';
+import {
+  candidateImage,
+  differenceImage,
+  referenceImagePath,
+  thumbnailForImage
+} from './globals';
+import { createThumbnail, saveComparisonImage } from './image';
+import fs from 'fs';
+import { globSync } from 'glob';
+import path from 'path';
+import { z } from 'zod';
 
 type TestRecord = {
   /// The group name of the test record. This value contains URL safe characters
@@ -43,10 +45,8 @@ type TestRecord = {
   /// The name of the hardware that was used to generate this record
   hardware: string;
   /// The individual test runs, grouped by the hardware string
-  data: [ TestData ];
+  data: [TestData];
 };
-
-
 
 const TestDataSchema = z.object({
   pixelError: z.number().min(0).max(1),
@@ -58,7 +58,6 @@ const TestDataSchema = z.object({
   candidateImage: z.coerce.date(),
   differenceImage: z.coerce.date()
 });
-
 
 export type TestData = {
   /// Contains the pixel error in the image as a value between 0 and 1 as the ratio of
@@ -85,16 +84,12 @@ export type TestData = {
 
   /// The timestamp for the test whose difference image that was used for this test
   differenceImage: Date;
-}
-
-
+};
 
 /// An in-memory data storage of test records. The array gets created at startup time by
 /// parsing the 'data' folder and continuously updated as new test data comes in. This
 /// array is not stored on disk, but instead recreated from files that are kept instead
 export let TestRecords: TestRecord[] = [];
-
-
 
 /**
  * Loads a test record from the provided `path`.
@@ -113,8 +108,6 @@ export function loadTestRecord(path: string): TestData {
   return res.data;
 }
 
-
-
 /**
  * Saves a specific test data to the provided path. It will overwrite the file that is
  * already present in that location
@@ -125,8 +118,6 @@ export function loadTestRecord(path: string): TestData {
 export function saveTestData(data: TestData, path: string) {
   fs.writeFileSync(path, JSON.stringify(data, null, 2));
 }
-
-
 
 /**
  * Add a new test data to the internal list of records that are being kept. If the
@@ -139,8 +130,12 @@ export function saveTestData(data: TestData, path: string) {
  * @param hardware The hardware on which the test was run
  * @param data The test data that should be added to the list of test records
  */
-export function addTestData(group: string, name: string, hardware: string, data: TestData)
-{
+export function addTestData(
+  group: string,
+  name: string,
+  hardware: string,
+  data: TestData
+) {
   printAudit(`Adding new record for (${group}/${name}/${hardware})`);
 
   for (const record of TestRecords) {
@@ -148,23 +143,21 @@ export function addTestData(group: string, name: string, hardware: string, data:
       continue;
     }
 
-    printAudit("  Adding to data existing record");
+    printAudit('  Adding to data existing record');
     record.data.push(data);
-    record.data.sort((a, b) => a.timeStamp.getTime() - b.timeStamp.getTime())
+    record.data.sort((a, b) => a.timeStamp.getTime() - b.timeStamp.getTime());
     return;
   }
 
   // If we get here, it's a new record
-  printAudit("Creating new test record");
+  printAudit('Creating new test record');
   TestRecords.push({
     group: group,
     name: name,
     hardware: hardware,
-    data: [ data ]
+    data: [data]
   });
 }
-
-
 
 /**
  * Runs a check on all of the data results and ensure that they are all self consistent.
@@ -173,9 +166,9 @@ export function addTestData(group: string, name: string, hardware: string, data:
  *   - All test data files' reference images exist
  */
 export function verifyDataFolder() {
-  printAudit("Verifying data files");
+  printAudit('Verifying data files');
 
-  printAudit("  Reference pointers");
+  printAudit('  Reference pointers');
   const references = globSync(`${Config.data}/reference/**/ref.txt`);
   for (const reference of references) {
     const content = fs.readFileSync(reference).toString();
@@ -184,7 +177,7 @@ export function verifyDataFolder() {
     assert(fs.existsSync(p), `Reference image ${content} in ${reference} does not exist`);
   }
 
-  printAudit("  Data file references");
+  printAudit('  Data file references');
   const hardwares = fs.readdirSync(`${Config.data}/tests`);
   for (const hardware of hardwares) {
     const base = `${Config.data}/tests/${hardware}`;
@@ -211,7 +204,12 @@ export function verifyDataFolder() {
           );
 
           // Verify candidate image existence
-          const candidate = candidateImage(group, name, hardware, new Date(data.candidateImage));
+          const candidate = candidateImage(
+            group,
+            name,
+            hardware,
+            new Date(data.candidateImage)
+          );
           assert(fs.existsSync(candidate), `Missing candidate file ${candidate}`);
           assert(
             fs.existsSync(thumbnailForImage(candidate)),
@@ -236,15 +234,13 @@ export function verifyDataFolder() {
   }
 }
 
-
-
 /**
  * Loads all of the existing test results from the data folder as provided in the
  * configuration. It will iterate through all of the tests and will assert if one of the
  * test folders is malformed due to, for example, missing files.
  */
 export function loadTestResults() {
-  printAudit("Loading test results");
+  printAudit('Loading test results');
 
   const hardwares = fs.readdirSync(`${Config.data}/tests`);
   for (const hardware of hardwares) {
@@ -258,8 +254,8 @@ export function loadTestResults() {
         for (const run of runs) {
           const p = `${base}/${group}/${name}/${run}`;
           const files = fs.readdirSync(p);
-          assert(files.includes("data.json"), `No 'data.json' in ${p}`);
-          assert(files.includes("log.txt"), `No 'log.txt' in ${p}`);
+          assert(files.includes('data.json'), `No 'data.json' in ${p}`);
+          assert(files.includes('log.txt'), `No 'log.txt' in ${p}`);
 
           const data = loadTestRecord(`${p}/data.json`);
           addTestData(group, name, hardware, data);
@@ -269,8 +265,6 @@ export function loadTestResults() {
   }
 }
 
-
-
 /**
  * This function will regenerate all of the difference images that are locally stored and
  * update the pixel error values in all tests. In general this should only be necessary if
@@ -278,7 +272,7 @@ export function loadTestResults() {
  * limit has changed.
  */
 export async function regenerateTestResults() {
-  printAudit("Regenerating all test results");
+  printAudit('Regenerating all test results');
 
   const hardwares = fs.readdirSync(`${Config.data}/tests`);
   for (const hardware of hardwares) {
@@ -317,8 +311,6 @@ export async function regenerateTestResults() {
   // Reset the local records and load a fresh version from disk
   reloadTestResults();
 }
-
-
 
 /**
  * Reloads all of the test results from disk. This should be called whenever any testdata

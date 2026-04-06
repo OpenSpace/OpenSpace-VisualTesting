@@ -1,15 +1,15 @@
-import { Anchor, Box, Button, Table, Text } from '@mantine/core'
-import { TestRecord, TestData } from '../types'
-import { diffDisplay, diffStyle, timingDisplay } from '../utils'
-import { ImageThumbnail } from './ImageThumbnail'
+import { Anchor, Box, Button, Table, Text } from '@mantine/core';
+import { TestRecord, TestData } from '../types';
+import { diffDisplay, diffStyle, timingDisplay } from '../utils';
+import { ImageThumbnail } from './ImageThumbnail';
 
 interface Props {
-  record: TestRecord
-  onUpdateReference: (record: TestRecord) => void
-};
+  record: TestRecord;
+  onUpdateReference: (record: TestRecord) => void;
+}
 
 export function TestHistory({ record, onUpdateReference }: Props) {
-  const testData = [...record.data].reverse()
+  const testData = [...record.data].reverse();
 
   return (
     <Box p="md" bg="dark.8">
@@ -31,10 +31,21 @@ export function TestHistory({ record, onUpdateReference }: Props) {
           {testData.map((d: TestData, i: number) => (
             <Table.Tr key={d.timeStamp}>
               <Table.Td>
-                <Text size="sm" c="dimmed">{new Date(d.timeStamp).toUTCString()}</Text>
+                <Text size="sm" c="dimmed">
+                  {new Date(d.timeStamp).toUTCString()}
+                </Text>
               </Table.Td>
               <Table.Td>
-                <Box px={4} style={{ borderRadius: 4, display: 'inline-block', width: 70, textAlign: 'center', ...diffStyle(d.pixelError) }}>
+                <Box
+                  px={4}
+                  style={{
+                    borderRadius: 4,
+                    display: 'inline-block',
+                    width: 70,
+                    textAlign: 'center',
+                    ...diffStyle(d.pixelError)
+                  }}
+                >
                   <Text>{diffDisplay(d.pixelError)}</Text>
                 </Box>
               </Table.Td>
@@ -58,16 +69,31 @@ export function TestHistory({ record, onUpdateReference }: Props) {
                 </Anchor>
               </Table.Td>
               <Table.Td>
-                <ImageThumbnail type="candidate" group={record.group} name={record.name}
-                  hardware={record.hardware} timestamp={d.timeStamp} />
+                <ImageThumbnail
+                  type="candidate"
+                  group={record.group}
+                  name={record.name}
+                  hardware={record.hardware}
+                  timestamp={d.timeStamp}
+                />
               </Table.Td>
               <Table.Td>
-                <ImageThumbnail type="reference" group={record.group} name={record.name}
-                  hardware={record.hardware} timestamp={d.timeStamp} />
+                <ImageThumbnail
+                  type="reference"
+                  group={record.group}
+                  name={record.name}
+                  hardware={record.hardware}
+                  timestamp={d.timeStamp}
+                />
               </Table.Td>
               <Table.Td>
-                <ImageThumbnail type="difference" group={record.group} name={record.name}
-                  hardware={record.hardware} timestamp={d.timeStamp} />
+                <ImageThumbnail
+                  type="difference"
+                  group={record.group}
+                  name={record.name}
+                  hardware={record.hardware}
+                  timestamp={d.timeStamp}
+                />
               </Table.Td>
               <Table.Td>
                 {i === 0 && (
@@ -81,5 +107,5 @@ export function TestHistory({ record, onUpdateReference }: Props) {
         </Table.Tbody>
       </Table>
     </Box>
-  )
+  );
 }

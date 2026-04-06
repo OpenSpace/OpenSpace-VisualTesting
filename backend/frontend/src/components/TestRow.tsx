@@ -1,16 +1,16 @@
-import { Anchor, Box, Table, Text } from '@mantine/core'
-import { TestRecord } from '../types'
-import { diffDisplay, diffStyle, timingDisplay } from '../utils'
-import { ImageThumbnail } from './ImageThumbnail'
+import { Anchor, Box, Table, Text } from '@mantine/core';
+import { TestRecord } from '../types';
+import { diffDisplay, diffStyle, timingDisplay } from '../utils';
+import { ImageThumbnail } from './ImageThumbnail';
 
 interface Props {
-  record: TestRecord
-  onOpen: (record: TestRecord) => void
-};
+  record: TestRecord;
+  onOpen: (record: TestRecord) => void;
+}
 
 export function TestRow({ record, onOpen }: Props) {
-  const latestData = record.data[record.data.length - 1]
-  if (!latestData) return null
+  const latestData = record.data[record.data.length - 1];
+  if (!latestData) return null;
 
   return (
     <Table.Tr style={{ cursor: 'pointer' }} onClick={() => onOpen(record)}>
@@ -18,7 +18,12 @@ export function TestRow({ record, onOpen }: Props) {
         <Box
           px={6}
           py={2}
-          style={{ borderRadius: 4, textAlign: 'center', fontSize: 13, ...diffStyle(latestData.pixelError) }}
+          style={{
+            borderRadius: 4,
+            textAlign: 'center',
+            fontSize: 13,
+            ...diffStyle(latestData.pixelError)
+          }}
         >
           {diffDisplay(latestData.pixelError)}
         </Box>
@@ -42,22 +47,31 @@ export function TestRow({ record, onOpen }: Props) {
       </Table.Td>
       <Table.Td>
         <ImageThumbnail
-          type="candidate" group={record.group} name={record.name}
-          hardware={record.hardware} stopPropagation
+          type="candidate"
+          group={record.group}
+          name={record.name}
+          hardware={record.hardware}
+          stopPropagation
         />
       </Table.Td>
       <Table.Td>
         <ImageThumbnail
-          type="reference" group={record.group} name={record.name}
-          hardware={record.hardware} stopPropagation
+          type="reference"
+          group={record.group}
+          name={record.name}
+          hardware={record.hardware}
+          stopPropagation
         />
       </Table.Td>
       <Table.Td>
         <ImageThumbnail
-          type="difference" group={record.group} name={record.name}
-          hardware={record.hardware} stopPropagation
+          type="difference"
+          group={record.group}
+          name={record.name}
+          hardware={record.hardware}
+          stopPropagation
         />
       </Table.Td>
     </Table.Tr>
-  )
+  );
 }

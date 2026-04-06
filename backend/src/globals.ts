@@ -22,14 +22,12 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import { assert } from "./assert";
-import { Config } from "./configuration";
-import { imagesAreEqual } from "./image";
-import { loadTestRecord } from "./testrecords";
-import fs from "fs";
-import path from "path";
-
-
+import { assert } from './assert';
+import { Config } from './configuration';
+import { imagesAreEqual } from './image';
+import { loadTestRecord } from './testrecords';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Converts the provided `date` to a version in which it can be used as part of a path in
@@ -39,10 +37,8 @@ import path from "path";
  * @returns A string that is safe to be used as a filesystem path or a URL
  */
 export function dateToPath(date: Date): string {
-  return date.toISOString().split("-").join("").split(":").join("").split(".").join("");
+  return date.toISOString().split('-').join('').split(':').join('').split('.').join('');
 }
-
-
 
 /**
  * Returns the path used for storing the thumbnail for the provided image.
@@ -51,12 +47,10 @@ export function dateToPath(date: Date): string {
  * @returns The path to the thumbnail image
  */
 export function thumbnailForImage(path: string): string {
-  const ext = path.substring(path.lastIndexOf("."));
-  const base = path.substring(0, path.lastIndexOf("."));
+  const ext = path.substring(path.lastIndexOf('.'));
+  const base = path.substring(0, path.lastIndexOf('.'));
   return `${base}-thumbnail${ext}`;
 }
-
-
 
 /**
  * Returns the base path to where the files for the latest test for the `group`, `name`,
@@ -67,9 +61,11 @@ export function thumbnailForImage(path: string): string {
  * @param hardware The hardware for which the latest test should be returned
  * @returns The path where the test files for the latest test are stored
  */
-export function latestTestPath(group: string, name: string,
-                               hardware: string): string | null
-{
+export function latestTestPath(
+  group: string,
+  name: string,
+  hardware: string
+): string | null {
   const path = `${Config.data}/tests/${hardware}/${group}/${name}`;
   if (!fs.existsSync(path)) {
     return null;
@@ -85,8 +81,6 @@ export function latestTestPath(group: string, name: string,
   return `${path}/${tests[tests.length - 1]}`;
 }
 
-
-
 /**
  * Returns the path to where the files for the test identified by the `group`, `name`,
  * `hardware`, and `timestamp` are located. Note that the returned folder might not exist,
@@ -98,13 +92,14 @@ export function latestTestPath(group: string, name: string,
  * @param timestamp The time stamp for which the path should be returned
  * @returns The path to the test files for the provided parameters
  */
-export function testPath(group: string, name: string, hardware: string,
-                         timestamp: Date): string
-{
-  return `${Config.data}/tests/${hardware}/${group}/${name}/${dateToPath(timestamp)}`
+export function testPath(
+  group: string,
+  name: string,
+  hardware: string,
+  timestamp: Date
+): string {
+  return `${Config.data}/tests/${hardware}/${group}/${name}/${dateToPath(timestamp)}`;
 }
-
-
 
 /**
  * Returns the path to the file that contains the name of the file that is considered the
@@ -122,8 +117,6 @@ function referencePointer(group: string, name: string, hardware: string): string
   return `${Config.data}/reference/${hardware}/${group}/${name}/ref.txt`;
 }
 
-
-
 /**
  * Invalidates the current reference image for the test identified by the `group`, `name`,
  * and `hardware`.
@@ -137,8 +130,6 @@ export function clearReferencePointer(group: string, name: string, hardware: str
   fs.unlinkSync(referencePointer(group, name, hardware));
 }
 
-
-
 /**
  * Updates the current reference image for the test identified by `group`, `name`, and
  * `hardware` to point at the image identified by the `timestamp`.
@@ -149,12 +140,13 @@ export function clearReferencePointer(group: string, name: string, hardware: str
  * @param timestamp The time stamp of the image that is used as the new reference image
  * @returns The path to the file that is used as the new reference image
  */
-export function updateReferencePointer(group: string, name: string, hardware: string,
-                                       timestamp: Date): string {
-  assert(
-    !hasReferenceImage(group, name, hardware),
-    "Reference pointer already exists"
-  );
+export function updateReferencePointer(
+  group: string,
+  name: string,
+  hardware: string,
+  timestamp: Date
+): string {
+  assert(!hasReferenceImage(group, name, hardware), 'Reference pointer already exists');
 
   const p = `${dateToPath(timestamp)}.png`;
   const ref = referencePointer(group, name, hardware);
@@ -166,8 +158,6 @@ export function updateReferencePointer(group: string, name: string, hardware: st
   return referenceImage(group, name, hardware);
 }
 
-
-
 /**
  * Returns whether the test identified by `group`, `name`, and `hardware` has a current
  * reference image.
@@ -177,13 +167,13 @@ export function updateReferencePointer(group: string, name: string, hardware: st
  * @param hardware The hardware for which to check the current reference image
  * @returns Returns `true` if there is a current reference image, `false` otherwise
  */
-export function hasReferenceImage(group: string, name: string,
-                                  hardware: string): boolean
-{
+export function hasReferenceImage(
+  group: string,
+  name: string,
+  hardware: string
+): boolean {
   return fs.existsSync(referencePointer(group, name, hardware));
 }
-
-
 
 /**
  * Returns the path to the reference image for the test identified by `group`,
@@ -196,13 +186,11 @@ export function hasReferenceImage(group: string, name: string,
  * @returns The path to the current reference image for the requested test
  */
 export function referenceImage(group: string, name: string, hardware: string): string {
-  assert(hasReferenceImage(group, name, hardware), "No reference image found");
+  assert(hasReferenceImage(group, name, hardware), 'No reference image found');
 
   const path = fs.readFileSync(referencePointer(group, name, hardware)).toString();
   return `${Config.data}/reference/${hardware}/${group}/${name}/${path}`;
 }
-
-
 
 /**
  * Returns the path to the candidate image for the test identified by the `group`, `name`,
@@ -215,26 +203,25 @@ export function referenceImage(group: string, name: string, hardware: string): s
  * @param timestamp The time stamp for which to return the candidate image
  * @returns The path to the candidate image for the requested test
  */
-export function candidateImage(group: string, name: string, hardware: string,
-                               timestamp?: Date): string
-{
+export function candidateImage(
+  group: string,
+  name: string,
+  hardware: string,
+  timestamp?: Date
+): string {
   const path = testDataPath(group, name, hardware, timestamp);
   if (fs.existsSync(path)) {
     const data = loadTestRecord(path);
     return `${testPath(group, name, hardware, data.candidateImage)}/candidate.png`;
-  }
-  else {
+  } else {
     // The data path might not exist yet, if this is the first time the test is run
     if (timestamp == null) {
       return `${latestTestPath(group, name, hardware)}/candidate.png`;
-    }
-    else {
+    } else {
       return `${testPath(group, name, hardware, timestamp)}/candidate.png`;
     }
   }
 }
-
-
 
 /**
  * Returns the path to the difference image for the test identified by the `group`,
@@ -247,26 +234,25 @@ export function candidateImage(group: string, name: string, hardware: string,
  * @param timestamp The time stamp for which to return the difference image
  * @returns The path to the difference image for the requested test
  */
-export function differenceImage(group: string, name: string, hardware: string,
-                                timestamp?: Date): string
-{
+export function differenceImage(
+  group: string,
+  name: string,
+  hardware: string,
+  timestamp?: Date
+): string {
   const path = testDataPath(group, name, hardware, timestamp);
   if (fs.existsSync(path)) {
     const data = loadTestRecord(path);
     return `${testPath(group, name, hardware, data.differenceImage)}/difference.png`;
-  }
-  else {
+  } else {
     // The data path might not exist yet, if this is the first time the test is run
     if (timestamp == null) {
       return `${latestTestPath(group, name, hardware)}/difference.png`;
-    }
-    else {
+    } else {
       return `${testPath(group, name, hardware, timestamp)}/difference.png`;
     }
   }
 }
-
-
 
 /**
  * Returns the path to the log file for the test identified by the `group`, `name`,
@@ -279,13 +265,14 @@ export function differenceImage(group: string, name: string, hardware: string,
  * @param timestamp The time stamp for which to return the log file
  * @returns The path to the log file for the requested test
  */
-export function logFile(group: string, name: string, hardware: string,
-                        timestamp: Date): string
-{
+export function logFile(
+  group: string,
+  name: string,
+  hardware: string,
+  timestamp: Date
+): string {
   return `${testPath(group, name, hardware, timestamp)}/log.txt`;
 }
-
-
 
 /**
  * Returns the path to the test data file for the test identified by the `group`, `name`,
@@ -300,18 +287,18 @@ export function logFile(group: string, name: string, hardware: string,
  *                  test path if this parameter is omitted
  * @returns The path to the test data file for the requested test
  */
-export function testDataPath(group: string, name: string, hardware: string,
-                             timestamp?: Date): string
-{
+export function testDataPath(
+  group: string,
+  name: string,
+  hardware: string,
+  timestamp?: Date
+): string {
   if (timestamp) {
     return `${testPath(group, name, hardware, timestamp)}/data.json`;
-  }
-  else {
+  } else {
     return `${latestTestPath(group, name, hardware)}/data.json`;
   }
 }
-
-
 
 /**
  * Returns a path to the folder that contains all references images for the provided
@@ -322,12 +309,13 @@ export function testDataPath(group: string, name: string, hardware: string,
  * @param hardware The hardware for which to return the reference folder path
  * @returns The path to the reference folder for the requested test
  */
-export function referenceImagePath(group: string, name: string, hardware: string): string
-{
+export function referenceImagePath(
+  group: string,
+  name: string,
+  hardware: string
+): string {
   return `${Config.data}/reference/${hardware}/${group}/${name}`;
 }
-
-
 
 /**
  * Returns a path to a temporary file in which files can be stored for a short time.
@@ -337,8 +325,6 @@ export function referenceImagePath(group: string, name: string, hardware: string
 export function temporaryPath(): string {
   return `${Config.data}/temporary/`;
 }
-
-
 
 /**
  * Inspects all available candidate images for the test identified by `group`, `name`, and
@@ -354,9 +340,12 @@ export function temporaryPath(): string {
  *          file if a duplicate was found or `null` if the `image` does not have any
  *          duplicates
  */
-export function findMatchingCandidateImage(group: string, name: string,
-                                           hardware: string, image: string): Date | null
-{
+export function findMatchingCandidateImage(
+  group: string,
+  name: string,
+  hardware: string,
+  image: string
+): Date | null {
   const base = `${Config.data}/tests/${hardware}/${group}/${name}`;
   const runs = fs.readdirSync(base);
   assert(runs.length > 0, `Could not find test folders for ${hardware}/${group}/${name}`);
@@ -365,7 +354,7 @@ export function findMatchingCandidateImage(group: string, name: string,
     const path = `${base}/${run}/candidate.png`;
 
     // We don't want to compare the image with itself
-    if (path == image)  continue;
+    if (path == image) continue;
 
     if (fs.existsSync(path)) {
       const equal = imagesAreEqual(image, path);
@@ -381,8 +370,6 @@ export function findMatchingCandidateImage(group: string, name: string,
   return null;
 }
 
-
-
 /**
  * Inspects all available difference images for the test identified by `group`, `name`,
  * and `hardware` and checks if any of the difference images are identical to the image
@@ -397,9 +384,12 @@ export function findMatchingCandidateImage(group: string, name: string,
  *          file if a duplicate was found or `null` if the `image` does not have any
  *          duplicates
  */
-export function findMatchingDifferenceImage(group: string, name: string,
-  hardware: string, image: string): Date | null
-{
+export function findMatchingDifferenceImage(
+  group: string,
+  name: string,
+  hardware: string,
+  image: string
+): Date | null {
   const base = `${Config.data}/tests/${hardware}/${group}/${name}`;
   const runs = fs.readdirSync(base);
   assert(runs.length > 0, `Could not find test folders for ${hardware}/${group}/${name}`);
@@ -408,7 +398,7 @@ export function findMatchingDifferenceImage(group: string, name: string,
     const path = `${base}/${run}/difference.png`;
 
     // We don't want to compare the image with itself
-    if (path == image)  continue;
+    if (path == image) continue;
 
     if (fs.existsSync(path)) {
       const equal = imagesAreEqual(image, path);
