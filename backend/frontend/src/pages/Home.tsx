@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Anchor, Box, Button, Checkbox, Group, PasswordInput,
-  Select, Table, Text, Title,
+  Anchor, Box, Button, Checkbox, Group, Modal, PasswordInput,
+  ScrollArea, Select, Table, Text, Title,
 } from '@mantine/core'
 import { TestRecord, TestData } from '../types'
 import { diffDisplay, diffStyle, timingDisplay } from '../utils'
@@ -179,75 +179,63 @@ function TestHistory({
   )
 }
 
-const COL_SPAN = 10
-
 function TestRow({
   record,
-  onUpdateReference,
+  onOpen,
 }: {
   record: TestRecord
-  onUpdateReference: (record: TestRecord) => void
+  onOpen: (record: TestRecord) => void
 }) {
-  const [expanded, setExpanded] = useState(false)
   const latestData = record.data[record.data.length - 1]
   if (!latestData) return null
 
   return (
-    <>
-      <Table.Tr style={{ cursor: 'pointer' }} onClick={() => setExpanded(e => !e)}>
-        <Table.Td>
-          <Box
-            px={6}
-            py={2}
-            style={{ borderRadius: 4, textAlign: 'center', fontSize: 13, ...diffStyle(latestData.pixelError) }}
-          >
-            {diffDisplay(latestData.pixelError)}
-          </Box>
-        </Table.Td>
-        <Table.Td>{record.group}</Table.Td>
-        <Table.Td>{record.name}</Table.Td>
-        <Table.Td>{record.hardware}</Table.Td>
-        <Table.Td>{timingDisplay(latestData.timing)}</Table.Td>
-        <Table.Td>
-          <Anchor
-            size="sm"
-            href={`https://github.com/OpenSpace/OpenSpace/commit/${latestData.commitHash}`}
-            target="_blank"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          >
-            {latestData.commitHash.substring(0, 8)}
-          </Anchor>
-        </Table.Td>
-        <Table.Td>
-          <Text size="sm">{new Date(latestData.timeStamp).toISOString()}</Text>
-        </Table.Td>
-        <Table.Td>
-          <ImageThumbnail
-            type="candidate" group={record.group} name={record.name}
-            hardware={record.hardware} stopPropagation
-          />
-        </Table.Td>
-        <Table.Td>
-          <ImageThumbnail
-            type="reference" group={record.group} name={record.name}
-            hardware={record.hardware} stopPropagation
-          />
-        </Table.Td>
-        <Table.Td>
-          <ImageThumbnail
-            type="difference" group={record.group} name={record.name}
-            hardware={record.hardware} stopPropagation
-          />
-        </Table.Td>
-      </Table.Tr>
-      {expanded && (
-        <Table.Tr>
-          <Table.Td colSpan={COL_SPAN} style={{ padding: 0 }}>
-            <TestHistory record={record} onUpdateReference={onUpdateReference} />
-          </Table.Td>
-        </Table.Tr>
-      )}
-    </>
+    <Table.Tr style={{ cursor: 'pointer' }} onClick={() => onOpen(record)}>
+      <Table.Td>
+        <Box
+          px={6}
+          py={2}
+          style={{ borderRadius: 4, textAlign: 'center', fontSize: 13, ...diffStyle(latestData.pixelError) }}
+        >
+          {diffDisplay(latestData.pixelError)}
+        </Box>
+      </Table.Td>
+      <Table.Td>{record.group}</Table.Td>
+      <Table.Td>{record.name}</Table.Td>
+      <Table.Td>{record.hardware}</Table.Td>
+      <Table.Td>{timingDisplay(latestData.timing)}</Table.Td>
+      <Table.Td>
+        <Anchor
+          size="sm"
+          href={`https://github.com/OpenSpace/OpenSpace/commit/${latestData.commitHash}`}
+          target="_blank"
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        >
+          {latestData.commitHash.substring(0, 8)}
+        </Anchor>
+      </Table.Td>
+      <Table.Td>
+        <Text size="sm">{new Date(latestData.timeStamp).toISOString()}</Text>
+      </Table.Td>
+      <Table.Td>
+        <ImageThumbnail
+          type="candidate" group={record.group} name={record.name}
+          hardware={record.hardware} stopPropagation
+        />
+      </Table.Td>
+      <Table.Td>
+        <ImageThumbnail
+          type="reference" group={record.group} name={record.name}
+          hardware={record.hardware} stopPropagation
+        />
+      </Table.Td>
+      <Table.Td>
+        <ImageThumbnail
+          type="difference" group={record.group} name={record.name}
+          hardware={record.hardware} stopPropagation
+        />
+      </Table.Td>
+    </Table.Tr>
   )
 }
 
@@ -272,6 +260,7 @@ export default function Home() {
   const [allHardware, setAllHardware] = useState<string[]>([])
   const [selectedHardware, setSelectedHardware] = useState<Set<string>>(new Set())
   const [adminToken, setAdminToken] = useState('')
+  const [selectedRecord, setSelectedRecord] = useState<TestRecord | null>(null)
 
   useEffect(() => {
     fetch('/api/test-records')
@@ -398,12 +387,24 @@ export default function Home() {
           {visibleRecords.map(record => (
             <TestRow
               key={`${record.group}-${record.name}-${record.hardware}`}
+              onOpen={setSelectedRecord}
               record={record}
-              onUpdateReference={updateReference}
             />
           ))}
         </Table.Tbody>
       </Table>
+
+      <Modal
+        opened={selectedRecord !== null}
+        onClose={() => setSelectedRecord(null)}
+        title={selectedRecord ? `${selectedRecord.group} / ${selectedRecord.name} — ${selectedRecord.hardware}` : ''}
+        size="auto"
+        scrollAreaComponent={ScrollArea.Autosize}
+      >
+        {selectedRecord && (
+          <TestHistory record={selectedRecord} onUpdateReference={updateReference} />
+        )}
+      </Modal>
     </Box>
   )
 }
