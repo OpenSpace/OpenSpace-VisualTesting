@@ -1,4 +1,4 @@
-import { SortColumn,TestRecord } from './types';
+import { SortColumn, TestRecord } from './types';
 
 export function diffDisplay(diff: number): string {
   return `${Math.round(diff * 100000) / 1000}%`;

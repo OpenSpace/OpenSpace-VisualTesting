@@ -178,11 +178,11 @@ async function handleResult(req: express.Request, res: express.Response) {
   ] as const;
 
   const p: any = req.params;
-  const {type} = p;
-  const {group} = p;
-  const {name} = p;
-  const {hardware} = p;
-  const {timestamp} = p;
+  const { type } = p;
+  const { group } = p;
+  const { name } = p;
+  const { hardware } = p;
+  const { timestamp } = p;
 
   if (!types.includes(type)) {
     res.status(400).json({ error: `Invalid type ${type} provided` });
@@ -274,11 +274,11 @@ async function handleResult(req: express.Request, res: express.Response) {
  */
 async function handleCompare(req: express.Request, res: express.Response) {
   const p: any = req.params;
-  const {type} = p;
-  const {group} = p;
-  const {name} = p;
-  const {hardware1} = p;
-  const {hardware2} = p;
+  const { type } = p;
+  const { group } = p;
+  const { name } = p;
+  const { hardware1 } = p;
+  const { hardware2 } = p;
 
   if (!['reference', 'candidate'].includes(type)) {
     res.status(400).json({ error: `Invalid type ${type} provided` });
@@ -346,7 +346,7 @@ async function handleChangeThreshold(req: express.Request, res: express.Response
     return;
   }
 
-  const {threshold} = body;
+  const { threshold } = body;
   if (threshold == null || typeof threshold !== 'number') {
     res.status(400).json({ error: 'Threshold must be provided and be a number' });
     return;
@@ -389,19 +389,19 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     return;
   }
 
-  const {hardware} = req.body;
+  const { hardware } = req.body;
   if (hardware == null) {
     res.status(400).json({ error: "Missing field 'hardware'" });
     return;
   }
 
-  const {group} = req.body;
+  const { group } = req.body;
   if (group == null) {
     res.status(400).json({ error: "Missing field 'group'" });
     return;
   }
 
-  const {name} = req.body;
+  const { name } = req.body;
   if (name == null) {
     res.status(400).json({ error: "Missing field 'name'" });
     return;
@@ -413,13 +413,13 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   }
   const timeStamp = new Date(req.body.timestamp);
 
-  const {timing} = req.body;
+  const { timing } = req.body;
   if (timing == null) {
     res.status(400).json({ error: "Missing field 'timing'" });
     return;
   }
 
-  const {commitHash} = req.body;
+  const { commitHash } = req.body;
   if (commitHash == null) {
     res.status(400).json({ error: "Missing field 'commitHash'" });
     return;
@@ -554,19 +554,19 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
  *   - `file`: The generated candidate file
  */
 function handleRunTest(req: express.Request, res: express.Response) {
-  const {hardware} = req.body;
+  const { hardware } = req.body;
   if (hardware == null) {
     res.status(400).json({ error: "Missing field 'hardware'" });
     return;
   }
 
-  const {group} = req.body;
+  const { group } = req.body;
   if (group == null) {
     res.status(400).json({ error: "Missing field 'group'" });
     return;
   }
 
-  const {name} = req.body;
+  const { name } = req.body;
   if (name == null) {
     res.status(400).json({ error: "Missing field 'name'" });
     return;
@@ -626,25 +626,25 @@ function handleRunTest(req: express.Request, res: express.Response) {
  */
 async function handleUpdateReference(req: express.Request, res: express.Response) {
   const body = JSON.parse(req.body);
-  const {adminToken} = body;
+  const { adminToken } = body;
   if (adminToken == null || adminToken != Config.adminToken) {
     res.status(401).end();
     return;
   }
 
-  const {hardware} = body;
+  const { hardware } = body;
   if (hardware == null) {
     res.status(400).json({ error: "Missing key 'hardware'" });
     return;
   }
 
-  const {group} = body;
+  const { group } = body;
   if (group == null) {
     res.status(400).json({ error: "Missing key 'group'" });
     return;
   }
 
-  const {name} = body;
+  const { name } = body;
   if (name == null) {
     res.status(400).json({ error: "Missing key 'name'" });
     return;

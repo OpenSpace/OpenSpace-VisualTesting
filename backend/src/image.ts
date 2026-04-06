@@ -64,8 +64,8 @@ export function generateComparisonImage(
     return null;
   }
 
-  const {width} = Config.size;
-  const {height} = Config.size;
+  const { width } = Config.size;
+  const { height } = Config.size;
   const diffImg = new PNG({ width, height });
   const nPixels = pixelmatch(refImg.data, testImg.data, diffImg.data, width, height, {
     threshold: Config.comparisonThreshold

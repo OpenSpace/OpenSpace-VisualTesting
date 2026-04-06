@@ -1,6 +1,6 @@
 import { Anchor, Box, Button, Table, Text } from '@mantine/core';
 
-import { TestData,TestRecord } from '../types';
+import { TestData, TestRecord } from '../types';
 import { diffDisplay, diffStyle, timingDisplay } from '../utils';
 
 import { ImageThumbnail } from './ImageThumbnail';
@@ -14,8 +14,13 @@ export function TestHistory({ record, onUpdateReference }: Props) {
   const testData = [...record.data].reverse();
 
   return (
-    <Box p={"md"} bg={"dark.8"}>
-      <Table horizontalSpacing={"xs"} verticalSpacing={4} withTableBorder withColumnBorders>
+    <Box p={'md'} bg={'dark.8'}>
+      <Table
+        horizontalSpacing={'xs'}
+        verticalSpacing={4}
+        withTableBorder
+        withColumnBorders
+      >
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Timestamp</Table.Th>
@@ -33,7 +38,7 @@ export function TestHistory({ record, onUpdateReference }: Props) {
           {testData.map((d: TestData, i: number) => (
             <Table.Tr key={d.timeStamp}>
               <Table.Td>
-                <Text size={"sm"} c={"dimmed"}>
+                <Text size={'sm'} c={'dimmed'}>
                   {new Date(d.timeStamp).toUTCString()}
                 </Text>
               </Table.Td>
@@ -54,7 +59,7 @@ export function TestHistory({ record, onUpdateReference }: Props) {
               <Table.Td>
                 <Anchor
                   href={`https://github.com/OpenSpace/OpenSpace/commit/${d.commitHash}`}
-                  target={"_blank"}
+                  target={'_blank'}
                 >
                   {d.commitHash.substring(0, 8)}
                 </Anchor>
@@ -65,14 +70,14 @@ export function TestHistory({ record, onUpdateReference }: Props) {
               <Table.Td>
                 <Anchor
                   href={`/api/result/log/${record.group}/${record.name}/${record.hardware}/${d.timeStamp}`}
-                  target={"_blank"}
+                  target={'_blank'}
                 >
                   Log ({d.nErrors} errors)
                 </Anchor>
               </Table.Td>
               <Table.Td>
                 <ImageThumbnail
-                  type={"candidate"}
+                  type={'candidate'}
                   group={record.group}
                   name={record.name}
                   hardware={record.hardware}
@@ -81,7 +86,7 @@ export function TestHistory({ record, onUpdateReference }: Props) {
               </Table.Td>
               <Table.Td>
                 <ImageThumbnail
-                  type={"reference"}
+                  type={'reference'}
                   group={record.group}
                   name={record.name}
                   hardware={record.hardware}
@@ -90,7 +95,7 @@ export function TestHistory({ record, onUpdateReference }: Props) {
               </Table.Td>
               <Table.Td>
                 <ImageThumbnail
-                  type={"difference"}
+                  type={'difference'}
                   group={record.group}
                   name={record.name}
                   hardware={record.hardware}
@@ -99,7 +104,7 @@ export function TestHistory({ record, onUpdateReference }: Props) {
               </Table.Td>
               <Table.Td>
                 {i === 0 && (
-                  <Button variant={"default"} onClick={() => onUpdateReference(record)}>
+                  <Button variant={'default'} onClick={() => onUpdateReference(record)}>
                     Upgrade Candidate to Reference
                   </Button>
                 )}
