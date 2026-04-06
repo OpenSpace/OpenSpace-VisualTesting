@@ -205,8 +205,16 @@ async function handleResult(req: express.Request, res: express.Response) {
     basePath = testPath(group, name, hardware, new Date(timestamp));
 
     if (!fs.existsSync(basePath)) {
-      res.status(404).end();
-      return;
+      // The provided timestamp might be incomplete, so in that case we return the closest
+      // image to the provided timestamp instead
+      let p = latestTestPath(group, name, hardware, new Date(timestamp));
+
+      if (!p) {
+        res.status(404).end();
+        return;
+      }
+
+      basePath = p;
     }
   }
 

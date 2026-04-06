@@ -60,19 +60,29 @@ export function thumbnailForImage(path: string): string {
  * @param group The name of the group for which the latest test should be returned
  * @param name The name of the test for which the latest run should be returned
  * @param hardware The hardware for which the latest test should be returned
+ * @param timestamp If the date is provided, the last test before the provided date is
+ *        returned. Only the date is used in this, any hours, minutes, or seconds are
+ *        ignored
  * @returns The path where the test files for the latest test are stored
  */
 export function latestTestPath(
   group: string,
   name: string,
-  hardware: string
+  hardware: string,
+  timestamp?: Date
 ): string | null {
   const path = `${Config.data}/tests/${hardware}/${group}/${name}`;
   if (!fs.existsSync(path)) {
     return null;
   }
 
-  const tests = fs.readdirSync(path);
+  let tests = fs.readdirSync(path);
+
+  if (timestamp) {
+    const prefix = dateToPath(timestamp).substring(0, 8);
+    tests = tests.filter((t) => t.startsWith(prefix));
+  }
+
   if (tests.length == 0) {
     return null;
   }
