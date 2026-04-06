@@ -53,7 +53,7 @@ def submit_image(result: TestResult, hardware: str, timestamp: str, file: str,
       with open(file, "rb") as f:
         res = requests.post(
           url,
-          timeout=30,
+          timeout=300,
           data = {
             "group": result.group,
             "name": result.name,
