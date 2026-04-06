@@ -19,7 +19,7 @@ export function ImageThumbnail({
     >
       <img
         src={`/api/result/${type}-thumbnail/${group}/${name}/${hardware}${timePart}`}
-        style={{ width: 85, height: 47.8125 }}
+        style={{ width: 170, height: 95.625 }}
         loading="lazy"
         alt={type}
       />
