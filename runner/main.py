@@ -47,44 +47,28 @@ def submit_image(result: TestResult, hardware: str, timestamp: str, file: str,
   Submits a new candidate image to the provided URL. This function logs a method
   indicating whether the image submission succeeded
   """
-  nRetries = 10
-  for attempt in range(1, nRetries + 1):
-    try:
-      with open(file, "rb") as f:
-        res = requests.post(
-          url,
-          timeout=300,
-          data = {
-            "group": result.group,
-            "name": result.name,
-            "hardware": hardware,
-            "runnerID": runner,
-            "timestamp": timestamp,
-            "timing": result.timing,
-            "commitHash": result.commit
-          },
-          files = {
-            "file": f,
-            "log": result.error
-          }
-        )
-      if res.status_code == 200:
-        print("Image submitted successfully")
-        return
-      elif res.status_code in (502, 503, 504):
-        print(f"Image submission attempt {attempt}/{nRetries} failed with error {res.status_code}, retrying...")
-      else:
-        print(f"Image submission failed with error {res.status_code}")
-        print(res.text)
-        return
-    except requests.exceptions.Timeout:
-      print(f"Image submission attempt {attempt}/{nRetries} timed out, retrying...")
-    except requests.exceptions.RequestException as e:
-      print(f"Image submission attempt {attempt}/{nRetries} failed with error: {e}")
-      return
-    if attempt < nRetries:
-      time.sleep(5)
-  print(f"Image submission failed after {nRetries} attempts")
+  with open(file, "rb") as f:
+    res = requests.post(
+      url,
+      data = {
+        "group": result.group,
+        "name": result.name,
+        "hardware": hardware,
+        "runnerID": runner,
+        "timestamp": timestamp,
+        "timing": result.timing,
+        "commitHash": result.commit
+      },
+      files = {
+        "file": f,
+        "log": result.error
+      }
+    )
+  if res.status_code == 200:
+    print("Image submitted successfully")
+  else:
+    print(f"Image submission failed with error {res.status_code}")
+    print(res.text)
 
 
 
