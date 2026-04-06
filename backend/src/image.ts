@@ -22,14 +22,15 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import { assert } from './assert';
-import { printAudit } from './audit';
-import { Config } from './configuration';
-import { thumbnailForImage } from './globals';
 import fs from 'fs';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import resizeImg from 'resize-img';
+
+import { assert } from './assert';
+import { printAudit } from './audit';
+import { Config } from './configuration';
+import { thumbnailForImage } from './globals';
 
 /**
  * Runs an image comparison to compare the `reference` image with the `candidate` image.
@@ -63,8 +64,8 @@ export function generateComparisonImage(
     return null;
   }
 
-  const width = Config.size.width;
-  const height = Config.size.height;
+  const {width} = Config.size;
+  const {height} = Config.size;
   const diffImg = new PNG({ width, height });
   const nPixels = pixelmatch(refImg.data, testImg.data, diffImg.data, width, height, {
     threshold: Config.comparisonThreshold

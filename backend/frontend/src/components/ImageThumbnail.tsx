@@ -21,13 +21,13 @@ export function ImageThumbnail({
   return (
     <Anchor
       href={`/api/result/${type}/${group}/${name}/${hardware}${timePart}`}
-      target="_blank"
+      target={"_blank"}
       onClick={stopPropagation ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
     >
       <img
         src={`/api/result/${type}-thumbnail/${group}/${name}/${hardware}${timePart}`}
         style={{ width: 170, height: 95.625 }}
-        loading="lazy"
+        loading={"lazy"}
         alt={type}
       />
     </Anchor>

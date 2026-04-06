@@ -22,14 +22,15 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import { registerRoutes } from './api';
-import { initializeAudit } from './audit';
-import { Config, loadConfiguration } from './configuration';
-import { loadTestResults, verifyDataFolder } from './testrecords';
 import cors from 'cors';
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
+
+import { registerRoutes } from './api';
+import { initializeAudit } from './audit';
+import { Config, loadConfiguration } from './configuration';
+import { loadTestResults, verifyDataFolder } from './testrecords';
 
 // @TODO: Add graphs showing timing information
 // @TODO: Add repeating task to clean the files in the temporary folder

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect,useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Anchor,
@@ -13,11 +13,12 @@ import {
   Text,
   Title
 } from '@mantine/core';
-import { TestRecord, SortColumn } from '../types';
-import { sortRecords } from '../utils';
+
+import { SortableHeader } from '../components/SortableHeader';
 import { TestHistory } from '../components/TestHistory';
 import { TestRow } from '../components/TestRow';
-import { SortableHeader } from '../components/SortableHeader';
+import { SortColumn,TestRecord } from '../types';
+import { sortRecords } from '../utils';
 
 export default function Home() {
   const [records, setRecords] = useState<TestRecord[]>([]);
@@ -79,14 +80,14 @@ export default function Home() {
     <Box>
       {/* Header */}
       <Box
-        py="md"
+        py={"md"}
         style={{ textAlign: 'center', backgroundColor: 'var(--mantine-color-dark-7)' }}
       >
         <Title
           order={1}
           style={{ fontVariant: 'small-caps', fontFamily: 'Roboto, sans-serif' }}
         >
-          <Link to="/" style={{ textDecoration: 'none', color: 'white' }}>
+          <Link to={"/"} style={{ textDecoration: 'none', color: 'white' }}>
             OpenSpace Image Testing
           </Link>
         </Title>
@@ -94,21 +95,21 @@ export default function Home() {
 
       {/* Controls */}
       <Group
-        p="sm"
-        align="flex-start"
-        justify="space-between"
+        p={"sm"}
+        align={"flex-start"}
+        justify={"space-between"}
         style={{ backgroundColor: 'var(--mantine-color-dark-6)' }}
       >
-        <Group gap="sm" align="center" wrap="wrap">
+        <Group gap={"sm"} align={"center"} wrap={"wrap"}>
           <Text fw={600}>Hardware:</Text>
           <Select
-            size="xs"
+            size={"xs"}
             w={200}
             data={[
               { value: 'all', label: 'All' },
               ...allHardware.map((hw) => ({ value: hw, label: hw }))
             ]}
-            defaultValue="all"
+            defaultValue={"all"}
             onChange={(val) => {
               if (val === 'all') setSelectedHardware(new Set(allHardware));
               else if (val) setSelectedHardware(new Set([val]));
@@ -122,14 +123,14 @@ export default function Home() {
               onChange={() => toggleHardware(hw)}
             />
           ))}
-          <Anchor component={Link as any} to="/compare" size="sm">
+          <Anchor component={Link as any} to={"/compare"} size={"sm"}>
             Hardware Compare
           </Anchor>
         </Group>
-        <Group gap="xs">
+        <Group gap={"xs"}>
           <Text fw={600}>Admin:</Text>
           <PasswordInput
-            size="xs"
+            size={"xs"}
             w={180}
             value={adminToken}
             onChange={(e) => setAdminToken(e.target.value)}
@@ -141,13 +142,13 @@ export default function Home() {
       <Table striped highlightOnHover withColumnBorders stickyHeader>
         <Table.Thead>
           <Table.Tr>
-            <SortableHeader sortKey="pixelError" label="Error" onSort={handleSort} />
-            <SortableHeader sortKey="group" label="Group" onSort={handleSort} />
-            <SortableHeader sortKey="name" label="Name" onSort={handleSort} />
-            <SortableHeader sortKey="hardware" label="Hardware" onSort={handleSort} />
-            <SortableHeader sortKey="timing" label="Timing" onSort={handleSort} />
-            <SortableHeader sortKey="commitHash" label="Commit" onSort={handleSort} />
-            <SortableHeader sortKey="timeStamp" label="Timestamp" onSort={handleSort} />
+            <SortableHeader sortKey={"pixelError"} label={"Error"} onSort={handleSort} />
+            <SortableHeader sortKey={"group"} label={"Group"} onSort={handleSort} />
+            <SortableHeader sortKey={"name"} label={"Name"} onSort={handleSort} />
+            <SortableHeader sortKey={"hardware"} label={"Hardware"} onSort={handleSort} />
+            <SortableHeader sortKey={"timing"} label={"Timing"} onSort={handleSort} />
+            <SortableHeader sortKey={"commitHash"} label={"Commit"} onSort={handleSort} />
+            <SortableHeader sortKey={"timeStamp"} label={"Timestamp"} onSort={handleSort} />
             <Table.Th>Candidate</Table.Th>
             <Table.Th>Reference</Table.Th>
             <Table.Th>Difference</Table.Th>
@@ -172,7 +173,7 @@ export default function Home() {
             ? `${selectedRecord.group} / ${selectedRecord.name} — ${selectedRecord.hardware}`
             : ''
         }
-        size="auto"
+        size={"auto"}
         scrollAreaComponent={ScrollArea.Autosize}
       >
         {selectedRecord && (

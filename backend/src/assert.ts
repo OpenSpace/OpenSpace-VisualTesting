@@ -22,8 +22,9 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import { Config } from './configuration';
 import { WebClient } from '@slack/web-api';
+
+import { Config } from './configuration';
 
 /**
  * A more sophisticated version of console.assert. It checks the state of the provided

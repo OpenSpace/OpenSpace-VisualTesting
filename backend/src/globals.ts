@@ -22,12 +22,13 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
+import fs from 'fs';
+import path from 'path';
+
 import { assert } from './assert';
 import { Config } from './configuration';
 import { imagesAreEqual } from './image';
 import { loadTestRecord } from './testrecords';
-import fs from 'fs';
-import path from 'path';
 
 /**
  * Converts the provided `date` to a version in which it can be used as part of a path in

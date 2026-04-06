@@ -22,8 +22,9 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import { Config } from './configuration';
 import fs from 'fs';
+
+import { Config } from './configuration';
 
 /**
  * The path to the file that is used to store the audit data. If it does not exist, it

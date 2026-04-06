@@ -1,6 +1,8 @@
 import { Anchor, Box, Table, Text } from '@mantine/core';
+
 import { TestRecord } from '../types';
 import { diffDisplay, diffStyle, timingDisplay } from '../utils';
+
 import { ImageThumbnail } from './ImageThumbnail';
 
 interface Props {
@@ -34,20 +36,20 @@ export function TestRow({ record, onOpen }: Props) {
       <Table.Td>{timingDisplay(latestData.timing)}</Table.Td>
       <Table.Td>
         <Anchor
-          size="sm"
+          size={"sm"}
           href={`https://github.com/OpenSpace/OpenSpace/commit/${latestData.commitHash}`}
-          target="_blank"
+          target={"_blank"}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           {latestData.commitHash.substring(0, 8)}
         </Anchor>
       </Table.Td>
       <Table.Td>
-        <Text size="sm">{new Date(latestData.timeStamp).toISOString()}</Text>
+        <Text size={"sm"}>{new Date(latestData.timeStamp).toISOString()}</Text>
       </Table.Td>
       <Table.Td>
         <ImageThumbnail
-          type="candidate"
+          type={"candidate"}
           group={record.group}
           name={record.name}
           hardware={record.hardware}
@@ -56,7 +58,7 @@ export function TestRow({ record, onOpen }: Props) {
       </Table.Td>
       <Table.Td>
         <ImageThumbnail
-          type="reference"
+          type={"reference"}
           group={record.group}
           name={record.name}
           hardware={record.hardware}
@@ -65,7 +67,7 @@ export function TestRow({ record, onOpen }: Props) {
       </Table.Td>
       <Table.Td>
         <ImageThumbnail
-          type="difference"
+          type={"difference"}
           group={record.group}
           name={record.name}
           hardware={record.hardware}

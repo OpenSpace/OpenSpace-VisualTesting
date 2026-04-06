@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef,useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Anchor,
@@ -11,6 +11,7 @@ import {
   TextInput,
   Title
 } from '@mantine/core';
+
 import { TestRecord } from '../types';
 import { diffDisplay, diffStyle } from '../utils';
 
@@ -42,7 +43,7 @@ function CompareCell({ type, group, name, hardware1, hardware2 }: Props) {
         textAlign: 'center'
       }}
     >
-      <Anchor href={compareUrl} target="_blank">
+      <Anchor href={compareUrl} target={"_blank"}>
         <img
           src={compareUrl}
           alt={`${hardware1} vs ${hardware2}`}
@@ -55,7 +56,7 @@ function CompareCell({ type, group, name, hardware1, hardware2 }: Props) {
           mt={2}
           style={{ borderRadius: 4, display: 'inline-block', ...diffStyle(pixelError) }}
         >
-          <Text size="sm">{diffDisplay(pixelError)}</Text>
+          <Text size={"sm"}>{diffDisplay(pixelError)}</Text>
         </Box>
       )}
     </Table.Td>
@@ -111,11 +112,11 @@ export default function Compare() {
     <Box>
       {/* Header */}
       <Box
-        py="md"
+        py={"md"}
         style={{ textAlign: 'center', backgroundColor: 'var(--mantine-color-dark-7)' }}
       >
         <Title order={1} style={{ fontVariant: 'small-caps' }}>
-          <Link to="/" style={{ textDecoration: 'none', color: 'white' }}>
+          <Link to={"/"} style={{ textDecoration: 'none', color: 'white' }}>
             OpenSpace Image Testing
           </Link>
         </Title>
@@ -123,25 +124,25 @@ export default function Compare() {
 
       {/* Input fields */}
       <Group
-        p="sm"
-        align="flex-end"
+        p={"sm"}
+        align={"flex-end"}
         style={{ backgroundColor: 'var(--mantine-color-dark-6)' }}
       >
         <TextInput
-          label="Group"
-          size="sm"
+          label={"Group"}
+          size={"sm"}
           value={group}
           onChange={(e) => setGroup(e.target.value)}
         />
         <TextInput
-          label="Name"
-          size="sm"
+          label={"Name"}
+          size={"sm"}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <Select
-          label="Type"
-          size="sm"
+          label={"Type"}
+          size={"sm"}
           w={160}
           value={type}
           onChange={(val) => setType((val ?? 'reference') as ImageType)}
@@ -156,15 +157,15 @@ export default function Compare() {
       </Group>
 
       {shareUrl && (
-        <Box px="sm" py="xs">
-          <Anchor href={shareUrl} size="sm">
+        <Box px={"sm"} py={"xs"}>
+          <Anchor href={shareUrl} size={"sm"}>
             {shareUrl}
           </Anchor>
         </Box>
       )}
 
       {hasResult && (
-        <Table id="splom" withColumnBorders withTableBorder>
+        <Table id={"splom"} withColumnBorders withTableBorder>
           <Table.Tbody>
             {hardwares.map((hw, i) => (
               <Table.Tr key={hw}>
@@ -182,7 +183,7 @@ export default function Compare() {
                 >
                   <Anchor
                     href={`/api/result/${rType}/${rGroup}/${rName}/${hw}`}
-                    target="_blank"
+                    target={"_blank"}
                   >
                     <img
                       src={`/api/result/${rType}-thumbnail/${rGroup}/${rName}/${hw}`}
@@ -190,7 +191,7 @@ export default function Compare() {
                       style={{ width: 150, height: 84.375 }}
                     />
                   </Anchor>
-                  <Text size="sm" ta="center">
+                  <Text size={"sm"} ta={"center"}>
                     {hw}
                   </Text>
                 </Table.Td>

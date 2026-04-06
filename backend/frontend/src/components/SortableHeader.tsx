@@ -1,4 +1,5 @@
 import { Table } from '@mantine/core';
+
 import { SortColumn } from '../types';
 
 interface Props {

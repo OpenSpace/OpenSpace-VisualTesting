@@ -22,6 +22,13 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
+import bodyParser from 'body-parser';
+import express from 'express';
+import fs from 'fs';
+import multer from 'multer';
+import path from 'path';
+import { PNG } from 'pngjs';
+
 import { printAudit } from './audit';
 import { Config, saveConfiguration } from './configuration';
 import {
@@ -52,12 +59,6 @@ import {
   TestData,
   TestRecords
 } from './testrecords';
-import bodyParser from 'body-parser';
-import express from 'express';
-import fs from 'fs';
-import multer from 'multer';
-import path from 'path';
-import { PNG } from 'pngjs';
 
 /**
  * Registers the routes for the available API calls.
@@ -177,11 +178,11 @@ async function handleResult(req: express.Request, res: express.Response) {
   ] as const;
 
   const p: any = req.params;
-  const type = p.type;
-  const group = p.group;
-  const name = p.name;
-  const hardware = p.hardware;
-  const timestamp = p.timestamp;
+  const {type} = p;
+  const {group} = p;
+  const {name} = p;
+  const {hardware} = p;
+  const {timestamp} = p;
 
   if (!types.includes(type)) {
     res.status(400).json({ error: `Invalid type ${type} provided` });
@@ -273,11 +274,11 @@ async function handleResult(req: express.Request, res: express.Response) {
  */
 async function handleCompare(req: express.Request, res: express.Response) {
   const p: any = req.params;
-  const type = p.type;
-  const group = p.group;
-  const name = p.name;
-  const hardware1 = p.hardware1;
-  const hardware2 = p.hardware2;
+  const {type} = p;
+  const {group} = p;
+  const {name} = p;
+  const {hardware1} = p;
+  const {hardware2} = p;
 
   if (!['reference', 'candidate'].includes(type)) {
     res.status(400).json({ error: `Invalid type ${type} provided` });
@@ -345,7 +346,7 @@ async function handleChangeThreshold(req: express.Request, res: express.Response
     return;
   }
 
-  const threshold = body.threshold;
+  const {threshold} = body;
   if (threshold == null || typeof threshold !== 'number') {
     res.status(400).json({ error: 'Threshold must be provided and be a number' });
     return;
@@ -388,19 +389,19 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     return;
   }
 
-  const hardware = req.body.hardware;
+  const {hardware} = req.body;
   if (hardware == null) {
     res.status(400).json({ error: "Missing field 'hardware'" });
     return;
   }
 
-  const group = req.body.group;
+  const {group} = req.body;
   if (group == null) {
     res.status(400).json({ error: "Missing field 'group'" });
     return;
   }
 
-  const name = req.body.name;
+  const {name} = req.body;
   if (name == null) {
     res.status(400).json({ error: "Missing field 'name'" });
     return;
@@ -412,13 +413,13 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
   }
   const timeStamp = new Date(req.body.timestamp);
 
-  const timing = req.body.timing;
+  const {timing} = req.body;
   if (timing == null) {
     res.status(400).json({ error: "Missing field 'timing'" });
     return;
   }
 
-  const commitHash = req.body.commitHash;
+  const {commitHash} = req.body;
   if (commitHash == null) {
     res.status(400).json({ error: "Missing field 'commitHash'" });
     return;
@@ -553,19 +554,19 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
  *   - `file`: The generated candidate file
  */
 function handleRunTest(req: express.Request, res: express.Response) {
-  const hardware = req.body.hardware;
+  const {hardware} = req.body;
   if (hardware == null) {
     res.status(400).json({ error: "Missing field 'hardware'" });
     return;
   }
 
-  const group = req.body.group;
+  const {group} = req.body;
   if (group == null) {
     res.status(400).json({ error: "Missing field 'group'" });
     return;
   }
 
-  const name = req.body.name;
+  const {name} = req.body;
   if (name == null) {
     res.status(400).json({ error: "Missing field 'name'" });
     return;
@@ -625,25 +626,25 @@ function handleRunTest(req: express.Request, res: express.Response) {
  */
 async function handleUpdateReference(req: express.Request, res: express.Response) {
   const body = JSON.parse(req.body);
-  const adminToken = body.adminToken;
+  const {adminToken} = body;
   if (adminToken == null || adminToken != Config.adminToken) {
     res.status(401).end();
     return;
   }
 
-  const hardware = body.hardware;
+  const {hardware} = body;
   if (hardware == null) {
     res.status(400).json({ error: "Missing key 'hardware'" });
     return;
   }
 
-  const group = body.group;
+  const {group} = body;
   if (group == null) {
     res.status(400).json({ error: "Missing key 'group'" });
     return;
   }
 
-  const name = body.name;
+  const {name} = body;
   if (name == null) {
     res.status(400).json({ error: "Missing key 'name'" });
     return;

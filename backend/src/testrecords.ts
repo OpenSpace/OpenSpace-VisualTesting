@@ -22,6 +22,11 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
+import fs from 'fs';
+import { globSync } from 'glob';
+import path from 'path';
+import { z } from 'zod';
+
 import { assert } from './assert';
 import { printAudit } from './audit';
 import { Config } from './configuration';
@@ -32,10 +37,6 @@ import {
   thumbnailForImage
 } from './globals';
 import { createThumbnail, saveComparisonImage } from './image';
-import fs from 'fs';
-import { globSync } from 'glob';
-import path from 'path';
-import { z } from 'zod';
 
 type TestRecord = {
   /// The group name of the test record. This value contains URL safe characters
