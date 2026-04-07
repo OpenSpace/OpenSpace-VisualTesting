@@ -41,7 +41,7 @@ def write_configuration_overwrite(base_path, data_path):
   with open(f"{base_path}/openspace.cfg.override", "w") as f:
     # Use a common sync folder outside of the build to prevent redownloading of data
     sync_location = f"{data_path}/sync"
-    f.write(f"Paths.SYNC = [[{sync_location}]]\n")
+    f.write(f"Paths.SYNC = os.getenv([[OPENSPACE_SYNC]]) or [[{sync_location}]]\n")
 
     # Enable MRF caching for the same reason and to reduce dependency on external servers
     mrf_location = f"{data_path}/mrf"
