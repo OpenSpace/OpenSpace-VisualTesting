@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Anchor,
@@ -41,7 +41,9 @@ export default function Home() {
   }, []);
 
   function handleSort(column: SortColumn) {
-    setSortDir((prev) => (column === sortCol ? (prev === 'asc' ? 'desc' : 'asc') : 'asc'));
+    setSortDir((prev) =>
+      column === sortCol ? (prev === 'asc' ? 'desc' : 'asc') : 'asc'
+    );
     setSortCol(column);
   }
 
@@ -78,7 +80,10 @@ export default function Home() {
   }
 
   const visibleRecords = useMemo(
-    () => sortRecords(records, sortCol, sortDir).filter((r) => selectedHardware.has(r.hardware)),
+    () =>
+      sortRecords(records, sortCol, sortDir).filter((r) =>
+        selectedHardware.has(r.hardware)
+      ),
     [records, sortCol, sortDir, selectedHardware]
   );
 
@@ -148,12 +153,48 @@ export default function Home() {
       <Table striped highlightOnHover withColumnBorders stickyHeader fz={'md'}>
         <Table.Thead>
           <Table.Tr>
-            <SortableHeader sortKey={'pixelError'} label={'Error'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
-            <SortableHeader sortKey={'group'} label={'Group'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
-            <SortableHeader sortKey={'name'} label={'Name'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
-            <SortableHeader sortKey={'hardware'} label={'Hardware'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
-            <SortableHeader sortKey={'timing'} label={'Timing'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
-            <SortableHeader sortKey={'commitHash'} label={'Commit'} onSort={handleSort} activeColumn={sortCol} direction={sortDir} />
+            <SortableHeader
+              sortKey={'pixelError'}
+              label={'Error'}
+              onSort={handleSort}
+              activeColumn={sortCol}
+              direction={sortDir}
+            />
+            <SortableHeader
+              sortKey={'group'}
+              label={'Group'}
+              onSort={handleSort}
+              activeColumn={sortCol}
+              direction={sortDir}
+            />
+            <SortableHeader
+              sortKey={'name'}
+              label={'Name'}
+              onSort={handleSort}
+              activeColumn={sortCol}
+              direction={sortDir}
+            />
+            <SortableHeader
+              sortKey={'hardware'}
+              label={'Hardware'}
+              onSort={handleSort}
+              activeColumn={sortCol}
+              direction={sortDir}
+            />
+            <SortableHeader
+              sortKey={'timing'}
+              label={'Timing'}
+              onSort={handleSort}
+              activeColumn={sortCol}
+              direction={sortDir}
+            />
+            <SortableHeader
+              sortKey={'commitHash'}
+              label={'Commit'}
+              onSort={handleSort}
+              activeColumn={sortCol}
+              direction={sortDir}
+            />
             <SortableHeader
               sortKey={'timeStamp'}
               label={'Timestamp'}

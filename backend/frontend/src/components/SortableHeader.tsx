@@ -10,12 +10,22 @@ interface Props {
   direction?: SortDirection;
 }
 
-export function SortableHeader({ sortKey, label, onSort, activeColumn, direction }: Props) {
+export function SortableHeader({
+  sortKey,
+  label,
+  onSort,
+  activeColumn,
+  direction
+}: Props) {
   const isActive = activeColumn === sortKey;
   const indicator = isActive ? (direction === 'asc' ? ' ↑' : ' ↓') : '';
   return (
-    <Table.Th style={{ cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => onSort(sortKey)}>
-      {label}{indicator}
+    <Table.Th
+      style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}
+      onClick={() => onSort(sortKey)}
+    >
+      {label}
+      {indicator}
     </Table.Th>
   );
 }

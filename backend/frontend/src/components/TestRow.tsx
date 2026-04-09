@@ -46,7 +46,10 @@ export function TestRow({ record, onOpen }: Props) {
         </Anchor>
       </Table.Td>
       <Table.Td>
-        <Text>{new Date(latestData.timeStamp).toISOString().split('T')[0]}<br />{new Date(latestData.timeStamp).toISOString().split('T')[1]?.replace('Z', '')}
+        <Text>
+          {new Date(latestData.timeStamp).toISOString().split('T')[0]}
+          <br />
+          {new Date(latestData.timeStamp).toISOString().split('T')[1]?.replace('Z', '')}
         </Text>
       </Table.Td>
       <Table.Td style={{ width: ImageWidth }}>
