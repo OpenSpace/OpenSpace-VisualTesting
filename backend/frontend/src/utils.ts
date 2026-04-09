@@ -8,19 +8,6 @@ export function timingDisplay(timing: number): string {
   return `${Math.round(timing * 1000) / 1000}s`;
 }
 
-export function classForDiff(diff: number): string {
-  if (diff === 0.0) return 'error-0';
-  else if (diff < 0.001) return 'error-1';
-  else if (diff < 0.01) return 'error-2';
-  else if (diff < 0.05) return 'error-3';
-  else if (diff < 0.1) return 'error-4';
-  else if (diff < 0.25) return 'error-5';
-  else if (diff < 0.5) return 'error-6';
-  else if (diff < 0.75) return 'error-7';
-  else if (diff < 1.0) return 'error-8';
-  else return 'error-9';
-}
-
 export function diffStyle(diff: number): { backgroundColor: string; color: string } {
   if (diff === 0.0) return { backgroundColor: '#eeeeee', color: '#111111' };
   else if (diff < 0.001) return { backgroundColor: '#4ce600', color: '#111111' };
