@@ -30,9 +30,14 @@ function CompareCell({ type, group, name, hardware1, hardware2 }: Props) {
   const compareUrl = `/api/compare/${type}/${group}/${name}/${hardware1}/${hardware2}`;
 
   useEffect(() => {
-    fetch(compareUrl).then((res) => {
-      setPixelError(Number(res.headers.get('result')));
-    });
+    fetch(compareUrl)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setPixelError(Number(res.headers.get('result')));
+      })
+      .catch((err) => {
+        console.error(`Failed to load comparison ${compareUrl}:`, err);
+      });
   }, [compareUrl]);
 
   return (
@@ -78,9 +83,16 @@ export default function Compare() {
   const resultParams = useRef({ group, name, type });
 
   async function generateComparison(g: string, n: string, t: ImageType) {
-    const records: TestRecord[] = await fetch('/api/test-records').then((res) =>
-      res.json()
-    );
+    const records: TestRecord[] | null = await fetch('/api/test-records')
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .catch((err) => {
+        console.error('Failed to generate comparison:', err);
+        return null;
+      });
+    if (!records) return;
     const hwList = [...new Set(records.map((r) => r.hardware))].sort();
     resultParams.current = { group: g, name: n, type: t };
     setHardwares(hwList);

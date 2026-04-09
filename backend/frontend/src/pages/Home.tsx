@@ -31,12 +31,18 @@ export default function Home() {
 
   useEffect(() => {
     fetch('/api/test-records')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((data: TestRecord[]) => {
         const hardwares = [...new Set(data.map((r) => r.hardware))].sort();
         setAllHardware(hardwares);
         setSelectedHardware(new Set(hardwares));
         setRecords(data);
+      })
+      .catch((err) => {
+        console.error('Failed to load test records:', err);
       });
   }, []);
 
@@ -69,8 +75,13 @@ export default function Home() {
         name: record.name,
         hardware: record.hardware
       })
+    }).catch((err) => {
+      console.error('Failed to update reference:', err);
+      alert('Network error: could not update reference image');
+      return null;
     });
-    if (response.status === 200) {
+    if (!response) return;
+    if (response.ok) {
       alert('Successfully updated reference image');
     } else {
       alert(
