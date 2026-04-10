@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
+  ActionIcon,
   Anchor,
   Box,
   Checkbox,
@@ -11,6 +12,7 @@ import {
   Select,
   Table,
   Text,
+  TextInput,
   Title
 } from '@mantine/core';
 
@@ -28,6 +30,9 @@ export default function Home() {
   const [selectedRecord, setSelectedRecord] = useState<TestRecord | null>(null);
   const [sortCol, setSortCol] = useState<SortColumn>('pixelError');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
+
+  const [groupFilter, setGroupFilter] = useState('');
+  const [nameFilter, setNameFilter] = useState('');
 
   useEffect(() => {
     fetch('/api/test-records')
@@ -92,10 +97,15 @@ export default function Home() {
 
   const visibleRecords = useMemo(
     () =>
-      sortRecords(records, sortCol, sortDir).filter((r) =>
-        selectedHardware.has(r.hardware)
-      ),
-    [records, sortCol, sortDir, selectedHardware]
+      sortRecords(records, sortCol, sortDir).filter((r) => {
+        if (!selectedHardware.has(r.hardware)) return false;
+        if (groupFilter && !r.group.toLowerCase().includes(groupFilter.toLowerCase()))
+          return false;
+        if (nameFilter && !r.name.toLowerCase().includes(nameFilter.toLowerCase()))
+          return false;
+        return true;
+      }),
+    [records, sortCol, sortDir, selectedHardware, groupFilter, nameFilter]
   );
 
   return (
@@ -177,6 +187,19 @@ export default function Home() {
               onSort={handleSort}
               activeColumn={sortCol}
               direction={sortDir}
+              filter={
+                <TextInput
+                  placeholder="Filter..."
+                  onChange={(e) => setGroupFilter(e.target.value)}
+                  rightSection={
+                    groupFilter && (
+                      <ActionIcon onClick={() => setGroupFilter('')} size={'xs'}>
+                        <Text size={'xs'}>×</Text>
+                      </ActionIcon>
+                    )
+                  }
+                />
+              }
             />
             <SortableHeader
               sortKey={'name'}
@@ -184,6 +207,19 @@ export default function Home() {
               onSort={handleSort}
               activeColumn={sortCol}
               direction={sortDir}
+              filter={
+                <TextInput
+                  placeholder="Filter..."
+                  onChange={(e) => setNameFilter(e.target.value)}
+                  rightSection={
+                    nameFilter && (
+                      <ActionIcon onClick={() => setNameFilter('')} size={'xs'}>
+                        <Text size={'xs'}>×</Text>
+                      </ActionIcon>
+                    )
+                  }
+                />
+              }
             />
             <SortableHeader
               sortKey={'hardware'}
