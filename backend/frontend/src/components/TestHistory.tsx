@@ -4,6 +4,7 @@ import { TestData, TestRecord } from '../types';
 import { diffDisplay, diffStyle, timingDisplay } from '../utils';
 
 import { ImageThumbnail } from './ImageThumbnail';
+import { useState } from 'react';
 
 interface Props {
   record: TestRecord;
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export function TestHistory({ record, onUpdateReference }: Props) {
+  const [wasUpdated, setWasUpdated] = useState(false);
+
   const testData = [...record.data].reverse();
 
   const ImageWidth = 250;
@@ -111,9 +114,18 @@ export function TestHistory({ record, onUpdateReference }: Props) {
               </Table.Td>
               <Table.Td>
                 {i === 0 && (
-                  <Button variant={'default'} onClick={() => onUpdateReference(record)}>
-                    Upgrade Candidate to Reference
-                  </Button>
+                  <>
+                    <Button
+                      variant={'default'}
+                      onClick={() => {
+                        onUpdateReference(record);
+                        setWasUpdated(true);
+                      }}
+                      disabled={wasUpdated}
+                    >
+                      Upgrade Candidate to Reference
+                    </Button>
+                  </>
                 )}
               </Table.Td>
             </Table.Tr>
