@@ -215,11 +215,12 @@ export default function Home() {
               filter={
                 <TextInput
                   placeholder="Filter..."
+                  value={nameFilter}
                   onChange={(e) => setNameFilter(e.target.value)}
                   rightSection={
                     nameFilter && (
                       <ActionIcon onClick={() => setNameFilter('')} size={'xs'}>
-                        <Text size={'xs'}>×</Text>
+                        <Text size={'xs'}>x</Text>
                       </ActionIcon>
                     )
                   }

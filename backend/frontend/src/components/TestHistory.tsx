@@ -78,19 +78,13 @@ export function TestHistory({ record, onUpdateReference }: Props) {
               onClick={() => {
                 onUpdateReference(record);
                 setWasUpdated(true);
+                close();
               }}
               color="red"
             >
               Yes, update reference
             </Button>
-            <Button
-              onClick={() => {
-                onUpdateReference(record);
-                setWasUpdated(true);
-              }}
-              variant="default"
-              autoFocus
-            >
+            <Button onClick={close} variant="default" autoFocus>
               Cancel
             </Button>
           </Group>
