@@ -211,7 +211,7 @@ if __name__ == "__main__":
     except Exception as e:
       print(f"Test '{path}' failed with error: {e}")
     else:
-      for file in result.files:
+      for file in (result.files if result is not None else []):
         if submit_images:
           submit_image(result, hardware, timestamp, file, runner_id, submit_url)
         else:
@@ -232,6 +232,8 @@ if __name__ == "__main__":
         result = run_single_test(file, executable)
       except Exception as e:
         print(f"Test '{file}' failed with error: {e}")
+        continue
+      if result is None:
         continue
       for img in result.files:
         if submit_images:
@@ -257,6 +259,8 @@ if __name__ == "__main__":
         result = run_single_test(path, executable)
       except Exception as e:
         print(f"Test '{path}' failed with error: {e}")
+        continue
+      if result is None:
         continue
       for file in result.files:
         if submit_images:

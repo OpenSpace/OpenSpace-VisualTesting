@@ -68,6 +68,8 @@ class Test:
     if content["commands"] is None:
       raise Exception(f"Missing 'commands' in test {path}")
 
+    self.skipTest = content.get("skip_test", False)
+
     self.instructions = []
     for command in content["commands"]:
       try:

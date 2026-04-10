@@ -132,6 +132,11 @@ def run_single_test(test_path, executable) -> TestResult:
   print(f"Running test: {test_path}")
   test = Test(test_path)
 
+  # Skip the test if the test-creator asked for it
+  if test.skipTest:
+    print(f"  Skipping test {test_path}")
+    return None
+
   start_time = time.perf_counter()
   print(f"  Starting OpenSpace (Profile: {test.profile})")
   process = subprocess.Popen(
