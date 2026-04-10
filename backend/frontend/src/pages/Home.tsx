@@ -166,6 +166,11 @@ export default function Home() {
             w={180}
             value={adminToken}
             onChange={(e) => setAdminToken(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur();
+              }
+            }}
           />
         </Group>
       </Group>
