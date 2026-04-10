@@ -87,7 +87,7 @@ async def setup_test_run(openspace):
 
 
 
-async def internal_run(openspace, test):
+async def internal_run(openspace, test, shutdown=True):
   """
   This function runs the actual test with the library object passed into it. It first sets
   up default values, then runs the individual instructions for the test, and retrieves
@@ -95,6 +95,8 @@ async def internal_run(openspace, test):
 
   This function assumes that the `openspace` library object is already authenticated and
   connected to the OpenSpace instance and is ready to take commands.
+
+  If `shutdown` is False, the OpenSpace instance will not be shut down after the test.
   """
   print("  Starting test")
   await setup_test_run(openspace)
@@ -109,7 +111,8 @@ async def internal_run(openspace, test):
   version = await openspace.version()
   commit = version["Commit"]
 
-  await openspace.toggleShutdown()
+  if shutdown:
+    await openspace.toggleShutdown()
 
   return screenshot_folder, commit
 
@@ -188,4 +191,55 @@ def run_single_test(test_path, executable) -> TestResult:
   result.timing = end_time - start_time
   result.commit = commit
   result.error = error_log
+  return result
+
+
+
+def run_single_test_attached(test_path) -> TestResult:
+  """
+  Run the single test provided by `test_path` against an already-running OpenSpace
+  instance. Unlike `run_single_test`, this function does not start or stop OpenSpace —
+  it only connects to the running instance, executes the test, and then disconnects.
+
+   - `test_path`: The path to the ostest file that should be run. This file must exist
+  """
+  print(f"Running test (attached): {test_path}")
+  test = Test(test_path)
+
+  start_time = time.perf_counter()
+
+  async def mainLoop():
+    """
+    The main loop of an async event loop that is needed for the OpenSpace Python API to
+    work correctly. This will connect to OpenSpace, which then triggers the rest of the
+    test run
+    """
+    print("  Connecting...")
+    os_api = Api("localhost", 4681)
+    os_api.connect()
+    openspace = await os_api.singleReturnLibrary()
+    # Injecting the main API into the library as we use it in some test instructions
+    openspace.__api__ = os_api
+    print("  Connected to OpenSpace")
+    screenshot_folder, commit = await asyncio.create_task(
+      internal_run(openspace, test, shutdown=False)
+    )
+    os_api.disconnect()
+    return screenshot_folder, commit
+
+  screenshot_folder, commit = asyncio.new_event_loop().run_until_complete(mainLoop())
+
+  end_time = time.perf_counter()
+
+  # Collect all screenshots taken by the test
+  files = glob.glob(f"{screenshot_folder}/*.png")
+  print(f"Test images: {files}")
+
+  result = TestResult()
+  result.group = test.group
+  result.name = test.name
+  result.files = files
+  result.timing = end_time - start_time
+  result.commit = commit
+  result.error = ""
   return result

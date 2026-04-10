@@ -31,7 +31,7 @@ import requests
 import shutil
 import time
 from testsuite.constants import test_base_dir
-from testsuite.openspace import write_configuration_overwrite, run_single_test
+from testsuite.openspace import write_configuration_overwrite, run_single_test, run_single_test_attached
 from testsuite.test import TestResult
 
 
@@ -66,6 +66,9 @@ def submit_image(result: TestResult, hardware: str, timestamp: str, file: str,
     )
   if res.status_code == 200:
     print("Image submitted successfully")
+    print(f"  Group: {result.group}")
+    print(f"  Name: {result.name}")
+    print(f"  Hardware: {hardware}")
   else:
     print(f"Image submission failed with error {res.status_code}")
     print(res.text)
@@ -96,7 +99,7 @@ def setup_argparse():
     dest="dir",
     type=str,
     help="Specifies the OpenSpace directory in which to run the tests.",
-    required=True
+    required=False
   )
   parser.add_argument(
     "-t", "--test",
@@ -128,6 +131,17 @@ def setup_argparse():
     action="store_true",
     default=False
   )
+  parser.add_argument(
+    "-a", "--attach",
+    dest="attach",
+    help="Run a single test against an already-running OpenSpace instance without "
+      "starting or closing it. Requires exactly one test to be specified via --test. "
+      "When used, --dir is optional; if omitted the test path is resolved relative to "
+      "the current working directory.",
+    required=False,
+    action="store_true",
+    default=False
+  )
 
   args = parser.parse_args()
   return args
@@ -143,6 +157,9 @@ if __name__ == "__main__":
       submit_url = f"{url}/api/submit-test"
       hardware = config["hardware"]
       runner_id = config["id"]
+    print(f"Submit URL: {submit_url}")
+    print(f"Hardware: {hardware}")
+    print(f"ID: {runner_id}")
   else:
     print("No 'config.json' provided. Test results will be stored locally instead")
     submit_images = False
@@ -150,25 +167,57 @@ if __name__ == "__main__":
 
   args = setup_argparse()
 
-  # Find the executable location and its name
-  if os.name == "nt":
-    # Windows
-    executable = f"{args.dir}/bin/RelWithDebInfo/OpenSpace.exe"
+  if args.attach:
+    if not args.test:
+      raise Exception("--attach requires exactly one test to be specified via --test")
+    if "," in args.test:
+      raise Exception("--attach requires exactly one test, not a comma-separated list")
   else:
-    # Linux
-    executable = f"{args.dir}/bin/OpenSpace"
+    if args.dir is None:
+      raise Exception("--dir is required when not using --attach")
 
-  if not os.path.exists(executable):
-    raise Exception(f"Could not find executable '{executable}'")
+    # Find the executable location and its name
+    if os.name == "nt":
+      # Windows
+      executable = f"{args.dir}/bin/RelWithDebInfo/OpenSpace.exe"
+    else:
+      # Linux
+      executable = f"{args.dir}/bin/OpenSpace"
 
+    if not os.path.exists(executable):
+      raise Exception(f"Could not find executable '{executable}'")
 
-  if args.overwrite_path != None:
+  if not args.attach and args.overwrite_path != None:
     write_configuration_overwrite(args.dir, args.overwrite_path)
 
 
 
   # Running the tests
-  if args.test is None:
+  if args.attach:
+    test_arg = args.test.strip()
+    if os.path.isfile(test_arg):
+      path = test_arg
+    elif args.dir:
+      path = f"{args.dir}/{test_base_dir}/{test_arg}.ostest"
+    else:
+      path = f"{test_arg}.ostest"
+
+    if not os.path.isfile(path):
+      raise Exception(f"Could not find test '{path}'")
+
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    try:
+      result = run_single_test_attached(path)
+    except Exception as e:
+      print(f"Test '{path}' failed with error: {e}")
+    else:
+      for file in result.files:
+        if submit_images:
+          submit_image(result, hardware, timestamp, file, runner_id, submit_url)
+        else:
+          store_image(result, file)
+
+  elif args.test is None:
     print("Running all tests in OpenSpace folder")
     files = glob.glob(f"{args.dir}/{test_base_dir}/**/*.ostest", recursive=True)
     for file in files:
@@ -190,7 +239,7 @@ if __name__ == "__main__":
         else:
           store_image(result, img)
       time.sleep(5.0)
-  else:
+  elif not args.attach:
     tests = args.test.split(",")
     print(f"Running tests: {tests}")
     for test in tests:
