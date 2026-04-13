@@ -13,7 +13,7 @@ import {
 } from '@mantine/core';
 
 import { TestRecord } from '../types';
-import { diffDisplay, diffStyle } from '../utils';
+import { PixelDiffNumber } from '../components/PixelDiffNumber';
 
 type ImageType = 'reference' | 'candidate';
 
@@ -55,15 +55,7 @@ function CompareCell({ type, group, name, hardware1, hardware2 }: Props) {
           style={{ width: 150, height: 84.375 }}
         />
       </Anchor>
-      {pixelError !== null && (
-        <Box
-          px={4}
-          mt={2}
-          style={{ borderRadius: 4, display: 'inline-block', ...diffStyle(pixelError) }}
-        >
-          <Text size={'sm'}>{diffDisplay(pixelError)}</Text>
-        </Box>
-      )}
+      {pixelError !== null && <PixelDiffNumber value={pixelError} />}
     </Table.Td>
   );
 }

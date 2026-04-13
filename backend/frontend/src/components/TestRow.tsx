@@ -1,9 +1,10 @@
-import { Anchor, Box, Table, Text } from '@mantine/core';
+import { Anchor, Table, Text } from '@mantine/core';
 
 import { TestRecord } from '../types';
-import { diffDisplay, diffStyle, timingDisplay } from '../utils';
+import { timingDisplay } from '../utils';
 
 import { ImageThumbnail } from './ImageThumbnail';
+import { PixelDiffNumber } from './PixelDiffNumber';
 
 interface Props {
   record: TestRecord;
@@ -19,18 +20,7 @@ export function TestRow({ record, onOpen }: Props) {
   return (
     <Table.Tr style={{ cursor: 'pointer' }} onClick={() => onOpen(record)}>
       <Table.Td style={{ width: 90 }}>
-        <Box
-          px={6}
-          py={2}
-          style={{
-            borderRadius: 4,
-            textAlign: 'center',
-            fontSize: 18,
-            ...diffStyle(latestData.pixelError)
-          }}
-        >
-          {diffDisplay(latestData.pixelError)}
-        </Box>
+        <PixelDiffNumber value={latestData.pixelError} />
       </Table.Td>
       <Table.Td>{record.group}</Table.Td>
       <Table.Td>{record.name}</Table.Td>
