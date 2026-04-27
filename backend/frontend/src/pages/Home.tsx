@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+
 import {
   ActionIcon,
   Anchor,
@@ -13,7 +14,8 @@ import {
   Table,
   Text,
   TextInput,
-  Title
+  Title,
+  Tooltip
 } from '@mantine/core';
 
 import { SortableHeader } from '../components/SortableHeader';
@@ -33,6 +35,24 @@ export default function Home() {
 
   const [groupFilter, setGroupFilter] = useState('');
   const [nameFilter, setNameFilter] = useState('');
+
+  const [searchParams] = useSearchParams();
+  const initialLinkHandled = useRef(false);
+
+  // Auto-open modal when URL contains group/name/hardware params
+  useEffect(() => {
+    if (initialLinkHandled.current || records.length === 0) return;
+    initialLinkHandled.current = true;
+    const group = searchParams.get('group');
+    const name = searchParams.get('name');
+    const hardware = searchParams.get('hardware');
+    if (group && name && hardware) {
+      const found = records.find(
+        (r) => r.group === group && r.name === name && r.hardware === hardware
+      );
+      if (found) setSelectedRecord(found);
+    }
+  }, [records]);
 
   useEffect(() => {
     fetch('/api/test-records')
@@ -255,6 +275,7 @@ export default function Home() {
               activeColumn={sortCol}
               direction={sortDir}
             />
+            <Table.Th>Link</Table.Th>
             <Table.Th>Candidate</Table.Th>
             <Table.Th>Reference</Table.Th>
             <Table.Th>Difference</Table.Th>
@@ -275,9 +296,28 @@ export default function Home() {
         opened={selectedRecord !== null}
         onClose={() => setSelectedRecord(null)}
         title={
-          selectedRecord
-            ? `${selectedRecord.group} / ${selectedRecord.name} — ${selectedRecord.hardware}`
-            : ''
+          selectedRecord ? (
+            <Group gap={'xs'} align={'center'}>
+              <Text>{`${selectedRecord.group} / ${selectedRecord.name} — ${selectedRecord.hardware}`}</Text>
+              <Tooltip label={'Copy link'} withArrow>
+                <ActionIcon
+                  variant={'subtle'}
+                  size={'sm'}
+                  onClick={() => {
+                    const url = new URL(window.location.href);
+                    url.search = '';
+                    url.searchParams.set('group', selectedRecord.group);
+                    url.searchParams.set('name', selectedRecord.name);
+                    url.searchParams.set('hardware', selectedRecord.hardware);
+                    navigator.clipboard.writeText(url.toString());
+                  }}
+                  aria-label={'Copy link to this test'}
+                >
+                  🔗
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          ) : ''
         }
         size={'auto'}
         scrollAreaComponent={ScrollArea.Autosize}

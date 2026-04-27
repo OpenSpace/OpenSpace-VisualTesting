@@ -1,4 +1,4 @@
-import { Anchor, Table, Text } from '@mantine/core';
+import { ActionIcon, Anchor, Table, Text, Tooltip } from '@mantine/core';
 
 import { TestRecord } from '../types';
 import { timingDisplay } from '../utils';
@@ -16,6 +16,16 @@ export function TestRow({ record, onOpen }: Props) {
   if (!latestData) return null;
 
   const ImageWidth = 250;
+
+  function copyLink(e: React.MouseEvent) {
+    e.stopPropagation();
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.searchParams.set('group', record.group);
+    url.searchParams.set('name', record.name);
+    url.searchParams.set('hardware', record.hardware);
+    navigator.clipboard.writeText(url.toString());
+  }
 
   return (
     <Table.Tr style={{ cursor: 'pointer' }} onClick={() => onOpen(record)}>
@@ -41,6 +51,19 @@ export function TestRow({ record, onOpen }: Props) {
           <br />
           {new Date(latestData.timeStamp).toISOString().split('T')[1]?.replace('Z', '')}
         </Text>
+      </Table.Td>
+      <Table.Td>
+        <Tooltip label={'Copy link'} withArrow>
+          <ActionIcon
+            variant={'subtle'}
+            size={'xs'}
+            mt={4}
+            onClick={copyLink}
+            aria-label={'Copy link to this test'}
+          >
+            🔗
+          </ActionIcon>
+        </Tooltip>
       </Table.Td>
       <Table.Td style={{ width: ImageWidth }}>
         <ImageThumbnail
