@@ -487,7 +487,7 @@ async function handleSubmitTest(req: express.Request, res: express.Response) {
     .split('\n')
     .filter((line) => line.trim() !== '')
     .join('\n');
-  const nLogLines = logContent.split('\n').length;
+  const nLogLines = logContent === '' ? 0 : logContent.split('\n').length;
   fs.writeFileSync(logPath, logContent);
 
   if (!hasReferenceImage(group, name, hardware)) {
