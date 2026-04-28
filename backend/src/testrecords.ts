@@ -22,7 +22,7 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-import fs from 'fs';
+import fs, { write } from 'fs';
 import { globSync } from 'glob';
 import path from 'path';
 import { z } from 'zod';
@@ -130,28 +130,36 @@ export function saveTestData(data: TestData, path: string) {
  * @param name The name of the test to which the @param data belongs
  * @param hardware The hardware on which the test was run
  * @param data The test data that should be added to the list of test records
+ * @param writeAudit If `true` the test data will be written to the audit log
  */
 export function addTestData(
   group: string,
   name: string,
   hardware: string,
-  data: TestData
+  data: TestData,
+  writeAudit: boolean = true
 ) {
-  printAudit(`Adding new record for (${group}/${name}/${hardware})`);
+  if (writeAudit) {
+    printAudit(`Adding new record for (${group}/${name}/${hardware})`);
+  }
 
   for (const record of TestRecords) {
     if (record.group != group || record.name != name || record.hardware != hardware) {
       continue;
     }
 
-    printAudit('  Adding to data existing record');
+    if (writeAudit) {
+      printAudit('  Adding to data existing record');
+    }
     record.data.push(data);
     record.data.sort((a, b) => a.timeStamp.getTime() - b.timeStamp.getTime());
     return;
   }
 
   // If we get here, it's a new record
-  printAudit('Creating new test record');
+  if (writeAudit) {
+    printAudit('Creating new test record');
+  }
   TestRecords.push({
     group: group,
     name: name,
@@ -259,7 +267,7 @@ export function loadTestResults() {
           assert(files.includes('log.txt'), `No 'log.txt' in ${p}`);
 
           const data = loadTestRecord(`${p}/data.json`);
-          addTestData(group, name, hardware, data);
+          addTestData(group, name, hardware, data, false);
         }
       }
     }
