@@ -55,19 +55,33 @@ export default function Home() {
   }, [records]);
 
   useEffect(() => {
-    fetch('/api/test-records')
-      .then((res) => {
+    Promise.all([
+      fetch('/api/config').then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+        return res.json() as Promise<{ preferredHardware: string[] }>;
+      }),
+      fetch('/api/test-records').then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json() as Promise<TestRecord[]>;
       })
-      .then((data: TestRecord[]) => {
+    ])
+      .then(([config, data]) => {
         const hardwares = [...new Set(data.map((r) => r.hardware))].sort();
         setAllHardware(hardwares);
-        setSelectedHardware(new Set(hardwares));
+        const urlHardware = searchParams.getAll('hardware').filter((hw) => hardwares.includes(hw));
+        setSelectedHardware(
+          new Set(
+            urlHardware.length > 0
+              ? urlHardware
+              : config.preferredHardware.length > 0
+                ? hardwares.filter((hw) => config.preferredHardware.includes(hw))
+                : hardwares
+          )
+        );
         setRecords(data);
       })
       .catch((err) => {
-        console.error('Failed to load test records:', err);
+        console.error('Failed to load data:', err);
       });
   }, []);
 

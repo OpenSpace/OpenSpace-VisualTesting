@@ -40,7 +40,8 @@ const ConfigurationSchema = z
     thumbnailScale: z.number().min(1),
     adminToken: z.string().min(1),
     data: z.string().min(1),
-    runners: z.array(z.string().min(1))
+    runners: z.array(z.string().min(1)),
+    preferredHardware: z.array(z.string()).optional()
   })
   .strict();
 
@@ -64,6 +65,7 @@ class Configuration {
     this.adminToken = config.adminToken;
     this.data = config.data;
     this.runners = config.runners;
+    this.preferredHardware = config.preferredHardware ?? [];
     this.path = configFile;
   }
 
@@ -96,6 +98,9 @@ class Configuration {
 
   /// The list of ids for runners that are allowed to submit tests
   runners: string[];
+
+  /// The list of hardware names that should be checked by default in the frontend
+  preferredHardware: string[];
 
   /// The path to where the configuration file lives
   path: string;
