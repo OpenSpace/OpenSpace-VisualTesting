@@ -4,6 +4,7 @@
     "module": "node16",
     "moduleResolution": "node16",
     "outDir": "out",
+    "rootDir": "src",
 
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
