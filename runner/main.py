@@ -157,9 +157,11 @@ if __name__ == "__main__":
       submit_url = f"{url}/api/submit-test"
       hardware = config["hardware"]
       runner_id = config["id"]
+      per_profile_wait = config["per-profile-wait"]
     print(f"Submit URL: {submit_url}")
     print(f"Hardware: {hardware}")
     print(f"ID: {runner_id}")
+    print(f"Per Profile wait: {per_profile_wait}")
   else:
     print("No 'config.json' provided. Test results will be stored locally instead")
     submit_images = False
@@ -229,7 +231,7 @@ if __name__ == "__main__":
         continue
 
       try:
-        result = run_single_test(file, executable)
+        result = run_single_test(file, executable, per_profile_wait)
       except Exception as e:
         print(f"Test '{file}' failed with error: {e}")
         continue
@@ -256,7 +258,7 @@ if __name__ == "__main__":
         continue
 
       try:
-        result = run_single_test(path, executable)
+        result = run_single_test(path, executable, per_profile_wait)
       except Exception as e:
         print(f"Test '{path}' failed with error: {e}")
         continue

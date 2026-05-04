@@ -118,7 +118,7 @@ async def internal_run(openspace, test, shutdown=True):
 
 
 
-def run_single_test(test_path, executable) -> TestResult:
+def run_single_test(test_path, executable, per_profile_wait) -> TestResult:
   """
   Run the single test provided by `test_path` using the OpenSpace executable provided by
   `executable`. This will include starting OpenSpace as a subprocess using a known
@@ -152,8 +152,10 @@ def run_single_test(test_path, executable) -> TestResult:
   )
 
   # Add a sleeping time instead of repeatedly trying to reconnect. Starting up OpenSpace
-  # in general takes longer than this, so we don't actually lose any time
-  time.sleep(15)
+  # in general takes longer than this, so we don't actually lose any time. If a
+  # per-profile wait time is specified, we use that, otherwise we wait 15 seconds
+  wait_timer = per_profile_wait.get(test.profile, 15)
+  time.sleep(wait_timer)
 
   async def mainLoop():
     """
