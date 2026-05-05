@@ -53,7 +53,7 @@ const TestDataSchema = z.object({
   pixelError: z.number().min(0).max(1),
   timeStamp: z.coerce.date(),
   timing: z.number().min(0),
-  nErrors: z.number().int().positive(),
+  nErrors: z.number().int().min(0),
   commitHash: z.string().min(1),
   referenceImage: z.string().min(1),
   candidateImage: z.coerce.date(),
