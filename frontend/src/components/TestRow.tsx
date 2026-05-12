@@ -88,7 +88,7 @@ export function TestRow({ record, onOpen }: Props) {
 
   return (
     <Table.Tr style={{ cursor: 'pointer' }} onClick={() => onOpen(record)}>
-      <Table.Td style={{ whiteSpace: 'nowrap' }}>
+      <Table.Td style={{ width: 75, maxWidth: 75, whiteSpace: 'nowrap' }}>
         <PixelDiffNumber value={latestData.pixelError} />
         <Tooltip label={diffTooltip} withArrow>
           <Text size={'xs'} c={diffColor}>{diffText}</Text>
@@ -97,11 +97,11 @@ export function TestRow({ record, onOpen }: Props) {
           <Text size={'xs'} c={nErrorsColor}>{nErrorsText}</Text>
         </Tooltip>
       </Table.Td>
-      <Table.Td>{record.group}</Table.Td>
-      <Table.Td>{record.name}</Table.Td>
-      <Table.Td>{record.hardware}</Table.Td>
-      <Table.Td>{timingDisplay(latestData.timing)}</Table.Td>
-      <Table.Td>
+      <Table.Td style={{ width: 200, maxWidth: 200, wordBreak: 'break-word' }}>{record.group}</Table.Td>
+      <Table.Td style={{ width: 200, maxWidth: 200, wordBreak: 'break-word' }}>{record.name}</Table.Td>
+      <Table.Td style={{ width: 100, maxWidth: 100, wordBreak: 'break-word' }}>{record.hardware}</Table.Td>
+      <Table.Td style={{ width: 100, maxWidth: 100, wordBreak: 'break-word' }}>{timingDisplay(latestData.timing)}</Table.Td>
+      <Table.Td style={{ width: 100, maxWidth: 100, wordBreak: 'break-word' }}>
         <Anchor
           href={`https://github.com/OpenSpace/OpenSpace/commit/${latestData.commitHash}`}
           target={'_blank'}
@@ -110,14 +110,14 @@ export function TestRow({ record, onOpen }: Props) {
           {latestData.commitHash.substring(0, 8)}
         </Anchor>
       </Table.Td>
-      <Table.Td>
+      <Table.Td style={{ width: 100, maxWidth: 100, wordBreak: 'break-word' }}>
         <Text>
           {new Date(latestData.timeStamp).toISOString().split('T')[0]}
           <br />
           {new Date(latestData.timeStamp).toISOString().split('T')[1]?.replace('Z', '')}
         </Text>
       </Table.Td>
-      <Table.Td>
+      <Table.Td style={{ width: 50, maxWidth: 50, wordBreak: 'break-word' }}>
         <Tooltip label={'Copy link'} withArrow>
           <ActionIcon
             variant={'subtle'}

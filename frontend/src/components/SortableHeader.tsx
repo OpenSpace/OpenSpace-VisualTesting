@@ -9,6 +9,7 @@ interface Props {
   filter?: React.ReactNode;
   activeColumn?: SortColumn;
   direction?: SortDirection;
+  w?: number | string;
 }
 
 export function SortableHeader({
@@ -17,12 +18,13 @@ export function SortableHeader({
   onSort,
   filter,
   activeColumn,
-  direction
+  direction,
+  w
 }: Props) {
   const isActive = activeColumn === sortKey;
   const indicator = isActive ? (direction === 'asc' ? ' ↑' : ' ↓') : '';
   return (
-    <Table.Th>
+    <Table.Th style={w !== undefined ? { width: w, maxWidth: w } : undefined}>
       <Stack gap={0}>
         <UnstyledButton
           style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}

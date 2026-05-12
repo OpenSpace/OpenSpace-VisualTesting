@@ -226,6 +226,7 @@ export default function Home() {
               onSort={handleSort}
               activeColumn={sortCol}
               direction={sortDir}
+              w={160}
               filter={
                 <TextInput
                   placeholder="Filter..."
@@ -246,6 +247,7 @@ export default function Home() {
               onSort={handleSort}
               activeColumn={sortCol}
               direction={sortDir}
+              w={160}
               filter={
                 <TextInput
                   placeholder="Filter..."
