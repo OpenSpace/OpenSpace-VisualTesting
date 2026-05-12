@@ -1,10 +1,6 @@
-﻿backend/node_modules
-runner/node_modules
-runner/out
-backend/data
-backend/config.json
-runner/config.json
-runner/testsuite/__pycache__
-runner/tests
-backend/frontend/node_modules
-backend/dist
+﻿node_modules
+data
+config.json
+frontend/node_modules
+dist
+out
