@@ -32,9 +32,7 @@ import { initializeAudit } from './audit';
 import { Config, loadConfiguration } from './configuration';
 import { loadTestResults, verifyDataFolder } from './testrecords';
 
-// @TODO: Add graphs showing timing information
-// @TODO: Add repeating task to clean the files in the temporary folder
-// @TODO: Use <dialog> instead of alert() when reporting status
+
 export function main() {
   loadConfiguration('config.json');
 

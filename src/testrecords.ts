@@ -195,6 +195,8 @@ export function verifyDataFolder() {
     for (const group of groups) {
       const names = fs.readdirSync(`${base}/${group}`);
       for (const name of names) {
+        console.log(`    ${group}/${name}`);
+
         const runs = fs.readdirSync(`${base}/${group}/${name}`);
         for (const run of runs) {
           const p = `${base}/${group}/${name}/${run}`;
