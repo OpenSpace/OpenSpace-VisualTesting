@@ -16,7 +16,7 @@
   "dependencies": {
     "@slack/web-api": "^7.0.4",
     "@types/pngjs": "^6.0.4",
-    "body-parser": "^2.2.1",
+    "body-parser": "^2.3.0",
     "cors": "^2.8.5",
     "express": "^5.2.0",
     "fs": "^0.0.1-security",
