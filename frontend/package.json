@@ -13,7 +13,7 @@
     "@mantine/hooks": "^9.0.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router-dom": "^6.28.0"
+    "react-router-dom": "^6.30.4"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
